@@ -37,6 +37,9 @@ curl -fsSL https://raw.githubusercontent.com/hagan/claudia-statusline/main/scrip
 # Install Dotenvx CLI
 curl -sfS https://dotenvx.sh | bash
 
+# Install CodeRabbit CLI
+curl -fsSL https://cli.coderabbit.ai/install.sh | sh
+
 # Install Cipher
 npm install -g @byterover/cipher
 

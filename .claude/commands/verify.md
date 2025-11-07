@@ -12,11 +12,19 @@ model: sonnet
 - **Previous command (/implement):** Implementation Plan → Working Code
 - **This command (/verify):** Working Code → Fixed & Verified Implementation
 
-**Process:** Run tests → Fix failures immediately → Re-test → Run program → Fix issues → Repeat until all green
+**Process:** Run CodeRabbit analysis → Run tests → Fix failures immediately → Re-test → Run program → Fix CodeRabbit findings → Repeat until all green
 
-## MCP Servers for Verification
+## Tools for Verification
 
 **Primary tools for verification and fixing:**
+- **CodeRabbit CLI**: `coderabbit --prompt-only` - AI-powered code review (CENTRAL TOOL)
+  - Identifies race conditions, memory leaks, security issues, best practice violations
+  - Use `--type uncommitted` for uncommitted changes only
+  - Use `--type committed` for committed changes only
+  - Use `--base <branch>` to specify base branch (e.g., `--base develop`)
+  - Run in background to keep workflow responsive
+  - **Rate Limits (Free Tier)**: 3 back-to-back reviews, then 2/hour (summary only), 200 files/hour, 100 files/PR
+  - **If rate limited**: Wait ~8 minutes or proceed with other verification steps (tests, build, diagnostics)
 - **IDE Diagnostics**: `mcp__ide__getDiagnostics()` - Check errors/warnings
 - **Cipher**: `mcp__cipher__ask_cipher(...)` - Query issues, store fixes
 - **Claude Context**: `mcp__claude-context__search_code(...)` - Find similar code
@@ -26,9 +34,17 @@ model: sonnet
 
 ## Process
 
-### Step 1: Gather Context & Fix Initial Issues
+### Step 1: Start CodeRabbit Analysis & Gather Context
 
-**Understand what needs verification and fix obvious problems:**
+**Launch automated code review while gathering context:**
+
+```bash
+# Start CodeRabbit analysis in background (critical first step)
+coderabbit --prompt-only --type uncommitted &
+CR_PID=$!
+```
+
+**While CodeRabbit runs, gather context and fix obvious problems:**
 1. Check diagnostics: `mcp__ide__getDiagnostics()`
    - **If errors/warnings found:** Fix them immediately before proceeding
 2. Read plan (if exists): `Glob("docs/plans/*.md")` then `Read(latest_plan)`
@@ -36,6 +52,13 @@ model: sonnet
    - If no plan found, continue without (standalone verification)
 3. Check changes: `git status --short` and `git diff --stat` - Understand scope
 4. Query Cipher: `mcp__cipher__ask_cipher("What was implemented? Any known issues?")`
+
+**Check if CodeRabbit is complete:**
+```bash
+# Check if background job finished
+jobs -l | grep $CR_PID
+# If still running, continue with tests; check back after Step 2-3
+```
 
 ### Step 2: Run & Fix Unit Tests
 
@@ -125,9 +148,55 @@ uv run pytest --cov=. --cov-report=term-missing --cov-fail-under=80
    - Run again to confirm coverage improvement
 3. Skip coverage for truly untestable code (e.g., if __name__ == "__main__")
 
-### Step 6: Fix Code Quality Issues
+### Step 6: Review & Fix CodeRabbit Findings
 
-**Run quality checks and fix all issues:**
+**Process CodeRabbit analysis results (CRITICAL QUALITY GATE):**
+
+```bash
+# Check if CodeRabbit analysis is complete
+wait $CR_PID || coderabbit --prompt-only --type uncommitted
+```
+
+**CodeRabbit output provides AI-optimized findings with:**
+- File locations and line numbers
+- Issue severity (critical/high/medium/low)
+- Suggested approaches for fixes
+- Best practice violations
+
+**Create systematic fix plan:**
+1. Review all findings and create TodoWrite list for each issue
+2. Prioritize: Critical → High → Medium → Low
+3. For each finding:
+   - Read the affected file(s)
+   - Understand the issue context
+   - Apply the fix (use `mcp__claude-context__search_code` to find similar patterns)
+   - Verify fix doesn't break tests: `uv run pytest path/to/affected_test.py`
+4. Store fixes in Cipher: `mcp__cipher__ask_cipher("Fixed CodeRabbit finding: [issue] in [file]. Solution: [description]")`
+
+**Common CodeRabbit findings:**
+- Race conditions → Add proper locking/synchronization
+- Memory leaks → Fix resource cleanup, close connections
+- Security vulnerabilities → Sanitize inputs, use secure functions
+- Error handling gaps → Add try-catch, validate inputs
+- Performance issues → Optimize algorithms, add caching
+- Best practice violations → Follow framework conventions
+
+**Re-run CodeRabbit after fixes to verify:**
+```bash
+coderabbit --prompt-only --type uncommitted
+# Continue fixing until no critical/high issues remain
+```
+
+**If rate limit is hit:**
+- Message: "Rate limit exceeded, please try after X minutes"
+- **Option 1**: Wait the specified time (usually 8 minutes) then re-run
+- **Option 2**: Proceed to Step 7-9 (code quality, tests, build) and verify those pass
+- **Option 3**: If all other checks pass and you fixed all reported issues, consider verification complete
+- **Note**: Free tier allows 3 back-to-back reviews, then 2/hour. Plan accordingly for large codebases.
+
+### Step 7: Fix Code Quality Issues
+
+**Run additional quality checks and fix all issues:**
 
 ```bash
 # Linting - auto-fix what's possible
@@ -154,7 +223,7 @@ uv run bandit -r src 2>/dev/null || echo "Bandit not installed"
 - Undefined names → Import missing modules
 - Security issues → Use secure functions/patterns
 
-### Step 7: E2E Verification (if applicable)
+### Step 8: E2E Verification (if applicable)
 
 **For API projects - test with real requests:**
 ```bash
@@ -176,7 +245,7 @@ SELECT COUNT(*) FROM target_table WHERE created_at > NOW() - INTERVAL '1 hour';
 -- If no data, debug the pipeline
 ```
 
-### Step 8: Final Verification Loop
+### Step 9: Final Verification Loop
 
 **Run everything one more time to ensure all fixes work together:**
 
@@ -185,13 +254,28 @@ SELECT COUNT(*) FROM target_table WHERE created_at > NOW() - INTERVAL '1 hour';
 uv run pytest -q  # Quiet mode for quick pass/fail
 uv run python src/main.py  # Or whatever the main entry point is
 mcp__ide__getDiagnostics()  # Must return zero issues
+coderabbit --prompt-only --type uncommitted  # Final CodeRabbit check
 ```
 
 **If anything fails:** Go back to the specific step and fix it
 
+**Success criteria:**
+- All tests passing
+- No IDE diagnostics errors
+- No critical/high CodeRabbit findings
+- Program executes successfully
+- Coverage meets threshold (80%+)
+
 ## Store Progress in Cipher
 
-**After fixing each major issue:**
+**After fixing each CodeRabbit finding:**
+```
+mcp__cipher__ask_cipher("Fixed CodeRabbit finding: [severity] - [issue description] in [file]:line.
+Solution: [what was done]
+Impact: [what improved]")
+```
+
+**After fixing each test failure:**
 ```
 mcp__cipher__ask_cipher("Fixed: [issue description] in [file].
 Solution: [what was done]
@@ -202,6 +286,7 @@ Tests now passing: [test names]")
 ```
 mcp__cipher__ask_cipher("Verification complete for [feature/plan].
 All tests passing, coverage at X%, program runs successfully.
+CodeRabbit findings: X critical, Y high (all resolved).
 Key fixes applied: [list of major fixes]")
 ```
 
@@ -210,3 +295,24 @@ Key fixes applied: [list of major fixes]")
 **Fix immediately** | **Test after each fix** | **No "should work" - verify it works** | **Keep fixing until green**
 
 **Success = Everything works. No exceptions.**
+
+## CodeRabbit Integration Workflow
+
+**Recommended iterative cycle for feature implementation:**
+
+1. Implement feature as requested
+2. Run `coderabbit --prompt-only` in background
+3. Continue with tests while CodeRabbit analyzes
+4. Check CodeRabbit completion: "Is CodeRabbit finished running?"
+5. Create TodoWrite list for each finding systematically
+6. Fix issues iteratively until critical/high issues resolve
+7. Re-run CodeRabbit to verify fixes
+8. Repeat until quality gate passes
+
+**Optimization tips:**
+- Work on smaller feature branches to reduce analysis time
+- Use `--type uncommitted` for work-in-progress changes
+- Use `--type committed` for pre-merge final review
+- Specify `--base <branch>` when working on feature branches
+- Run in background to keep Claude responsive during analysis
+- CodeRabbit catches complex issues (race conditions, memory leaks) that standard linters miss

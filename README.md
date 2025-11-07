@@ -18,15 +18,15 @@
 
 ---
 
-## ⚡ What's Inside
+## 📦 What's Inside
 
-**Claude CodePro is token-optimized and built using latest techniques such as the new skills feature:**
+<img src="https://www.claude-code.pro/assets/ide-screenshot-Bg67Az9Q.png" alt="IDE Screenshot" width="600">
 
 ### 📋 Token-Optimized Spec-Driven Workflow via Slash Commands
 - `/plan` - Based on your input asks the right questions → Detailed spec with exact code (Opus 4.1)
 - `/implement` - Execute spec with mandatory TDD → Auto-manages context when full (Sonnet 4.5)
 - `/remember` - Stores learnings in cross-session memory → Continue after /clear (Sonnet 4.5)
-- `/verify` - E2E spec verification → All tests, data integrity, quality checks (Sonnet 4.5)
+- `/verify` - E2E spec verification with CodeRabbit AI review → All tests, quality gates, security (Sonnet 4.5)
 
 ### 🎨 Auto-Enforce Best Practices and Standards via Skills
 - **Testing Skills** - TDD, test writing, anti-patterns, debugging, verification, code review
@@ -44,6 +44,7 @@
 ### 🛠️ Testing and Quality via Automated Tool Installation
 - **uv/pytest** - Unit and integration testing with uv
 - **Newman** - API end-to-end testing with Postman collections
+- **CodeRabbit CLI** - AI-powered code review for race conditions, security, best practices
 - **Qlty** - Automated code quality hooks
 - **Basedpyright** - Type checking with enhanced features
 - **Ruff** - Fast Python linter and formatter
@@ -51,12 +52,12 @@
 ### 🐳 Automated Dev Container Setup (VS Code / Cursor / Windsurf)
 - **Integrated Features** - Zsh, Node.js, Docker-in-Docker, uv, ruff, basedpyright, git, fzf
 - **IDE Extensions** - Python, Docker, SQL, testing, formatting, and development tools
-- **CLI Tools** - qlty, Claude Code, Statusline, dotenvx, Cipher, Newman
+- **CLI Tools** - qlty, Claude Code, Statusline, dotenvx, CodeRabbit, Cipher, Newman
 - **Local Database** - Local PostgreSQL instance on port 5433 for development and testing
 
 ---
 
-## 🎯 What Makes This Different
+## ⚖️ What Makes This Different
 
 ### Compared to Other Spec-Driven Frameworks (OpenSpec, SpecKit, AgentOS):
 
@@ -99,10 +100,10 @@
 
 ### ⚙️ Configuration
 
-- In the launched terminal, run `cc` and finish the Claude Code Container setup
-- Run `/config` to set auto-connect to IDE to true and disable auto-compaction, enable verbose output
-- Run `/ide` to connect to VS Code diagnostics and make sure all MCP servers for `/mcp` are online
-- You can click `USAGE` in the lower bar to start a split terminal and monitor usage with `/usage`
+- In the launched terminal, run `cc` to finish CC Setup, then `cr` to finish CodeRabbit setup
+- In CC, run `/config` to set auto-connect to IDE to true and disable auto-compaction, enable verbose output
+- In CC, run `/ide` to connect to VS Code diagnostics and make sure all MCP servers for `/mcp` are online
+- In VS Code, click `START` in the lower bar to start a split terminal and monitor CC usage with `/usage`
 - Open Claude Code in the IDE Terminal, Extension or an external Terminal like Warp with the `cc` command
 
 ### 👣 First Steps
@@ -110,28 +111,16 @@
 - Start with `/plan` - Provide your input and it will ask clarifying questions to create a spec
 - Use `/implement` to execute the spec with automatic TDD, best practices and context management
 - When context fills, `/remember` automatically updates your plan and stores learnings
-- After spec completion, run `/verify` to ensure all changes are working and tests pass
+- After spec completion, run `/verify` to run CodeRabbit AI review, all tests, and quality checks
 - Watch as CC automatically applies best practices, testing, and quality control with every step
 
 ---
 
 ## 🎬 Masterclass Coming Soon!
 
-**If you want to dive deeper into the setup and advanced usage of this framework, check out the upcoming video masterclass with 12 comprehensive modules and 50+ detailed lessons:**
+**If you want to dive deeper into the setup and advanced usage of Claude CodePro, check out the upcoming video masterclass with 12 comprehensive modules where we do a deep-dive into all important topics:**
 
 ### ➡️ [www.claude-code.pro](https://www.claude-code.pro)
-
-### 💡 What you'll learn:
-- 🐳 Details about the automated dev container setup
-- 🎨 Professional IDE configuration techniques
-- ⌨️ Optimal terminal experience with voice input
-- 🔍 Semantic code search with vector databases
-- 🔌 MCP integration with context-optimization techniques
-- 🧠 Cross-session memory layer that scales with your codebase
-- ✅ Built-in quality control with hooks and CLI tools
-- 📋 Context-optimized workflow (/plan → /implement → /remember → /verify)
-- 🧪 Test-driven development methodology and enforcement
-- 🚀 Applying all techniques to a real-world project
 
 ---
 
