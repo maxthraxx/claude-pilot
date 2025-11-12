@@ -1,3 +1,7 @@
+---
+name: Testing Debugging
+description: Apply systematic four-phase debugging methodology (root cause investigation, pattern analysis, hypothesis testing, implementation) that ensures thorough understanding before attempting solutions, preventing random fixes and reducing debugging time from hours to minutes. Use this skill when encountering any test failures in test suites (Jest, pytest, RSpec, JUnit, Go testing), when production bugs are reported or discovered, when code produces unexpected output or behavior different from requirements, when experiencing build failures or compilation errors, when integration tests fail due to component interaction issues, when performance problems or slowdowns are detected, when encountering race conditions, timing issues, or intermittent failures, when error messages or stack traces appear in logs or console output, when refactoring causes existing tests to fail, when you've already attempted one or more fixes that didn't resolve the issue, when deployment or CI/CD pipelines fail, when you're tempted to make a "quick fix" without understanding root cause, when multiple symptoms appear across different parts of the system, when debugging multi-component systems with layered architectures (API, service layer, database, external services), or when previous debugging attempts have taken longer than expected without resolution.
+---
 
 # Systematic Debugging
 
