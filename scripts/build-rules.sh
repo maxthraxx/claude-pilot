@@ -72,7 +72,7 @@ load_rules() {
             rule_id=$(basename "$md_file" .md)
             RULES["$rule_id"]=$(cat "$md_file")
             log_success "Loaded $category/$(basename "$md_file")"
-            ((rule_count++))
+            ((rule_count++)) || true
         done < <(find "$category_dir" -maxdepth 1 -name "*.md" -print0 2>/dev/null)
     done
 
@@ -107,7 +107,7 @@ discover_skills() {
 
         AVAILABLE_SKILLS+=("$skill_name|${description:-No description}")
         log_success "Discovered @$skill_name"
-        ((skill_count++))
+        ((skill_count++)) || true
     done < <(find "$extended_dir" -maxdepth 1 -name "*.md" -print0 2>/dev/null | sort -z)
 
     log_info "Total skills discovered: $skill_count"
@@ -271,7 +271,7 @@ build_commands() {
             log_success "Generated ${cmd_name}.md"
         fi
 
-        ((command_count++))
+        ((command_count++)) || true
     done < <(parse_yaml_commands)
 
     echo "$command_count"
@@ -305,7 +305,7 @@ build_skills() {
         echo "${RULES[$rule_id]}" > "$skill_file"
 
         log_success "Generated $rule_id/SKILL.md"
-        ((skill_count++))
+        ((skill_count++)) || true
     done < <(find "$extended_dir" -maxdepth 1 -name "*.md" -print0 2>/dev/null)
 
     echo "$skill_count"
