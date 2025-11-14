@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # =============================================================================
-# Claude CodePro Installation Script
-# Installs Claude CodePro directly on host machine (no container required)
+# Claude CodePro Installation & Update Script
+# Idempotent: Safe to run multiple times (install + update)
 # Supports: macOS, Linux, WSL
 # =============================================================================
 
@@ -135,6 +135,78 @@ install_file() {
         return 0
     else
         print_warning "Failed to install $repo_file"
+        return 1
+    fi
+}
+
+# Merge MCP configuration
+merge_mcp_config() {
+    local repo_file=$1
+    local dest_file=$2
+    local temp_file="${TEMP_DIR}/mcp-temp.json"
+
+    print_status "Installing MCP configuration..."
+
+    # Download the new config
+    if ! download_file "$repo_file" "$temp_file"; then
+        print_warning "Failed to download $repo_file"
+        return 1
+    fi
+
+    # If destination doesn't exist, just copy it
+    if [[ ! -f "$dest_file" ]]; then
+        cp "$temp_file" "$dest_file"
+        print_success "Created $repo_file"
+        return 0
+    fi
+
+    # Merge the configurations using Python
+    python3 <<EOF
+import json
+import sys
+
+try:
+    # Load existing config
+    with open('$dest_file', 'r') as f:
+        existing = json.load(f)
+
+    # Load new config
+    with open('$temp_file', 'r') as f:
+        new = json.load(f)
+
+    # Detect server key (mcpServers for .mcp.json, servers for .mcp-funnel.json)
+    server_key = 'mcpServers' if 'mcpServers' in new else 'servers'
+
+    # Ensure server key exists
+    if server_key not in existing:
+        existing[server_key] = {}
+
+    # Merge new servers into existing (don't overwrite existing servers)
+    for server_name, server_config in new.get(server_key, {}).items():
+        if server_name not in existing[server_key]:
+            existing[server_key][server_name] = server_config
+
+    # Merge other top-level keys (for .mcp-funnel.json)
+    for key in ['exposeTools', 'alwaysVisibleTools', 'exposeCoreTools']:
+        if key in new and key not in existing:
+            existing[key] = new[key]
+
+    # Write merged config
+    with open('$dest_file', 'w') as f:
+        json.dump(existing, f, indent=2)
+        f.write('\n')
+
+    sys.exit(0)
+except Exception as e:
+    print(f"Error merging MCP config: {e}", file=sys.stderr)
+    sys.exit(1)
+EOF
+
+    if [[ $? -eq 0 ]]; then
+        print_success "Merged MCP servers (preserved existing configuration)"
+        return 0
+    else
+        print_warning "Failed to merge MCP configuration"
         return 1
     fi
 }
@@ -293,48 +365,38 @@ install_dotenvx() {
 # Shell Configuration
 # -----------------------------------------------------------------------------
 
+add_shell_alias() {
+    local shell_file=$1
+    local alias_cmd=$2
+    local shell_name=$3
+
+    [[ ! -f "$shell_file" ]] && return
+
+    if grep -q "# Claude CodePro alias" "$shell_file"; then
+        sed -i.bak '/# Claude CodePro alias/,/^alias cc=/c\
+# Claude CodePro alias\
+'"$alias_cmd" "$shell_file" && rm -f "${shell_file}.bak"
+        print_success "Updated alias in $shell_name"
+    elif ! grep -q "^alias cc=" "$shell_file"; then
+        printf "\n# Claude CodePro alias\n%s\n" "$alias_cmd" >> "$shell_file"
+        print_success "Added alias to $shell_name"
+    else
+        print_success "Alias cc already exists in $shell_name (skipped)"
+    fi
+}
+
 add_cc_alias() {
-    print_status "Adding cc alias to shell configurations..."
+    print_status "Configuring cc alias in shell configurations..."
 
-    local alias_line="alias cc=\"cd '$PROJECT_DIR' && bash scripts/build-rules.sh && clear && dotenvx run -- claude\""
+    local bash_alias="alias cc=\"cd '$PROJECT_DIR' && bash scripts/build-rules.sh && clear && dotenvx run -- claude\""
+    local fish_alias="alias cc='cd $PROJECT_DIR; and bash scripts/build-rules.sh; and clear; and dotenvx run -- claude'"
 
-    # Add to .bashrc
-    if [[ -f "$HOME/.bashrc" ]]; then
-        if ! grep -q "alias cc=" "$HOME/.bashrc"; then
-            {
-                echo ""
-                echo "# Claude CodePro alias"
-                echo "$alias_line"
-            } >> "$HOME/.bashrc"
-            print_success "Added alias to .bashrc"
-        fi
-    fi
+    add_shell_alias "$HOME/.bashrc" "$bash_alias" ".bashrc"
+    add_shell_alias "$HOME/.zshrc" "$bash_alias" ".zshrc"
 
-    # Add to .zshrc
-    if [[ -f "$HOME/.zshrc" ]]; then
-        if ! grep -q "alias cc=" "$HOME/.zshrc"; then
-            {
-                echo ""
-                echo "# Claude CodePro alias"
-                echo "$alias_line"
-            } >> "$HOME/.zshrc"
-            print_success "Added alias to .zshrc"
-        fi
-    fi
-
-    # Add to fish config
-    if [[ -d "$HOME/.config/fish" ]]; then
+    if command -v fish &> /dev/null; then
         mkdir -p "$HOME/.config/fish"
-        local fish_alias="alias cc='cd $PROJECT_DIR; and bash scripts/build-rules.sh; and clear; and dotenvx run -- claude'"
-
-        if [[ ! -f "$HOME/.config/fish/config.fish" ]] || ! grep -q "alias cc=" "$HOME/.config/fish/config.fish"; then
-            {
-                echo ""
-                echo "# Claude CodePro alias"
-                echo "$fish_alias"
-            } >> "$HOME/.config/fish/config.fish"
-            print_success "Added alias to fish config"
-        fi
+        add_shell_alias "$HOME/.config/fish/config.fish" "$fish_alias" "fish config"
     fi
 }
 
@@ -370,21 +432,10 @@ main() {
     echo ""
     echo ""
 
-    # Check for existing Claude installation
-    if [[ -d "$PROJECT_DIR/.claude" ]]; then
-        print_warning ".claude already exists"
-        read -r -p "Overwrite? (y/n): " -n 1 < /dev/tty
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Installation cancelled"
-            exit 0
-        fi
-    fi
-
     # Install Claude CodePro files
     print_section "Installing Claude CodePro Files"
 
-    # Download .claude directory first
+    # Download .claude directory (update existing files, preserve settings.local.json)
     print_status "Downloading .claude files..."
     local files
     files=$(get_repo_files ".claude")
@@ -395,19 +446,13 @@ main() {
             if [[ -n "$file_path" ]]; then
                 # Skip Python hook if Python not selected
                 if [[ "$INSTALL_PYTHON" =~ ^[Yy]$ ]] || [[ "$file_path" != *"file_checker_python.sh"* ]]; then
-                    # Handle settings.local.json specially
-                    if [[ "$file_path" == *"settings.local.json"* ]]; then
-                        if [[ -f "$PROJECT_DIR/.claude/settings.local.json" ]]; then
-                            print_warning "settings.local.json already exists"
-                            echo "This file contains Claude Code configuration (permissions, hooks, MCP servers)."
-                            echo "Overwriting will replace your current configuration with Claude CodePro defaults."
-                            read -r -p "Overwrite settings.local.json? (y/n): " -n 1 < /dev/tty
-                            echo
-                            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                                print_warning "Skipped settings.local.json (keeping existing)"
-                                continue
-                            fi
-                        fi
+                    # Ask about settings.local.json if it already exists
+                    if [[ "$file_path" == *"settings.local.json"* ]] && [[ -f "$PROJECT_DIR/.claude/settings.local.json" ]]; then
+                        print_warning "settings.local.json already exists"
+                        echo "This file may contain new features in this version."
+                        read -r -p "Overwrite settings.local.json? (y/n): " -n 1 < /dev/tty
+                        echo
+                        [[ ! $REPLY =~ ^[Yy]$ ]] && print_success "Kept existing settings.local.json" && continue
                     fi
 
                     local dest_file="${PROJECT_DIR}/${file_path}"
@@ -461,9 +506,8 @@ with open('$PROJECT_DIR/.claude/settings.local.json', 'w') as f:
         echo ""
     fi
 
-    print_status "Installing MCP configuration..."
-    install_file ".mcp.json" "$PROJECT_DIR/.mcp.json"
-    install_file ".mcp-funnel.json" "$PROJECT_DIR/.mcp-funnel.json"
+    merge_mcp_config ".mcp.json" "$PROJECT_DIR/.mcp.json"
+    merge_mcp_config ".mcp-funnel.json" "$PROJECT_DIR/.mcp-funnel.json"
     echo ""
 
     mkdir -p "$PROJECT_DIR/scripts"
@@ -521,28 +565,43 @@ with open('$PROJECT_DIR/.claude/settings.local.json', 'w') as f:
     echo ""
 
     # Success message
-    print_section "Installation Complete!"
+    print_section "🎉 Installation Complete!"
 
-    echo -e "${GREEN}Claude CodePro has been successfully installed!${NC}"
     echo ""
-    echo -e "${YELLOW}Next Steps:${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}  Claude CodePro has been successfully installed! 🚀${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "1. Reload your shell or run: source ~/.bashrc (or ~/.zshrc)"
-    echo "2. Run: cc"
-    echo "3. Configure Claude Code with /config:"
-    echo "   - Set 'Auto-connect to IDE' = true"
-    echo "   - Set 'Auto-compact' = false"
-    echo "4. Verify setup:"
-    echo "   /ide     # Connect to VS Code"
-    echo "   /mcp     # Check MCP servers"
-    echo "   /context # Verify context usage"
-    echo "5. Start building:"
-    echo "   /quick     # Fast development"
-    echo "   /plan      # Spec-driven workflow"
-    echo "   /implement # Execute with TDD"
-    echo "   /verify    # Quality checks"
+    echo -e "${BLUE}What's next?${NC} Follow these steps to get started:"
     echo ""
+    echo -e "${YELLOW}STEP 1: Start Claude Code${NC}"
+    echo "   → Reload your shell: source ~/.bashrc  (or ~/.zshrc for zsh)"
+    echo "   → Launch Claude Code: cc"
+    echo ""
+    echo -e "${YELLOW}STEP 2: Configure Claude Code${NC}"
+    echo "   → In Claude Code, run: /config"
+    echo "   → Set 'Auto-connect to IDE' = true"
+    echo "   → Set 'Auto-compact' = false"
+    echo ""
+    echo -e "${YELLOW}STEP 3: Verify Everything Works${NC}"
+    echo "   → Run: /ide        (Connect to VS Code diagnostics)"
+    echo "   → Run: /mcp        (Verify all MCP servers are online)"
+    echo "   → Run: /context    (Check context usage is below 20%)"
+    echo ""
+    echo -e "${YELLOW}STEP 4: Start Building!${NC}"
+    echo ""
+    echo -e "   ${BLUE}For quick changes:${NC}"
+    echo "   → /quick           Fast development for fixes and refactoring"
+    echo ""
+    echo -e "   ${BLUE}For complex features:${NC}"
+    echo "   → /plan            Create detailed spec with TDD"
+    echo "   → /implement       Execute spec with mandatory testing"
+    echo "   → /verify          Run end-to-end quality checks"
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${GREEN}📚 Learn more: https://www.claude-code.pro${NC}"
+    echo -e "${GREEN}💬 Questions? https://github.com/maxritter/claude-codepro/issues${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 }
 

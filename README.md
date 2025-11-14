@@ -72,15 +72,13 @@ Start shipping systematically with Spec-Driven Development, Skills, TDD, Semanti
 
 ## 🚀 Getting Started
 
-### 📥 Installation
-
-Run this one-liner in any existing project directory that you want to enable Claude CodePro in:
+**Installation & Updates**: Run this one-liner in any project directory for fresh install or to update to the latest version:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/main/scripts/install.sh | bash
 ```
 
-It will automatically install all dependencies and ask you a few setup questions.
+It will ask you a few questions and set up everything automatically, then show you how to get started.
 
 ---
 
