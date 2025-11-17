@@ -26,6 +26,10 @@ Run this shell command in **any project directory** for a **fresh install** or t
 curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.3.8/scripts/install.sh | bash
 ```
 
+**Recommended:** Install via Dev Container for complete isolation from your host system. The installer will offer to set up the dev container configuration automatically.
+
+**Alternative:** Install directly on your host system (may interfere with existing packages and settings)
+
 ---
 
 ## 📦 What's Inside
@@ -67,6 +71,7 @@ curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.3.8/scri
 
 ### 🏗️ One-Command Installation
 
+- **Dev Container Support** - Isolated development environment with pre-configured tools and extensions
 - **Automated Setup Script** - Installs and configures everything in one command
 - **Global Tools** - Python tools, qlty, Claude Code, Cipher, Newman installed globally
 - **Shell Integration** - Auto-configures bash, zsh, and fish with `ccp` alias

@@ -113,6 +113,7 @@ LIB_MODULES=(
 	"shell.sh"
 	"migration.sh"
 	"setup-env.sh"
+	"devcontainer.sh"
 )
 
 # Download library modules
@@ -146,6 +147,8 @@ source "$PROJECT_DIR/scripts/lib/dependencies.sh"
 source "$PROJECT_DIR/scripts/lib/shell.sh"
 # shellcheck source=/dev/null
 source "$PROJECT_DIR/scripts/lib/migration.sh"
+# shellcheck source=/dev/null
+source "$PROJECT_DIR/scripts/lib/devcontainer.sh"
 
 # =============================================================================
 # Setup cleanup trap
@@ -250,6 +253,9 @@ main() {
 
 	print_status "Installing into: $PROJECT_DIR"
 	echo ""
+
+	# Offer dev container setup early (exits if user chooses container)
+	offer_devcontainer_setup
 
 	# Run migration if needed (must be before file installation)
 	run_migration
