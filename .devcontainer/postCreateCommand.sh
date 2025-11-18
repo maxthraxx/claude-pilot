@@ -34,24 +34,20 @@ echo "✓ Shell configuration complete"
 echo ""
 
 # =============================================================================
-# Run Claude CodePro Installation
+# Dev Container Setup Complete
 # =============================================================================
 
-echo "Starting Claude CodePro installation..."
-echo ""
-
-# Check if install script exists
-if [[ ! -f "scripts/install.py" ]]; then
-    echo "ERROR: scripts/install.py not found"
-    echo "Please ensure the repository is properly cloned"
-    exit 1
-fi
-
-# Run installation in non-interactive mode
-# Skip environment setup initially (user can run manually later)
-python3 scripts/install.py --non-interactive --local
-
-echo ""
 echo "=================================================="
 echo "Dev Container Setup Complete!"
+echo "=================================================="
+echo ""
+echo "To install Claude CodePro, run the installation command"
+echo "from the project README with your desired version."
+echo ""
+echo "For the latest version:"
+echo "  curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/main/scripts/install.py -o /tmp/claude-codepro-install.py && python3 /tmp/claude-codepro-install.py"
+echo ""
+echo "For a specific version (e.g., v2.4.1):"
+echo "  curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.4.1/scripts/install.py -o /tmp/claude-codepro-install.py && python3 /tmp/claude-codepro-install.py"
+echo ""
 echo "=================================================="

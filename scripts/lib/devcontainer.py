@@ -38,6 +38,7 @@ def is_in_devcontainer() -> bool:
 def install_devcontainer(
     project_dir: Path,
     config: downloads.DownloadConfig,
+    container_name: str,
 ) -> None:
     """
     Install dev container configuration.
@@ -47,6 +48,7 @@ def install_devcontainer(
     Args:
         project_dir: Project directory path
         config: Download configuration
+        container_name: Name for the container and workspace
     """
     ui.print_status("Installing dev container configuration...")
 
@@ -63,6 +65,18 @@ def install_devcontainer(
         else:
             ui.print_warning(f"Failed to download {file_path}")
 
+    # Create slug from container name (lowercase, replace spaces with hyphens)
+    container_slug = container_name.lower().replace(" ", "-").replace("_", "-")
+
+    # Update devcontainer.json with custom name
+    devcontainer_json = project_dir / ".devcontainer" / "devcontainer.json"
+    if devcontainer_json.exists():
+        content = devcontainer_json.read_text()
+        content = content.replace("{{PROJECT_NAME}}", container_name)
+        content = content.replace("{{PROJECT_SLUG}}", container_slug)
+        devcontainer_json.write_text(content)
+
+    # Make postCreateCommand.sh executable
     post_create = project_dir / ".devcontainer" / "postCreateCommand.sh"
     if post_create.exists():
         post_create.chmod(0o755)
@@ -123,7 +137,21 @@ def offer_devcontainer_setup(
         print("")
         return
 
-    install_devcontainer(project_dir, config)
+    # Ask for container name
+    default_name = project_dir.name
+    print(f"Enter a name for your dev container (default: {default_name}):")
+
+    if sys.stdin.isatty():
+        container_name = input("Container name: ").strip()
+    else:
+        container_name = input("Container name: ").strip()
+
+    if not container_name:
+        container_name = default_name
+
+    print("")
+
+    install_devcontainer(project_dir, config, container_name)
     print("")
 
     ui.print_section("Dev Container Next Steps")
