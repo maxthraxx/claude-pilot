@@ -28,7 +28,7 @@ curl -sSL https://raw.githubusercontent.com/maxritter/claude-codepro/v2.3.12/scr
 
 **Recommended:** Install via Dev Container for complete isolation from your host system. The installer will offer to set up the dev container configuration automatically.
 
-**Alternative:** Install directly on your host system (may interfere with existing packages and settings)
+**Alternative:** Install directly on your host system. This may interfere with existing packages and settings, therefore it is not recommend unless you know what to do.
 
 ---
 
