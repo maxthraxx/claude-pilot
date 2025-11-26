@@ -1,5 +1,5 @@
 ---
-description: Initialize project context and indexing
+description: Initialize project context and indexing with Claude CodePro
 ---
 # SETUP MODE: Project Initialization and Context Building
 

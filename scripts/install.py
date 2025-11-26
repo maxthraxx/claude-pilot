@@ -222,6 +222,12 @@ def install_claude_files(project_dir: Path, config, install_python: str, local_m
     claude_files = downloads.get_repo_files(".claude", config)
 
     for file_path in claude_files:
+        if not file_path:
+            continue
+
+        if "settings.local.json" in file_path and "settings.local.template.json" not in file_path:
+            continue
+
         if install_python.lower() not in ["y", "yes"]:
             if "file_checker_python.py" in file_path:
                 continue

@@ -227,6 +227,7 @@ data/
 # Claude Code
 settings.local.json
 .claude/CLAUDE.md
+.claude/rules/custom/project.md
 CLAUDE.local.md
 
 # Kiro

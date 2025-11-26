@@ -1,5 +1,5 @@
 ---
-description: Cross-session persistent memory storage for learnings within a session
+description: Cross-session persistent memory storage with Claude CodePro
 ---
 # REMEMBER: Session Learnings with Structured Knowledge
 

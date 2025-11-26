@@ -1,5 +1,5 @@
 ---
-description: Run tests and fix issues end-to-end
+description: Run tests and fix issues end-to-end with Claude CodePro
 ---
 # VERIFY MODE: Verification and Quality Assurance Process with Code Review
 

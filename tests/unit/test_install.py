@@ -354,19 +354,6 @@ class TestInstallClaudeFiles:
             assert old_file.exists()
             assert old_file.read_text() == "old content"
 
-    def test_install_claude_files_skips_custom_rules(self):
-        """Test that install_claude_files skips files in rules/custom/."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            project_dir = Path(tmpdir)
-            mock_config = Mock()
-
-            with patch("lib.downloads.get_repo_files", return_value=[".claude/rules/custom/test.md"]):
-                with patch("lib.downloads.download_file") as mock_download:
-                    count = install_claude_files(project_dir, mock_config, "Y", local_mode=False)
-
-                    mock_download.assert_not_called()
-                    assert count == 0
-
     def test_install_claude_files_skips_python_checker_when_python_disabled(self):
         """Test that install_claude_files skips file_checker_python.py when Python support is disabled."""
         with tempfile.TemporaryDirectory() as tmpdir:

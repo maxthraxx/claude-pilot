@@ -1,5 +1,5 @@
 ---
-description: Execute implementation plans in batches
+description: Execute implementation plans in batches with Claude CodePro
 ---
 # IMPLEMENT MODE: Task Execution with Mandatory Context Gathering
 

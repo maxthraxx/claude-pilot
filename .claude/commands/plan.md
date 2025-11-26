@@ -1,5 +1,5 @@
 ---
-description: Create structured implementation plans
+description: Create structured implementation plans with Claude CodePro
 ---
 # PLAN MODE: Six-Phase Planning Discovery Process
 
