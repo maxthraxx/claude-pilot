@@ -55,13 +55,8 @@ if [ "$OS" = "darwin" ] && command -v xattr &> /dev/null; then
     xattr -d com.apple.quarantine "$INSTALL_PATH" 2>/dev/null || true
 fi
 
-# Run installer with stdin from /dev/tty for interactive input when piped
-# Fall back to non-interactive mode if /dev/tty is not available
-if [ -e /dev/tty ]; then
-    "$INSTALL_PATH" install "$@" < /dev/tty
-else
-    "$INSTALL_PATH" install --non-interactive "$@"
-fi
+# Run installer (handles TTY input internally for piped execution)
+"$INSTALL_PATH" install "$@"
 
 # Clean up
 rm -f "$INSTALL_PATH"

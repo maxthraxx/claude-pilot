@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import getpass
+import os
+import sys
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any, Iterator, TextIO
 
 from rich.console import Console as RichConsole
 from rich.panel import Panel
@@ -51,6 +53,24 @@ class ProgressTask:
         self._progress.update(self._task_id, completed=completed)
 
 
+def _get_tty_input() -> TextIO:
+    """Get a file handle for TTY input, even when stdin is piped.
+
+    When running via 'curl | bash', stdin is consumed by the pipe.
+    This function opens /dev/tty directly to get interactive input.
+    Falls back to sys.stdin if /dev/tty is not available.
+    """
+    if sys.stdin.isatty():
+        return sys.stdin
+
+    # Try to open /dev/tty for interactive input
+    try:
+        return open("/dev/tty", "r")  # noqa: SIM115
+    except OSError:
+        # /dev/tty not available (e.g., no controlling terminal)
+        return sys.stdin
+
+
 class Console:
     """Console wrapper for Rich with simple input prompts."""
 
@@ -59,6 +79,19 @@ class Console:
         self._non_interactive = non_interactive
         self._current_step = 0
         self._total_steps = 0
+        self._tty: TextIO | None = None
+
+    def _get_input_stream(self) -> TextIO:
+        """Get the input stream for interactive prompts."""
+        if self._tty is None:
+            self._tty = _get_tty_input()
+        return self._tty
+
+    def close(self) -> None:
+        """Close TTY handle if opened."""
+        if self._tty is not None and self._tty is not sys.stdin:
+            self._tty.close()
+            self._tty = None
 
     @property
     def non_interactive(self) -> bool:
@@ -282,8 +315,9 @@ class Console:
         self._console.print(f"  [bold cyan]?[/bold cyan] {message} [{default_str}]: ", end="")
 
         try:
-            response = input().strip().lower()
-        except (EOFError, KeyboardInterrupt):
+            tty = self._get_input_stream()
+            response = tty.readline().strip().lower()
+        except (EOFError, KeyboardInterrupt, OSError):
             self._console.print()
             return default
 
@@ -303,8 +337,9 @@ class Console:
         self._console.print(f"  Enter choice [1-{len(choices)}]: ", end="")
 
         try:
-            response = input().strip()
-        except (EOFError, KeyboardInterrupt):
+            tty = self._get_input_stream()
+            response = tty.readline().strip()
+        except (EOFError, KeyboardInterrupt, OSError):
             self._console.print()
             return choices[0] if choices else ""
 
@@ -330,8 +365,9 @@ class Console:
         self._console.print(prompt, end="")
 
         try:
-            response = input().strip()
-        except (EOFError, KeyboardInterrupt):
+            tty = self._get_input_stream()
+            response = tty.readline().strip()
+        except (EOFError, KeyboardInterrupt, OSError):
             self._console.print()
             return default
 
@@ -346,8 +382,10 @@ class Console:
         self._console.print(f"  [bold cyan]?[/bold cyan] {message}: ", end="")
 
         try:
-            return getpass.getpass(prompt="")
-        except (EOFError, KeyboardInterrupt):
+            # getpass reads from /dev/tty by default, but we pass stream for consistency
+            tty = self._get_input_stream()
+            return getpass.getpass(prompt="", stream=tty)
+        except (EOFError, KeyboardInterrupt, OSError):
             self._console.print()
             return ""
 
