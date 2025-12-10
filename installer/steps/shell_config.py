@@ -71,6 +71,42 @@ def alias_exists_in_file(config_file: Path) -> bool:
     return "alias ccp" in content or CCP_ALIAS_MARKER in content
 
 
+def remove_old_alias(config_file: Path) -> bool:
+    """Remove old ccp alias from config file to allow clean update."""
+    if not config_file.exists():
+        return False
+
+    content = config_file.read_text()
+    if CCP_ALIAS_MARKER not in content and "alias ccp" not in content:
+        return False
+
+    lines = content.split("\n")
+    new_lines = []
+    skip_next = False
+
+    for line in lines:
+        if CCP_ALIAS_MARKER in line:
+            skip_next = True
+            continue
+        if skip_next and ("alias ccp" in line or line.strip().startswith("if [")):
+            # Skip the alias line and any continuation
+            if line.rstrip().endswith("'"):
+                skip_next = False
+            continue
+        skip_next = False
+        new_lines.append(line)
+
+    # Also remove any standalone alias ccp lines without marker
+    final_lines = []
+    for line in new_lines:
+        if line.strip().startswith("alias ccp="):
+            continue
+        final_lines.append(line)
+
+    config_file.write_text("\n".join(final_lines))
+    return True
+
+
 def _configure_zsh_fzf(zshrc: Path, ui) -> bool:
     """Configure fzf in zshrc (idempotent)."""
     if not zshrc.exists():
@@ -219,10 +255,12 @@ class ShellConfigStep(BaseStep):
             if not config_file.exists():
                 continue
 
-            if alias_exists_in_file(config_file):
+            # Always remove old alias first to ensure clean update
+            alias_existed = alias_exists_in_file(config_file)
+            if alias_existed:
+                remove_old_alias(config_file)
                 if ui:
-                    ui.info(f"Alias already exists in {config_file.name}")
-                continue
+                    ui.info(f"Updating alias in {config_file.name}")
 
             shell_type = "fish" if "fish" in config_file.name else "bash"
             alias_line = get_alias_line(shell_type)
@@ -232,7 +270,10 @@ class ShellConfigStep(BaseStep):
                     f.write(f"\n{alias_line}\n")
                 modified_files.append(str(config_file))
                 if ui:
-                    ui.success(f"Added alias to {config_file.name}")
+                    if alias_existed:
+                        ui.success(f"Updated alias in {config_file.name}")
+                    else:
+                        ui.success(f"Added alias to {config_file.name}")
             except (OSError, IOError) as e:
                 if ui:
                     ui.warning(f"Could not modify {config_file.name}: {e}")
