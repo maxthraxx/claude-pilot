@@ -4,8 +4,7 @@ import {
   Plug2,
   ShieldCheck,
   Container,
-  Sparkles,
-  Code2
+  Sparkles
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
@@ -54,7 +53,7 @@ const insideItems: InsideItem[] = [
       "Qlty - Post-edit formatting and linting",
       "TDD Enforcer - Pre-edit test requirement",
       "Context Monitor - Usage warnings at 85%/95%",
-      "Python Quality - uv, ruff, mypy, basedpyright",
+      "LSP Servers - Python (Pyright) & TypeScript",
     ],
   },
   {
@@ -75,16 +74,6 @@ const insideItems: InsideItem[] = [
       "Backend and frontend standards skills",
       "Testing guidelines and anti-patterns",
       "Invoked automatically when relevant",
-    ],
-  },
-  {
-    icon: Code2,
-    title: "LSP Servers",
-    items: [
-      "Python (Pyright) - Type info, definitions, references",
-      "TypeScript - Full language server support",
-      "Go to definition, find references, hover info",
-      "Call hierarchy and incoming/outgoing calls",
     ],
   },
 ];
