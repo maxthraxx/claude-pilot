@@ -30,6 +30,10 @@ const faqs: FaqItem[] = [
     question: "What MCP servers are included?",
     answer: "Claude CodePro includes Claude Mem (persistent memory), Claude Context (semantic search), Tavily (web search), Ref (code context retrieval), and MCP Lazy Loading (improves context). All are pre-configured and ready to use.",
   },
+  {
+    question: "Why shouldn't I use /compact?",
+    answer: "Claude CodePro is designed to use the full 200k context window. When context fills up, use /clear instead of /compact. Claude Mem automatically injects relevant context from your previous session when you continue with /implement. This ensures maximum context utilization with seamless session continuity.",
+  },
 ];
 
 const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => (
