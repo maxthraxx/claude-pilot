@@ -107,6 +107,11 @@ class FinalizeStep(BaseStep):
                     "     to generate documentation. Use mcp-cli to interact with them.",
                 ),
                 (
+                    "Claude MEM Dashboard (Optional)",
+                    "View stored memories and observations at http://localhost:37777\n"
+                    "     (Check VS Code Ports tab if 37777 is unavailable - may be 37778)",
+                ),
+                (
                     "Spec-Driven Mode",
                     '/spec "your task" → For new features with planning and verification',
                 ),

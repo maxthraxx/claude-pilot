@@ -449,12 +449,60 @@ def install_mcp_cli() -> bool:
     return _run_bash_with_retry("bun install -g https://github.com/philschmid/mcp-cli")
 
 
-def install_agent_browser() -> bool:
-    """Install agent-browser CLI for headless browser automation."""
+def _is_agent_browser_ready() -> bool:
+    """Check if agent-browser is installed and Chromium is available."""
+    if not command_exists("agent-browser"):
+        return False
+
+    cache_dir = Path.home() / ".cache" / "ms-playwright"
+    if not cache_dir.exists():
+        return False
+
+    for chromium_dir in cache_dir.glob("chromium-*"):
+        chrome_binary = chromium_dir / "chrome-linux" / "chrome"
+        if chrome_binary.exists():
+            return True
+
+    return False
+
+
+def install_agent_browser(ui: Any = None) -> bool:
+    """Install agent-browser CLI for headless browser automation.
+
+    Shows verbose output during installation since it takes 1-2 minutes.
+    Skips verbose output if already installed.
+    """
+    if _is_agent_browser_ready():
+        return True
+
     if not _run_bash_with_retry("npm install -g agent-browser"):
         return False
 
-    return _run_bash_with_retry("echo 'y' | agent-browser install --with-deps")
+    if _is_agent_browser_ready():
+        return True
+
+    if ui:
+        ui.print("  [dim]Downloading Chromium browser (this may take 1-2 minutes)...[/dim]")
+
+    try:
+        process = subprocess.Popen(
+            ["bash", "-c", "echo 'y' | agent-browser install --with-deps"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        if process.stdout:
+            for line in process.stdout:
+                line = _strip_ansi(line.rstrip())
+                if line and ui:
+                    if any(kw in line.lower() for kw in ["download", "install", "extract", "chromium", "%", "mb"]):
+                        ui.print(f"  {line}")
+
+        process.wait()
+        return process.returncode == 0
+    except Exception:
+        return False
 
 
 def _install_with_spinner(ui: Any, name: str, install_fn: Any, *args: Any) -> bool:
@@ -530,8 +578,15 @@ class DependenciesStep(BaseStep):
             installed.append("mcp_cli")
 
         if ctx.install_agent_browser:
-            if _install_with_spinner(ui, "agent-browser", install_agent_browser):
+            if ui:
+                ui.status("Installing agent-browser...")
+            if install_agent_browser(ui):
                 installed.append("agent_browser")
+                if ui:
+                    ui.success("agent-browser installed")
+            else:
+                if ui:
+                    ui.warning("Could not install agent-browser - please install manually")
         else:
             if not ctx.local_mode:
                 agent_browser_rule = ctx.project_dir / ".claude" / "rules" / "standard" / "agent-browser.md"

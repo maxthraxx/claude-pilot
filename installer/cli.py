@@ -183,7 +183,7 @@ def install(
             console.print()
             console.print("  [bold]Do you want to install agent-browser?[/bold]")
             console.print("  This includes: Headless Chromium browser for web automation and testing")
-            console.print("  [dim]Note: Downloads ~150MB, can be skipped if not needed[/dim]")
+            console.print("  [dim]Note: Installation takes 1-2 minutes[/dim]")
             install_agent_browser = console.confirm("Install agent-browser?", default=True)
 
     if not skip_prompts:
