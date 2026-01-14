@@ -31,7 +31,7 @@
       "@semantic-release/git",
       {
         "assets": ["installer/__init__.py", "README.md", "install.sh", ".devcontainer/devcontainer.json", "docs/site/src/components/InstallSection.tsx", "docs/site/src/components/HeroSection.tsx"],
-        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ],
     "@semantic-release/github"
