@@ -194,9 +194,10 @@ def install(
         console.success("License terms acknowledged. Thank you!")
         console.print()
 
-        saved_config["license_acknowledged"] = True
-        saved_config["license_type"] = use_type
-        save_config(project_dir, saved_config)
+        if use_type == "free":
+            saved_config["license_acknowledged"] = True
+            saved_config["license_type"] = use_type
+            save_config(project_dir, saved_config)
 
     claude_dir = Path.cwd() / ".claude"
     if claude_dir.exists() and not skip_prompts:
@@ -270,14 +271,10 @@ def install(
             install_agent_browser = console.confirm("Install agent-browser?", default=True)
 
     if not skip_prompts:
-        save_config(
-            project_dir,
-            {
-                "install_python": install_python,
-                "install_typescript": install_typescript,
-                "install_agent_browser": install_agent_browser,
-            },
-        )
+        saved_config["install_python"] = install_python
+        saved_config["install_typescript"] = install_typescript
+        saved_config["install_agent_browser"] = install_agent_browser
+        save_config(project_dir, saved_config)
 
     ctx = InstallContext(
         project_dir=project_dir,
