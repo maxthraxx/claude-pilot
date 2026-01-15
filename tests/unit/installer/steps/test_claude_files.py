@@ -433,13 +433,14 @@ class TestClaudeFilesStep:
             # Create source with TypeScript files
             source_claude = Path(tmpdir) / "source" / ".claude"
             source_hooks = source_claude / "hooks"
-            source_rules = source_claude / "rules" / "custom"
+            source_rules_standard = source_claude / "rules" / "standard"
             source_hooks.mkdir(parents=True)
-            source_rules.mkdir(parents=True)
+            source_rules_standard.mkdir(parents=True)
             (source_hooks / "file_checker_ts.py").write_text("# typescript hook")
             (source_hooks / "other_hook.sh").write_text("# other hook")
-            (source_rules / "typescript-rules.md").write_text("# typescript rules")
-            (source_rules / "python-rules.md").write_text("# python rules")
+            # Python/TypeScript rules are now in standard/ folder
+            (source_rules_standard / "typescript-rules.md").write_text("# typescript rules")
+            (source_rules_standard / "python-rules.md").write_text("# python rules")
             # Add settings file (required by the step)
             (source_claude / "settings.local.json").write_text('{"hooks": {}}')
 
@@ -447,7 +448,7 @@ class TestClaudeFilesStep:
             dest_dir.mkdir()
             (dest_dir / ".claude").mkdir()
             (dest_dir / ".claude" / "hooks").mkdir()
-            (dest_dir / ".claude" / "rules" / "custom").mkdir(parents=True)
+            (dest_dir / ".claude" / "rules" / "standard").mkdir(parents=True)
 
             ctx = InstallContext(
                 project_dir=dest_dir,
@@ -461,35 +462,32 @@ class TestClaudeFilesStep:
 
             # TypeScript hook should NOT be copied
             assert not (dest_dir / ".claude" / "hooks" / "file_checker_ts.py").exists()
-            # TypeScript rules should NOT be copied
-            assert not (dest_dir / ".claude" / "rules" / "custom" / "typescript-rules.md").exists()
+            # TypeScript rules should NOT be copied (now in standard/)
+            assert not (dest_dir / ".claude" / "rules" / "standard" / "typescript-rules.md").exists()
             # Other files should be copied
             assert (dest_dir / ".claude" / "hooks" / "other_hook.sh").exists()
-            # Python rules should be copied (it's in the allowed list)
-            assert (dest_dir / ".claude" / "rules" / "custom" / "python-rules.md").exists()
+            # Python rules should be copied (now in standard/)
+            assert (dest_dir / ".claude" / "rules" / "standard" / "python-rules.md").exists()
 
 
 class TestClaudeFilesCustomRulesPreservation:
     """Test that custom rules from repo are installed and user files preserved."""
 
     def test_custom_rules_installed_and_user_files_preserved(self):
-        """ClaudeFilesStep installs repo custom rules and preserves user files."""
+        """ClaudeFilesStep installs repo standard rules and preserves user custom files."""
         from installer.context import InstallContext
         from installer.steps.claude_files import ClaudeFilesStep
         from installer.ui import Console
 
         step = ClaudeFilesStep()
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create source with custom rules (simulating repo)
+            # Create source with rules (simulating repo)
             source_claude = Path(tmpdir) / "source" / ".claude"
-            source_rules_custom = source_claude / "rules" / "custom"
             source_rules_standard = source_claude / "rules" / "standard"
-            source_rules_custom.mkdir(parents=True)
             source_rules_standard.mkdir(parents=True)
 
-            # Repo has custom rules (these SHOULD be copied now)
-            (source_rules_custom / "python-rules.md").write_text("python rules from repo")
-            # Repo has standard rules (these SHOULD be copied)
+            # Repo has standard rules (including python-rules.md, now in standard/)
+            (source_rules_standard / "python-rules.md").write_text("python rules from repo")
             (source_rules_standard / "standard-rule.md").write_text("standard rule")
 
             # Destination already has user's custom rules (not in repo)
@@ -512,9 +510,9 @@ class TestClaudeFilesCustomRulesPreservation:
             assert (dest_rules_custom / "my-project-rules.md").exists()
             assert (dest_rules_custom / "my-project-rules.md").read_text() == "USER PROJECT RULES - PRESERVED"
 
-            # Repo's custom rule SHOULD be copied
-            assert (dest_rules_custom / "python-rules.md").exists()
-            assert (dest_rules_custom / "python-rules.md").read_text() == "python rules from repo"
+            # Repo's python rules SHOULD be copied to standard/
+            assert (dest_claude / "rules" / "standard" / "python-rules.md").exists()
+            assert (dest_claude / "rules" / "standard" / "python-rules.md").read_text() == "python rules from repo"
 
             # Standard rules SHOULD be copied
             assert (dest_claude / "rules" / "standard" / "standard-rule.md").exists()

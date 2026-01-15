@@ -39,11 +39,11 @@ Use descriptive queries - they drive result relevance:
 
 | Need | Primary Tool | Fallback |
 |------|--------------|----------|
-| Library API reference | Context7 | Firecrawl scrape official docs |
-| Framework patterns | Context7 | Firecrawl scrape |
-| Code examples | Context7 | GitHub search via Firecrawl |
-| Error message lookup | Firecrawl search | Stack Overflow |
-| General web research | Firecrawl search | WebSearch |
+| Library API reference | Context7 | Official docs |
+| Framework patterns | Context7 | Official docs |
+| Code examples | Context7 | GitHub search |
+| Error message lookup | WebSearch | Stack Overflow |
+| General web research | WebSearch | - |
 | Codebase patterns | Vexor | Grep/Glob |
 
 ### Example: Learning a New Library
@@ -69,7 +69,7 @@ query-docs(libraryId="/anthropics/claude-agent-sdk-python", query="authenticatio
 
 - **Library not found:** Try variations like `@types/react` vs `react`, or `node:fs` for built-ins
 - **Poor results:** Make query more specific, describe what you're trying to accomplish
-- **Empty results:** Library may not be indexed - fall back to `firecrawl_scrape` on official docs
+- **Empty results:** Library may not be indexed - check official docs directly
 - **Multiple libraries found:** Check the benchmark score and code snippet count to pick the best one
 
 ### Key Principle

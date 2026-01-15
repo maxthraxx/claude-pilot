@@ -140,9 +140,7 @@ class ClaudeFilesStep(BaseStep):
                 continue
 
             if "/rules/custom/" in file_path:
-                allowed_custom = ["python-rules.md", "typescript-rules.md"]
-                if Path(file_path).name not in allowed_custom:
-                    continue
+                continue
 
             if not ctx.install_python:
                 if "file_checker_python.py" in file_path:
@@ -154,6 +152,14 @@ class ClaudeFilesStep(BaseStep):
                 if "file_checker_ts.py" in file_path:
                     continue
                 if "typescript-rules.md" in file_path:
+                    continue
+
+            if not ctx.install_agent_browser:
+                if "agent-browser.md" in file_path:
+                    continue
+
+            if ctx.firecrawl_disabled:
+                if "web-search-scraping.md" in file_path:
                     continue
 
             if "/commands/" in file_path:

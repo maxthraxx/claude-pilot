@@ -133,17 +133,29 @@ class EnvironmentStep(BaseStep):
                 ui.print()
                 ui.rule("OpenAI API Key - Semantic Code Search")
                 ui.print()
-                ui.print("  [bold]Used for:[/bold] Generating embeddings for Vexor semantic search (cheap)")
+                ui.print("  [bold]Used for:[/bold] Generating embeddings for Vexor semantic search")
                 ui.print("  [bold]Why:[/bold] Powers fast, intelligent code search across your codebase")
                 ui.print("  [bold]Create at:[/bold] [cyan]https://platform.openai.com/api-keys[/cyan]")
                 ui.print()
+                ui.print("  [dim]You can skip this to use local embeddings instead (slower, CPU-intensive)[/dim]")
+                ui.print()
 
-                openai_api_key = ui.input("OPENAI_API_KEY", default="")
+                openai_choices = [
+                    "Enter API key (recommended - faster, better quality)",
+                    "Skip - use local embeddings (slower, no API needed)",
+                ]
+                choice = ui.select("OpenAI API Key", openai_choices)
+
+                if choice == openai_choices[0]:
+                    openai_api_key = ui.input("OPENAI_API_KEY", default="")
+                    if openai_api_key:
+                        add_env_key("OPENAI_API_KEY", openai_api_key, env_file)
+                else:
+                    ctx.use_local_vexor = True
+                    ui.info("Using local embeddings for Vexor (will download model during setup)")
         else:
             if ui:
                 ui.success("OPENAI_API_KEY already set, skipping")
-
-        add_env_key("OPENAI_API_KEY", openai_api_key, env_file)
 
         firecrawl_api_key = ""
 
@@ -158,13 +170,25 @@ class EnvironmentStep(BaseStep):
                     "  [bold]Create at:[/bold] [cyan]https://www.firecrawl.dev/app/api-keys[/cyan] (free tier available)"
                 )
                 ui.print()
+                ui.print("  [dim]Skip if your company policy doesn't allow external API keys[/dim]")
+                ui.print()
 
-                firecrawl_api_key = ui.input("FIRECRAWL_API_KEY", default="")
+                firecrawl_choices = [
+                    "Enter API key (recommended - enables web scraping)",
+                    "Skip - disable Firecrawl web scraping",
+                ]
+                choice = ui.select("Firecrawl API Key", firecrawl_choices)
+
+                if choice == firecrawl_choices[0]:
+                    firecrawl_api_key = ui.input("FIRECRAWL_API_KEY", default="")
+                    if firecrawl_api_key:
+                        add_env_key("FIRECRAWL_API_KEY", firecrawl_api_key, env_file)
+                else:
+                    ctx.firecrawl_disabled = True
+                    ui.info("Firecrawl disabled - web scraping features will not be available")
         else:
             if ui:
                 ui.success("FIRECRAWL_API_KEY already set, skipping")
-
-        add_env_key("FIRECRAWL_API_KEY", firecrawl_api_key, env_file)
 
         if ui:
             if append_mode:

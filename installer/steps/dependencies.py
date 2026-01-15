@@ -336,7 +336,7 @@ def _configure_claude_mem_defaults() -> bool:
 
 
 def _configure_vexor_defaults() -> bool:
-    """Configure Vexor with recommended defaults for semantic search."""
+    """Configure Vexor with recommended defaults for semantic search (OpenAI)."""
     import json
 
     config_dir = Path.home() / ".vexor"
@@ -369,17 +369,79 @@ def _configure_vexor_defaults() -> bool:
         return False
 
 
-def install_vexor() -> bool:
-    """Install Vexor semantic search tool and configure defaults."""
-    if command_exists("vexor"):
-        _configure_vexor_defaults()
-        return True
+def _configure_vexor_local() -> bool:
+    """Configure Vexor for local embeddings (no API key needed)."""
+    import json
+
+    config_dir = Path.home() / ".vexor"
+    config_path = config_dir / "config.json"
 
     try:
+        config_dir.mkdir(parents=True, exist_ok=True)
+
+        if config_path.exists():
+            config = json.loads(config_path.read_text())
+        else:
+            config = {}
+
+        config.update(
+            {
+                "model": "intfloat/multilingual-e5-small",
+                "batch_size": 64,
+                "embed_concurrency": 4,
+                "extract_concurrency": 4,
+                "extract_backend": "auto",
+                "provider": "local",
+                "auto_index": True,
+                "local_cuda": False,
+                "rerank": "bm25",
+            }
+        )
+        config_path.write_text(json.dumps(config, indent=2) + "\n")
+        return True
+    except Exception:
+        return False
+
+
+def _setup_vexor_local_model(ui: Any = None) -> bool:
+    """Download and setup the local embedding model for Vexor."""
+    if ui:
+        ui.print("  [dim]Downloading local embedding model (this may take a few minutes)...[/dim]")
+
+    try:
+        process = subprocess.Popen(
+            ["vexor", "local", "--setup", "--model", "intfloat/multilingual-e5-small"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        if process.stdout:
+            for line in process.stdout:
+                line = line.rstrip()
+                if line and ui:
+                    if any(kw in line.lower() for kw in ["download", "model", "%", "mb", "complete"]):
+                        ui.print(f"  {line}")
+
+        process.wait()
+        return process.returncode == 0
+    except Exception:
+        return False
+
+
+def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
+    """Install Vexor semantic search tool and configure defaults."""
+    if use_local:
+        if not _run_bash_with_retry("uv pip install 'vexor[local]'"):
+            return False
+        _configure_vexor_local()
+        return _setup_vexor_local_model(ui)
+    else:
+        if command_exists("vexor"):
+            _configure_vexor_defaults()
+            return True
         _configure_vexor_defaults()
         return True
-    except subprocess.CalledProcessError:
-        return False
 
 
 def _ensure_maxritter_marketplace() -> bool:
@@ -582,16 +644,20 @@ class DependenciesStep(BaseStep):
             else:
                 if ui:
                     ui.warning("Could not install agent-browser - please install manually")
-        else:
-            if not ctx.local_mode:
-                agent_browser_rule = ctx.project_dir / ".claude" / "rules" / "standard" / "agent-browser.md"
-                if agent_browser_rule.exists():
-                    agent_browser_rule.unlink()
-                    if ui:
-                        ui.info("Removed agent-browser.md (agent-browser not installed)")
 
-        if _install_with_spinner(ui, "Vexor semantic search", install_vexor):
-            installed.append("vexor")
+        if ctx.use_local_vexor:
+            if ui:
+                ui.status("Installing Vexor with local embeddings...")
+            if install_vexor(use_local=True, ui=ui):
+                installed.append("vexor")
+                if ui:
+                    ui.success("Vexor installed with local embeddings")
+            else:
+                if ui:
+                    ui.warning("Could not install Vexor local - please install manually")
+        else:
+            if _install_with_spinner(ui, "Vexor semantic search", install_vexor):
+                installed.append("vexor")
 
         qlty_result = install_qlty(ctx.project_dir)
         if qlty_result[0]:

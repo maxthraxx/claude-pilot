@@ -23,6 +23,8 @@ class InstallContext:
     local_mode: bool = False
     local_repo_dir: Path | None = None
     is_local_install: bool = False
+    use_local_vexor: bool = False
+    firecrawl_disabled: bool = False
     completed_steps: list[str] = field(default_factory=list)
     config: dict[str, Any] = field(default_factory=dict)
     ui: Console | None = None

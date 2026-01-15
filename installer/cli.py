@@ -277,6 +277,9 @@ def install(
         saved_config["install_agent_browser"] = install_agent_browser
         save_config(project_dir, saved_config)
 
+    use_local_vexor = saved_config.get("use_local_vexor", False)
+    firecrawl_disabled = saved_config.get("firecrawl_disabled", False)
+
     ctx = InstallContext(
         project_dir=project_dir,
         install_python=install_python,
@@ -287,11 +290,18 @@ def install(
         local_mode=local,
         local_repo_dir=effective_local_repo_dir,
         is_local_install=local_system,
+        use_local_vexor=use_local_vexor,
+        firecrawl_disabled=firecrawl_disabled,
         ui=console,
     )
 
     try:
         run_installation(ctx)
+
+        if not skip_prompts:
+            saved_config["use_local_vexor"] = ctx.use_local_vexor
+            saved_config["firecrawl_disabled"] = ctx.firecrawl_disabled
+            save_config(project_dir, saved_config)
     except FatalInstallError as e:
         console.error(f"Installation failed: {e}")
         raise typer.Exit(1) from e
