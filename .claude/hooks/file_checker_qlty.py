@@ -73,6 +73,12 @@ def main() -> int:
     if not target_file or not target_file.exists():
         return 0
 
+    if git_root:
+        try:
+            target_file.resolve().relative_to(git_root)
+        except ValueError:
+            return 0
+
     if target_file.suffix == ".py":
         return 0
 
