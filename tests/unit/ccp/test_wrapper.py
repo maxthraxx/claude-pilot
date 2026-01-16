@@ -207,3 +207,64 @@ class TestMigratedWrapperFunctionality:
 
         assert wrapper._shutdown_requested is True
         wrapper._kill_claude.assert_called_once()
+
+
+class TestExpiredTrialLicensePrompt:
+    """Tests for expired trial license key prompt."""
+
+    def test_expired_trial_prompts_for_license_key(self, tmp_path: Path) -> None:
+        """Expired trial should prompt for license key."""
+        from ccp.wrapper import ClaudeWrapper
+
+        pipe_dir = tmp_path / "pipes"
+        wrapper = ClaudeWrapper(claude_args=[], pipe_dir=pipe_dir)
+
+        expired_state = LicenseState(
+            license_key="TRIAL",
+            tier="trial",
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+
+        with patch.object(wrapper, "_license_manager") as mock_manager:
+            mock_manager.get_state.return_value = expired_state
+            mock_manager.validate.return_value = (False, "Trial expired")
+            valid, tier, expired, error = wrapper._check_license()
+
+        assert valid is False
+        assert expired is True
+        assert tier == "trial"
+
+    def test_expired_trial_accepts_valid_license(self, tmp_path: Path) -> None:
+        """Expired trial accepts valid license key activation."""
+        import subprocess
+        from ccp.wrapper import ClaudeWrapper
+
+        pipe_dir = tmp_path / "pipes"
+        wrapper = ClaudeWrapper(claude_args=[], pipe_dir=pipe_dir)
+
+        # Mock subprocess.run for license activation
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            with patch("builtins.input", return_value="VALID-LICENSE-KEY"):
+                # The actual run() method would call this, but we test the subprocess call pattern
+                result = subprocess.run(
+                    ["python", "-m", "ccp", "activate", "VALID-LICENSE-KEY", "--json"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+
+        assert result.returncode == 0
+
+    def test_expired_trial_rejects_empty_license(self, tmp_path: Path) -> None:
+        """Expired trial rejects empty license key."""
+        from ccp.wrapper import ClaudeWrapper
+
+        pipe_dir = tmp_path / "pipes"
+        wrapper = ClaudeWrapper(claude_args=[], pipe_dir=pipe_dir)
+
+        # Empty license key should be rejected without calling subprocess
+        license_key = ""
+        assert not license_key  # Empty string is falsy

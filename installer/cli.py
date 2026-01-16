@@ -145,8 +145,12 @@ def _get_license_info(project_dir: Path, local: bool = False, local_repo_dir: Pa
             text=True,
             timeout=10,
         )
-        if result.returncode == 0:
-            return json.loads(result.stdout)
+        output = result.stdout.strip() or result.stderr.strip()
+        if output:
+            data = json.loads(output)
+            if not data.get("success", True) and "expired" in data.get("error", "").lower():
+                data["is_expired"] = True
+            return data
     except (subprocess.SubprocessError, json.JSONDecodeError):
         pass
     return None
@@ -270,7 +274,32 @@ def install(
 
         console.print()
 
-        if tier == "free" or (tier == "trial" and is_expired):
+        if tier == "trial" and is_expired:
+            console.print("  [bold red]Your trial has expired.[/bold red]")
+            console.print()
+            console.print("  [bold]Enter your license key to continue:[/bold]")
+            console.print("  [dim]Purchase at: https://license.claude-code.pro[/dim]")
+            console.print()
+
+            for attempt in range(3):
+                license_key = console.input("License key").strip()
+                if not license_key:
+                    console.error("License key is required")
+                    continue
+
+                console.status("Validating license key...")
+                validated = _validate_license_key(console, project_dir, license_key, local, effective_local_repo_dir)
+                if validated:
+                    break
+                if attempt < 2:
+                    console.print("  [dim]Please check your license key and try again.[/dim]")
+            else:
+                console.error("License validation failed after 3 attempts.")
+                console.print("  [bold]Purchase a license at:[/bold] [cyan]https://license.claude-code.pro[/cyan]")
+                raise typer.Exit(1)
+
+            console.print()
+        elif tier == "free":
             console.print(
                 "  [bold yellow]Upgrade to Commercial:[/bold yellow] [cyan]https://license.claude-code.pro[/cyan]"
             )
@@ -301,9 +330,9 @@ def install(
         console.print("  [bold]💡 What's Included with a Commercial License?[/bold]")
         console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
         console.print()
-        console.print("    ✨ Continuous updates and improvements for the duration")
         console.print("    ✨ Exclusive access to recorded video trainings")
         console.print("    ✨ Exclusive access to community chat for direct Q&A")
+        console.print("    ✨ Continuous updates and improvements to have the best CC setup")
         console.print()
         console.print("  [bold yellow]Subscribe:[/bold yellow] [bold cyan]https://license.claude-code.pro[/bold cyan]")
         console.print()

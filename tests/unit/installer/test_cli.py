@@ -164,3 +164,61 @@ class TestMainEntry:
         import installer.__main__
 
         assert hasattr(installer.__main__, "main") or True  # May not have main function
+
+
+class TestLicenseInfo:
+    """Test license info retrieval."""
+
+    def test_get_license_info_function_exists(self):
+        """_get_license_info function exists."""
+        from installer.cli import _get_license_info
+
+        assert callable(_get_license_info)
+
+    @patch("subprocess.run")
+    def test_get_license_info_returns_valid_license(self, mock_run, tmp_path: Path):
+        """_get_license_info returns license data for valid license."""
+        from installer.cli import _get_license_info
+
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout='{"tier": "commercial", "email": "test@example.com"}',
+            stderr="",
+        )
+
+        # Create fake ccp binary
+        bin_dir = tmp_path / ".claude" / "bin"
+        bin_dir.mkdir(parents=True)
+        (bin_dir / "ccp").touch()
+
+        result = _get_license_info(tmp_path)
+        assert result is not None
+        assert result["tier"] == "commercial"
+
+    @patch("subprocess.run")
+    def test_get_license_info_detects_expired_trial(self, mock_run, tmp_path: Path):
+        """_get_license_info detects expired trial from stderr."""
+        from installer.cli import _get_license_info
+
+        mock_run.return_value = MagicMock(
+            returncode=1,
+            stdout="",
+            stderr='{"success": false, "error": "Trial expired", "tier": "trial"}',
+        )
+
+        # Create fake ccp binary
+        bin_dir = tmp_path / ".claude" / "bin"
+        bin_dir.mkdir(parents=True)
+        (bin_dir / "ccp").touch()
+
+        result = _get_license_info(tmp_path)
+        assert result is not None
+        assert result["tier"] == "trial"
+        assert result.get("is_expired") is True
+
+    def test_get_license_info_returns_none_without_binary(self, tmp_path: Path):
+        """_get_license_info returns None when ccp binary doesn't exist."""
+        from installer.cli import _get_license_info
+
+        result = _get_license_info(tmp_path)
+        assert result is None

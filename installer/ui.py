@@ -336,23 +336,28 @@ class Console:
         self._console.print(f"  [bold cyan]?[/bold cyan] {message}")
         for i, choice in enumerate(choices, 1):
             self._console.print(f"    [bold magenta]{i}.[/bold magenta] {choice}")
-        self._console.print(f"  Enter choice [1-{len(choices)}]: ", end="")
 
-        try:
-            tty = self._get_input_stream()
-            response = tty.readline().strip()
-        except (EOFError, KeyboardInterrupt, OSError):
-            self._console.print()
-            return choices[0] if choices else ""
+        while True:
+            self._console.print(f"  Enter choice [1-{len(choices)}]: ", end="")
 
-        try:
-            idx = int(response) - 1
-            if 0 <= idx < len(choices):
-                return choices[idx]
-        except ValueError:
-            pass
+            try:
+                tty = self._get_input_stream()
+                response = tty.readline().strip()
+            except (EOFError, KeyboardInterrupt, OSError):
+                self._console.print()
+                raise SystemExit(1)
 
-        return choices[0] if choices else ""
+            if not response:
+                continue
+
+            try:
+                idx = int(response) - 1
+                if 0 <= idx < len(choices):
+                    return choices[idx]
+            except ValueError:
+                pass
+
+            self._console.print(f"  [yellow]Please enter a number between 1 and {len(choices)}[/yellow]")
 
     def input(self, message: str, default: str = "") -> str:
         """Prompt for text input."""

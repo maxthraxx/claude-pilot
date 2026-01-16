@@ -232,9 +232,7 @@ echo ""
 
 mkdir -p .claude/bin
 
-# Check if CCP binary exists and might be in use
 if [ -f ".claude/bin/ccp" ]; then
-    # Try to remove it - if it fails, it's likely in use
     if ! rm -f ".claude/bin/ccp" 2>/dev/null; then
         echo "Error: Cannot update CCP binary - it may be in use."
         echo ""
