@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 from datetime import datetime
@@ -57,7 +58,7 @@ def _register_email(
     local_mode: bool,
     local_repo_dir: Path | None,
 ) -> bool:
-    """Register email for free/trial license using ccp binary or Python API fallback."""
+    """Register email for free/trial license using ccp binary."""
     bin_path = project_dir / ".claude" / "bin" / "ccp"
 
     if local_mode and local_repo_dir:
@@ -66,24 +67,8 @@ def _register_email(
             bin_path = local_bin
 
     if not bin_path.exists():
-        try:
-            from ccp.auth import create_eval_state, create_free_tier_state, subscribe_to_gumroad
-
-            console.status("Registering...")
-
-            if subscribe:
-                subscribe_result = subscribe_to_gumroad(email)
-                if not subscribe_result.success:
-                    console.warning(f"Newsletter subscription failed: {subscribe_result.error}")
-
-            if tier == "trial":
-                create_eval_state(email=email)
-            else:
-                create_free_tier_state(email=email)
-            return True
-        except Exception as e:
-            console.error(f"Registration failed: {e}")
-            return False
+        console.error("CCP binary not found - cannot register")
+        return False
 
     cmd = [str(bin_path), "register", email, "--tier", tier, "--json"]
     if not subscribe:
@@ -138,19 +123,33 @@ def _validate_license_key(
         return False
 
 
-def _get_license_info() -> dict | None:
-    """Get current license information using ccp auth module.
+def _get_license_info(project_dir: Path, local: bool = False, local_repo_dir: Path | None = None) -> dict | None:
+    """Get current license information using ccp binary.
 
     Returns dict with: tier, email, created_at, expires_at, days_remaining, is_expired
-    or None if no license exists.
+    or None if no license exists or ccp binary not found.
     """
-    try:
-        from ccp.auth import LicenseManager
+    bin_path = project_dir / ".claude" / "bin" / "ccp"
+    if not bin_path.exists() and local and local_repo_dir:
+        local_bin = local_repo_dir / ".claude" / "bin" / "ccp"
+        if local_bin.exists():
+            bin_path = local_bin
 
-        manager = LicenseManager()
-        return manager.get_license_info()
-    except Exception:
+    if not bin_path.exists():
         return None
+
+    try:
+        result = subprocess.run(
+            [str(bin_path), "status", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
+            return json.loads(result.stdout)
+    except (subprocess.SubprocessError, json.JSONDecodeError):
+        pass
+    return None
 
 
 def rollback_completed_steps(ctx: InstallContext, steps: list[BaseStep]) -> None:
@@ -219,7 +218,7 @@ def install(
     project_dir = Path.cwd()
     saved_config = load_config(project_dir)
 
-    license_info = _get_license_info()
+    license_info = _get_license_info(project_dir, local, effective_local_repo_dir)
     license_acknowledged = license_info is not None
 
     if not skip_prompts and license_acknowledged:

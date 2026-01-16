@@ -207,6 +207,16 @@ class ClaudeFilesStep(BaseStep):
                         if ui:
                             ui.warning(f"Failed to clear {name} directory: {e}")
 
+            scripts_dir = ctx.project_dir / ".claude" / "scripts"
+            if scripts_dir.exists():
+                if ui:
+                    ui.status("Removing deprecated scripts folder...")
+                try:
+                    shutil.rmtree(scripts_dir)
+                except (OSError, IOError) as e:
+                    if ui:
+                        ui.warning(f"Failed to remove scripts directory: {e}")
+
         for category, files in categories.items():
             if not files:
                 continue

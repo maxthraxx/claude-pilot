@@ -230,6 +230,19 @@ echo "Downloading Claude CodePro (v${VERSION})..."
 echo "  Platform: ${PLATFORM}-${ARCH}"
 echo ""
 
+mkdir -p .claude/bin
+
+# Check if CCP binary exists and might be in use
+if [ -f ".claude/bin/ccp" ]; then
+    # Try to remove it - if it fails, it's likely in use
+    if ! rm -f ".claude/bin/ccp" 2>/dev/null; then
+        echo "Error: Cannot update CCP binary - it may be in use."
+        echo ""
+        echo "Please quit Claude CodePro first (Ctrl+C or /exit), then run this installer again."
+        exit 1
+    fi
+fi
+
 echo "  [..] Downloading installer..."
 if command -v curl >/dev/null 2>&1; then
     curl -fsSL "$INSTALLER_URL" -o "$INSTALLER_PATH"
@@ -243,7 +256,6 @@ chmod +x "$INSTALLER_PATH"
 echo "  [OK] Installer downloaded"
 
 echo "  [..] Downloading ccp binary..."
-mkdir -p .claude/bin
 if command -v curl >/dev/null 2>&1; then
     curl -fsSL "$CCP_URL" -o "$CCP_PATH"
 elif command -v wget >/dev/null 2>&1; then
