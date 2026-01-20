@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import time
@@ -202,19 +203,21 @@ def _configure_claude_defaults() -> bool:
     )
 
 
-def _configure_firecrawl_mcp() -> bool:
+def _configure_firecrawl_mcp(api_key: str | None = None) -> bool:
     """Add firecrawl MCP server to ~/.claude.json if not already present.
 
     Only adds the firecrawl server - does not alter other MCP servers.
+    If api_key is provided, stores it directly. Otherwise uses env var reference.
     """
     import json
 
     config_path = Path.home() / ".claude.json"
 
+    env_value = api_key if api_key else "${FIRECRAWL_API_KEY}"
     firecrawl_config = {
         "command": "npx",
         "args": ["-y", "firecrawl-mcp"],
-        "env": {"FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"},
+        "env": {"FIRECRAWL_API_KEY": env_value},
     }
 
     try:
@@ -226,7 +229,7 @@ def _configure_firecrawl_mcp() -> bool:
         if "mcpServers" not in config:
             config["mcpServers"] = {}
 
-        if "firecrawl" not in config["mcpServers"]:
+        if api_key or "firecrawl" not in config["mcpServers"]:
             config["mcpServers"]["firecrawl"] = firecrawl_config
             config_path.write_text(json.dumps(config, indent=2) + "\n")
 
@@ -263,7 +266,6 @@ def install_claude_code(project_dir: Path) -> tuple[bool, str]:
         return False, version
 
     _configure_claude_defaults()
-    _configure_firecrawl_mcp()
     return True, version
 
 
@@ -748,6 +750,21 @@ class DependenciesStep(BaseStep):
         else:
             if ui:
                 ui.warning("Could not install qlty - please install manually")
+
+        if ctx.enable_firecrawl:
+            api_key = os.environ.get("FIRECRAWL_API_KEY")
+            if not api_key:
+                env_file = ctx.project_dir / ".env"
+                if env_file.exists():
+                    for line in env_file.read_text().split("\n"):
+                        if line.startswith("FIRECRAWL_API_KEY="):
+                            api_key = line.split("=", 1)[1].strip()
+                            break
+
+            if api_key:
+                _configure_firecrawl_mcp(api_key)
+                if ui:
+                    ui.success("Firecrawl MCP configured")
 
         ctx.config["installed_dependencies"] = installed
 

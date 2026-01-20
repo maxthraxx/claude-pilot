@@ -234,10 +234,10 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("subprocess.run")
     @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_configures_firecrawl_mcp(
+    def test_install_claude_code_does_not_configure_firecrawl(
         self, mock_remove, mock_run, mock_config, mock_firecrawl, mock_version
     ):
-        """install_claude_code configures Firecrawl MCP after npm install."""
+        """install_claude_code does not configure Firecrawl (handled by DependenciesStep)."""
         from installer.steps.dependencies import install_claude_code
 
         mock_run.return_value = MagicMock(returncode=0)
@@ -245,7 +245,7 @@ class TestClaudeCodeInstall:
         with tempfile.TemporaryDirectory() as tmpdir:
             install_claude_code(Path(tmpdir))
 
-        mock_firecrawl.assert_called_once()
+        mock_firecrawl.assert_not_called()
 
     def test_patch_claude_config_creates_file(self):
         """_patch_claude_config creates config file if it doesn't exist."""
