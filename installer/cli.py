@@ -314,11 +314,7 @@ def install(
     """Install Claude CodePro."""
     console = Console(non_interactive=non_interactive)
 
-    console.banner()
-    console.info(f"Build: {__build__}")
-
     effective_local_repo_dir = local_repo_dir if local_repo_dir else (Path.cwd() if local else None)
-
     skip_prompts = non_interactive
     project_dir = Path.cwd()
     saved_config = load_config(project_dir)
@@ -333,55 +329,15 @@ def install(
     license_info = _get_license_info(project_dir, local, effective_local_repo_dir, console)
     license_acknowledged = license_info is not None and license_info.get("tier") in ("trial", "standard", "enterprise")
 
+    console.banner(license_info=license_info)
+
     if not skip_prompts and license_acknowledged and license_info:
-        console.print()
-        console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
-        console.print("  [bold]📜 Current License[/bold]")
-        console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
-        console.print()
-
         tier = license_info.get("tier", "unknown")
-        email = license_info.get("email", "")
-        created_at = license_info.get("created_at", "")
-        expires_at = license_info.get("expires_at")
         is_expired = license_info.get("is_expired", False)
-        days_remaining = license_info.get("days_remaining")
-
-        if tier == "trial":
-            if is_expired:
-                console.print("  [bold red]Tier: Trial (EXPIRED)[/bold red]")
-            else:
-                console.print(f"  [bold yellow]Tier: Trial[/bold yellow] ({days_remaining} days remaining)")
-        elif tier == "standard":
-            console.print("  [bold green]Tier: Standard[/bold green]")
-        elif tier == "enterprise":
-            console.print("  [bold green]Tier: Enterprise[/bold green]")
-
-        if email:
-            console.print(f"  Email: {email}")
-
-        if created_at:
-            try:
-                created_dt = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
-                console.print(f"  Registered: {created_dt.strftime('%Y-%m-%d')}")
-            except (ValueError, AttributeError):
-                pass
-
-        if expires_at and tier == "trial":
-            try:
-                expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-                label = "Expired" if is_expired else "Expires"
-                console.print(f"  {label}: {expires_dt.strftime('%Y-%m-%d')}")
-            except (ValueError, AttributeError):
-                pass
-
-        console.print()
 
         if tier == "trial" and is_expired:
-            console.print("  [bold red]Your trial has expired.[/bold red]")
             console.print()
             console.print("  [bold]Enter your license key to continue:[/bold]")
-            console.print("  [dim]Subscribe: https://license.claude-code.pro[/dim]")
             console.print()
 
             for attempt in range(3):
@@ -392,6 +348,7 @@ def install(
 
                 validated = _validate_license_key(console, project_dir, license_key, local, effective_local_repo_dir)
                 if validated:
+                    license_info = _get_license_info(project_dir, local, effective_local_repo_dir)
                     break
                 if attempt < 2:
                     console.print("  [dim]Please check your license key and try again.[/dim]")
@@ -401,9 +358,6 @@ def install(
                 raise typer.Exit(1)
 
             console.print()
-
-        console.print("  [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
-        console.print()
 
     elif not skip_prompts and not license_acknowledged:
         console.print()

@@ -96,8 +96,12 @@ class Console:
         """Check if running in non-interactive mode."""
         return self._non_interactive
 
-    def banner(self) -> None:
-        """Print the Claude CodePro banner with feature highlights."""
+    def banner(self, license_info: dict[str, Any] | None = None) -> None:
+        """Print the Claude CodePro banner with feature highlights.
+
+        Args:
+            license_info: Current license info dict (tier, email, etc.) or None if not yet checked.
+        """
         logo = """
 [bold cyan]   _____ _                 _          _____          _      _____
   / ____| |               | |        / ____|        | |    |  __ \\
@@ -145,19 +149,46 @@ class Console:
         self._console.print(panel)
         self._console.print()
 
-        license_text = Text()
-        license_text.append("  📜 ", style="yellow")
-        license_text.append("7-day free trial", style="bold green")
-        license_text.append(" included. ", style="dim white")
-        license_text.append("Then ", style="dim white")
-        license_text.append("Standard", style="green")
-        license_text.append(" or ", style="dim white")
-        license_text.append("Enterprise", style="green")
-        license_text.append(" plan.\n", style="dim white")
-        license_text.append("     ", style="white")
-        license_text.append("Pricing: ", style="dim white")
-        license_text.append("https://license.claude-code.pro", style="cyan")
-        self._console.print(license_text)
+        tier = license_info.get("tier") if license_info else None
+
+        if tier in ("standard", "enterprise"):
+            tier_display = "Standard" if tier == "standard" else "Enterprise"
+            email = license_info.get("email", "") if license_info else ""
+            license_text = Text()
+            license_text.append("  ✓ ", style="green")
+            license_text.append(f"{tier_display} License", style="bold green")
+            if email:
+                license_text.append(f" — {email}", style="dim white")
+            self._console.print(license_text)
+        elif tier == "trial":
+            days = license_info.get("days_remaining") if license_info else None
+            is_expired = license_info.get("is_expired", False) if license_info else False
+            license_text = Text()
+            if is_expired:
+                license_text.append("  ⚠ ", style="red")
+                license_text.append("Trial Expired", style="bold red")
+                license_text.append(" — Subscribe: ", style="dim white")
+                license_text.append("https://license.claude-code.pro", style="cyan")
+            else:
+                license_text.append("  ⏳ ", style="yellow")
+                license_text.append(f"Trial ({days} days remaining)", style="bold yellow")
+                license_text.append(" — Subscribe: ", style="dim white")
+                license_text.append("https://license.claude-code.pro", style="cyan")
+            self._console.print(license_text)
+        else:
+            license_text = Text()
+            license_text.append("  📜 ", style="yellow")
+            license_text.append("7-day free trial", style="bold green")
+            license_text.append(" included. ", style="dim white")
+            license_text.append("Then ", style="dim white")
+            license_text.append("Standard", style="green")
+            license_text.append(" or ", style="dim white")
+            license_text.append("Enterprise", style="green")
+            license_text.append(" plan.\n", style="dim white")
+            license_text.append("     ", style="white")
+            license_text.append("Pricing: ", style="dim white")
+            license_text.append("https://license.claude-code.pro", style="cyan")
+            self._console.print(license_text)
         self._console.print()
 
     def set_total_steps(self, total: int) -> None:
