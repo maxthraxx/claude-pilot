@@ -39,7 +39,7 @@ pythonpath = ["installer", "ccp", "."]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-testpaths = ["tests/unit"]
+testpaths = ["ccp/tests", "installer/tests"]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
@@ -68,6 +68,8 @@ select = [
     "F",   # pyflakes
     "I",   # isort
     "ERA", # eradicate (detect commented-out code)
+    "PLR0913", # too-many-arguments (max 6)
+    "PLR0915", # too-many-statements (max 60)
 ]
 ignore = [
     "D100",
@@ -99,8 +101,13 @@ ignore = [
     "SIM113",
 ]
 
+[tool.ruff.lint.pylint]
+max-args = 6
+max-statements = 60
+
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "UP"]
+"ccp/tests/*" = ["D", "UP", "PLR0913", "PLR0915"]
+"installer/tests/*" = ["D", "UP", "PLR0913", "PLR0915"]
 
 [tool.vulture]
 exclude = [".venv/**", "target/**", "**/.tox/**", "**/build/**"]

@@ -51,9 +51,9 @@ const insideItems: InsideItem[] = [
     title: "Enhanced Context",
     items: [
       "Persistent Memory - Cross-session context",
-      "Vexor - Local semantic code search",
-      "Context7 / Firecrawl - Library docs & web",
-      "agent-browser - Headless browser automation",
+      "Semantic Search - Local vector store",
+      "External Context - Code/library & web",
+      "Browser Automation - Headless testing",
     ],
   },
   {
@@ -62,7 +62,7 @@ const insideItems: InsideItem[] = [
     items: [
       "Auditor Agent - AI rule compliance monitor",
       "TDD Enforcer - Pre-edit test requirement",
-      "Language Quality - Python & TypeScript hooks",
+      "Quality Hooks - Python, TypeScript, Go & QLTY",
       "Status Line - Live context and auditor state",
     ],
   },
@@ -71,7 +71,7 @@ const insideItems: InsideItem[] = [
     title: "One-Command Installer",
     items: [
       "Automated Dev Container setup",
-      "Optional Python & TypeScript support",
+      "Optional Python, TypeScript & Go support",
       "Shell integration with ccp alias",
       "Works with VS Code, Cursor, Windsurf",
     ],

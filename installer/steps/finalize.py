@@ -31,34 +31,6 @@ class FinalizeStep(BaseStep):
         if not ui:
             return
 
-        installed_items = []
-        if ctx.config.get("installed_dependencies"):
-            for dep in ctx.config["installed_dependencies"]:
-                installed_items.append(dep.replace("_", " ").title())
-
-        installed_items.extend(
-            [
-                "Claude CodePro rules",
-                "Shell alias (ccp)",
-                "Endless Mode (session continuity)",
-                "Auditor Agent (background rule monitoring)",
-            ]
-        )
-
-        if ctx.config.get("installed_extensions"):
-            installed_items.append(f"VS Code Extensions ({ctx.config['installed_extensions']})")
-
-        if ctx.enable_python:
-            installed_items.append("Python development tools")
-
-        if ctx.enable_typescript:
-            installed_items.append("TypeScript quality hooks")
-
-        if ctx.enable_golang:
-            installed_items.append("Go quality hooks")
-
-        ui.success_box("Installation Complete!", installed_items)
-
         steps: list[tuple[str, str]] = []
 
         if ctx.is_local_install:

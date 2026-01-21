@@ -194,33 +194,36 @@ def test_process_increments_total():
 - Relying on external services in unit tests
 - Missing cleanup between tests
 
-### ⛔ MANDATORY: Fix ALL Failing Tests
+### ⛔ MANDATORY: Fix ALL Errors (Tests, Types, Lint)
 
-**NEVER skip or ignore failing tests. No exceptions. No excuses.**
+**NEVER skip or ignore errors. No exceptions. No excuses.**
 
-When tests fail, you MUST fix them before marking work complete. The following justifications are INVALID and FORBIDDEN:
+When verification finds ANY errors - tests, type checker, or linter - you MUST fix them before marking work complete. This applies to ALL errors, not just ones "related" to your changes.
+
+The following justifications are INVALID and FORBIDDEN:
 
 | ❌ Invalid Excuse | Why It's Wrong |
 |------------------|----------------|
 | "Pre-existing failure" | If it was broken before, fix it now. You found it, you own it. |
-| "Unrelated to my changes" | You ran the tests, you saw the failure. Fix it. |
+| "Unrelated to my changes" | You ran the checks, you saw the error. Fix it. |
 | "Will fix later" | Later never comes. Fix it now. |
-| "Not my code" | Irrelevant. The test is failing. Fix it. |
+| "Not my code" | Irrelevant. The error exists. Fix it. |
 | "Flaky test" | Either fix the flakiness or delete the test. No middle ground. |
-| "Test is wrong" | Then fix the test. Don't leave it broken. |
+| "Test/type error is wrong" | Then fix it. Don't leave it broken. |
 
 **The Rule:**
-1. Run tests
-2. Tests fail → **STOP** and fix
-3. All tests pass → Continue with your work
+1. Run tests → failures? **STOP** and fix
+2. Run type checker → errors? **STOP** and fix
+3. Run linter → errors? **STOP** and fix
+4. All checks pass → Continue with your work
 
 **Why this matters:**
-- Broken tests erode trust in the test suite
+- Broken checks erode trust in the quality gates
 - "Pre-existing" failures multiply into more failures
-- Skipping broken tests normalizes ignoring quality
+- Skipping errors normalizes ignoring quality
 - The user trusts you to leave the codebase better than you found it
 
-**If you catch yourself about to say "pre-existing" or "unrelated":** STOP. Fix the test. Then continue.
+**If you catch yourself about to say "pre-existing" or "unrelated":** STOP. Fix the error. Then continue.
 
 ### Test Markers
 

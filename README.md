@@ -10,9 +10,8 @@ TDD enforced. Quality automated. Ship with confidence. 🚀
 [![Stars](https://img.shields.io/github/stars/maxritter/claude-codepro?style=flat&color=yellow)](https://github.com/maxritter/claude-codepro/stargazers)
 [![Last Commit](https://img.shields.io/github/last-commit/maxritter/claude-codepro?color=blue)](https://github.com/maxritter/claude-codepro/commits/main)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/maxritter/claude-codepro/pulls)
-![License](https://img.shields.io/badge/License-AGPL--3.0%20%2F%20Paid-blue.svg)
 
-#### ⭐ [Star this repository](https://github.com/maxritter/claude-codepro) · 🌐 [Visit the website](https://claude-code.pro) · 💼 [Follow for updates](https://www.linkedin.com/in/rittermax/) · ✉️ [Get in touch](mailto:mail@maxritter.net)
+#### ⭐ [Star this repository](https://github.com/maxritter/claude-codepro) · 🌐 [Visit the website](https://claude-code.pro) · 🔔 [Follow for updates](https://www.linkedin.com/in/rittermax/) · ✉️ [Get in touch](mailto:mail@maxritter.net)
 
 <br>
 
@@ -40,13 +39,12 @@ Then run `ccp` and `/setup` once. Use `/spec` or the quick mode for full quality
 - [Usage](#-usage)
 - [Contributing](#-contributing)
 - [License](#-license)
-- [Acknowledgments](#-acknowledgments)
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### ✅ Prerequisites
 
 Choose your installation method:
 
@@ -62,7 +60,7 @@ Choose your installation method:
 
 **Claude Subscription:** Claude Max 5x/20x or Enterprise recommended for best experience.
 
-### Installation
+### 🔧 Installation
 
 Run the following command in your **project folder root**:
 
@@ -100,21 +98,21 @@ You'll be asked to choose between **Dev Container** or **Local Installation**.
 ### 🧠 Enhanced Context Capabilities
 
 - **Persistent Memory** - Cross-session memory system that automatically ingests context
-- **Vexor** - Local vector store based semantic code search for token-efficient retrieval
-- **Context7 / Firecrawl** - External context retrieval for code and web search / scraping
-- **agent-browser** - Headless browser automation and testing within the Dev Container
+- **Semantic Search** - Local vector store based semantic code search for token-efficient retrieval
+- **External Context** - External context retrieval for code / libraries and web search / scraping
+- **Browser Automation** - Headless browser automation and testing even within the Dev Container
 
 ### ✅ Quality Automation
 
 - **Auditor Agent** - Background AI that monitors rule compliance and surfaces violations in real-time
 - **TDD Enforcer** - Pre-edit hook that warns when modifying code without failing tests first
-- **Language Quality** - Post-edit hooks for Python (ruff, basedpyright) and TypeScript (eslint, tsc)
+- **Quality Hooks** - Python (ruff, basedpyright), TypeScript (eslint, tsc), Go (gofmt, go vet) and QLTY
 - **Status Line** - Live display of context usage, memory status, auditor state, and license info
 
 ### 🛠️ One-Command Installer
 
 - **Automated Container Setup** - Isolated Linux environment with pre-configured tools and extensions
-- **Extended Language Support** - Optionally install extended support for Python & TypeScript
+- **Extended Language Support** - Optionally install extended support for Python, TypeScript & Go
 - **Automated Updater** - Updates CCP to the latest version when launched over the binary
 - **Shell Integration** - Auto-configures bash, fish and zsh with `ccp` alias
 
@@ -204,8 +202,18 @@ Claude CodePro uses [Claude Code's modular rules](https://code.claude.com/docs/e
 
 ## 📄 License
 
-**Standard** - All features, continuous updates, basic support via GitHub. [Subscribe](https://license.claude-code.pro)
+> **Try free for 7 days** — No signup, no credit card. Just install and go.
 
-**Enterprise** - Everything in Standard plus dedicated email support and optional training sessions. [Subscribe](https://license.claude-code.pro)
+After your trial, choose the tier that fits your needs:
 
-A 7-day free trial is available for evaluation. Most source code is open source under AGPL-3.0. See the [LICENSE](LICENSE) file for details.
+| Tier | Includes |
+|:-----|:---------|
+| **Standard** | All features, updates, GitHub support |
+| **Enterprise** | Standard + dedicated email support, training |
+
+<p align="center">
+  <a href="https://license.claude-code.pro"><strong>Purchase a license →</strong></a>
+</p>
+
+See the [LICENSE](LICENSE) file for full terms.
+

@@ -135,6 +135,8 @@ class ClaudeFilesStep(BaseStep):
                 continue
             if "/bin/" in file_path:
                 continue
+            if "/installer/" in file_path:
+                continue
             if "/claude-code-chat-images/" in file_path:
                 continue
             if file_path.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
@@ -267,7 +269,13 @@ class ClaudeFilesStep(BaseStep):
                     dest_file = ctx.project_dir / file_path
                     if Path(file_path).name == SETTINGS_FILE:
                         success = self._install_settings(
-                            file_path, dest_file, config, ctx.enable_python, ctx.enable_typescript, ctx.enable_golang, ctx.project_dir
+                            file_path,
+                            dest_file,
+                            config,
+                            ctx.enable_python,
+                            ctx.enable_typescript,
+                            ctx.enable_golang,
+                            ctx.project_dir,
                         )
                         if success:
                             file_count += 1
@@ -345,7 +353,9 @@ class ClaudeFilesStep(BaseStep):
 
             try:
                 settings_content = temp_file.read_text()
-                processed_content = process_settings(settings_content, install_python, install_typescript, install_golang)
+                processed_content = process_settings(
+                    settings_content, install_python, install_typescript, install_golang
+                )
                 processed_content = patch_hook_paths(processed_content, project_dir)
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
                 dest_path.write_text(processed_content)

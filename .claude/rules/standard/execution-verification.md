@@ -2,6 +2,36 @@
 
 **Core Rule:** Tests passing ≠ Program working. Always execute and verify real output.
 
+### ⛔ CRITICAL: Unit Tests Are NOT Execution
+
+**Unit tests with mocks prove NOTHING about real-world behavior.**
+
+When you:
+- Add a new CLI command → RUN the command
+- Add an API endpoint → CALL the endpoint
+- Add a provider/widget → RUN the module that uses it
+- Add file parsing → PARSE a real file
+- Add network calls → MAKE a real call (or verify mock is tested separately)
+
+**Example of what NOT to do:**
+```
+❌ Added UsageProvider that calls Anthropic API
+❌ Wrote tests with mocked API responses
+❌ Tests pass!
+❌ Marked task complete
+❌ NEVER actually ran the code to see if it works
+```
+
+**What you SHOULD do:**
+```
+✅ Added UsageProvider that calls Anthropic API
+✅ Wrote tests with mocked API responses
+✅ Tests pass!
+✅ Ran `python -m ccp.statusline` with real credentials
+✅ Verified real API call worked or got expected error
+✅ THEN marked task complete
+```
+
 ### Mandatory Execution
 
 Run the actual program after tests pass. Tests use mocks and fixtures - they don't prove the real program works.
@@ -12,6 +42,7 @@ Run the actual program after tests pass. Tests use mocks and fixtures - they don
 - Modifying imports or dependencies
 - Changing configuration
 - Working with entry points
+- Adding new features (even small ones!)
 - Before marking any task complete
 
 **If there's a runnable program, RUN IT.**

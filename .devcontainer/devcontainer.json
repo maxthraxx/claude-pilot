@@ -1,13 +1,13 @@
 {
-  "name": "{{PROJECT_NAME}}",
+  "name": "claude-codepro",
   "build": {
     "dockerfile": "Dockerfile"
   },
   "runArgs": [
     "--name",
-    "{{PROJECT_SLUG}}"
+    "claude-codepro"
   ],
-  "workspaceFolder": "/workspaces/{{PROJECT_SLUG}}",
+  "workspaceFolder": "/workspaces/claude-codepro",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -51,6 +51,11 @@
       "nvm": "latest",
       "pnpm": "latest"
     },
+    /* https://github.com/devcontainers/features/tree/main/src/go */
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest",
+      "golangciLintVersion": "latest"
+    },
     /* https://github.com/devcontainers/features/blob/main/src/docker-outside-of-docker/ */
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "moby": "false",
@@ -74,12 +79,7 @@
     /* https://github.com/braun-daniel/devcontainer-features/blob/main/src/spaceship */
     "ghcr.io/braun-daniel/devcontainer-features/spaceship:1": {},
     /* https://github.com/braun-daniel/devcontainer-features/blob/main/src/fzf */
-    "ghcr.io/braun-daniel/devcontainer-features/fzf:1": {},
-    /* https://github.com/devcontainers/features/tree/main/src/go */
-    "ghcr.io/devcontainers/features/go:1": {
-      "version": "latest",
-      "golangciLintVersion": "latest"
-    }
+    "ghcr.io/braun-daniel/devcontainer-features/fzf:1": {}
   },
   "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/maxritter/claude-codepro/v5.0.6/install.sh | bash",
   "remoteUser": "root",

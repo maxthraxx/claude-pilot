@@ -29,6 +29,19 @@ Before ANY claim of success, completion, or correctness:
 | "Regression test works" | Red-green cycle verified    | Test passes once            |
 | "Requirements met"      | Line-by-line checklist      | Tests passing               |
 
+### ⛔ Fix ALL Errors - No Exceptions
+
+When verification reveals errors, fix ALL of them - not just the ones "related" to your current task.
+
+**Invalid responses to errors:**
+- ❌ "These are pre-existing errors" → Fix them anyway
+- ❌ "Unrelated to my changes" → You found them, you fix them
+- ❌ "Type errors in other files" → Fix them anyway
+
+**Valid response:** Fix the error, then continue.
+
+The user trusts you to leave the codebase better than you found it. If you ran the check and saw the error, you own it.
+
 ### Stop Signals
 
 Run verification immediately if you're about to:

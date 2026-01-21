@@ -109,8 +109,10 @@ setup_devcontainer() {
         PROJECT_NAME="$(basename "$(pwd)")"
         PROJECT_SLUG="$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '-')"
         if [ -f ".devcontainer/devcontainer.json" ]; then
-            sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" ".devcontainer/devcontainer.json"
-            sed -i.bak "s/{{PROJECT_SLUG}}/${PROJECT_SLUG}/g" ".devcontainer/devcontainer.json"
+            # Replace quoted "claude-codepro" (for name and runArgs) - but not URLs
+            sed -i.bak 's/"claude-codepro"/"'"${PROJECT_SLUG}"'"/g' ".devcontainer/devcontainer.json"
+            # Replace in workspace path
+            sed -i.bak 's|/workspaces/claude-codepro|/workspaces/'"${PROJECT_SLUG}"'|g' ".devcontainer/devcontainer.json"
             rm -f ".devcontainer/devcontainer.json.bak"
         fi
 
