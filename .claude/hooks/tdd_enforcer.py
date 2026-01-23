@@ -90,17 +90,36 @@ def is_test_file(file_path: str) -> bool:
     return False
 
 
-def has_failing_python_tests(project_dir: str) -> bool:
-    """Check if there are failing tests in pytest cache."""
+def has_related_failing_test(project_dir: str, impl_file: str) -> bool:
+    """Check if there's a failing test specifically for this module.
+
+    Looks for test files matching the implementation file name in the
+    pytest lastfailed cache. Only returns True if there's a failing test
+    that appears to be for the module being edited.
+    """
     cache_file = Path(project_dir) / ".pytest_cache" / "v" / "cache" / "lastfailed"
 
     if not cache_file.exists():
         return False
 
+    impl_path = Path(impl_file)
+    module_name = impl_path.stem
+
     try:
         with cache_file.open() as f:
             lastfailed = json.load(f)
-            return bool(lastfailed)
+
+        if not lastfailed:
+            return False
+
+        for test_path in lastfailed:
+            test_file = test_path.split("::")[0]
+            test_name = Path(test_file).stem
+
+            if test_name == f"test_{module_name}" or test_name == f"{module_name}_test":
+                return True
+
+        return False
     except (json.JSONDecodeError, OSError):
         return False
 
@@ -162,7 +181,7 @@ def run_tdd_enforcer() -> int:
         found_failing = False
 
         for _ in range(10):
-            if has_failing_python_tests(str(path)):
+            if has_related_failing_test(str(path), file_path):
                 found_failing = True
                 break
             if path.parent == path:
@@ -172,9 +191,10 @@ def run_tdd_enforcer() -> int:
         if found_failing:
             return 0
 
+        module_name = Path(file_path).stem
         return warn(
-            "No failing tests detected",
-            "Consider writing a failing test first before implementing.",
+            f"No failing test for '{module_name}' module",
+            f"Write a failing test in test_{module_name}.py first.",
         )
 
     if file_path.endswith((".ts", ".tsx")):
