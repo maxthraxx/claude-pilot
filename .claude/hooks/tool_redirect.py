@@ -75,13 +75,13 @@ def is_semantic_pattern(pattern: str) -> bool:
 REDIRECTS = {
     "WebSearch": {
         "message": "WebSearch is blocked",
-        "alternative": "Use `mcp-cli web-search/search` or ToolSearch to load web-search MCP",
-        "example": 'mcp-cli web-search/search \'{"query": "your search", "limit": 5}\'',
+        "alternative": "Use ToolSearch to load mcp__web-search__search, then call it directly",
+        "example": 'ToolSearch(query="web-search") → mcp__web-search__search(query="...")',
     },
     "WebFetch": {
         "message": "WebFetch is blocked (truncates content)",
-        "alternative": "Use `mcp-cli web-fetch/fetch_url` for full page content",
-        "example": 'mcp-cli web-fetch/fetch_url \'{"url": "https://example.com"}\'',
+        "alternative": "Use ToolSearch to load mcp__web-fetch__fetch_url for full page content",
+        "example": 'ToolSearch(query="web-fetch") → mcp__web-fetch__fetch_url(url="...")',
     },
     "Grep": {
         "message": "Grep with semantic pattern detected",

@@ -210,6 +210,7 @@ def _configure_claude_defaults() -> bool:
             "respectGitignore": False,
             "autoUpdates": False,
             "claudeInChromeDefaultEnabled": False,
+            "attribution": {"commit": "", "pr": ""},
         }
     )
 
@@ -299,6 +300,9 @@ def install_typescript_lsp() -> bool:
         return True
 
     if not _ensure_lsp_marketplace():
+        return False
+
+    if not _run_bash_with_retry("npm install -g @vtsls/language-server"):
         return False
 
     return _run_bash_with_retry("claude plugin install vtsls")
