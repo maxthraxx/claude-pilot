@@ -1,14 +1,14 @@
-"""Download utilities using httpx with progress tracking."""
+"""Download utilities using urllib with progress tracking."""
 
 from __future__ import annotations
 
 import json
 import shutil
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
-
-import httpx
 
 
 @dataclass
@@ -44,23 +44,26 @@ def download_file(
 
     file_url = f"{config.repo_url}/raw/{config.repo_branch}/{repo_path}"
     try:
-        with httpx.Client(follow_redirects=True, timeout=30.0) as client:
-            with client.stream("GET", file_url) as response:
-                if response.status_code != 200:
-                    return False
+        request = urllib.request.Request(file_url)
+        with urllib.request.urlopen(request, timeout=30.0) as response:
+            if response.status != 200:
+                return False
 
-                total = int(response.headers.get("content-length", 0))
-                downloaded = 0
+            total = int(response.headers.get("content-length", 0))
+            downloaded = 0
 
-                with open(dest_path, "wb") as f:
-                    for chunk in response.iter_bytes(chunk_size=8192):
-                        f.write(chunk)
-                        downloaded += len(chunk)
-                        if progress_callback and total > 0:
-                            progress_callback(downloaded, total)
+            with open(dest_path, "wb") as f:
+                while True:
+                    chunk = response.read(8192)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if progress_callback and total > 0:
+                        progress_callback(downloaded, total)
 
         return True
-    except (httpx.HTTPError, httpx.TimeoutException, OSError):
+    except (urllib.error.URLError, OSError, TimeoutError):
         return False
 
 
@@ -81,12 +84,12 @@ def get_repo_files(dir_path: str, config: DownloadConfig) -> list[str]:
         repo_path = config.repo_url.replace("https://github.com/", "")
         tree_url = f"https://api.github.com/repos/{repo_path}/git/trees/{config.repo_branch}?recursive=true"
 
-        with httpx.Client(timeout=30.0) as client:
-            response = client.get(tree_url)
-            if response.status_code != 200:
+        request = urllib.request.Request(tree_url)
+        with urllib.request.urlopen(request, timeout=30.0) as response:
+            if response.status != 200:
                 return []
 
-            data = response.json()
+            data = json.loads(response.read().decode("utf-8"))
             files = []
             if "tree" in data:
                 for item in data["tree"]:
@@ -95,7 +98,7 @@ def get_repo_files(dir_path: str, config: DownloadConfig) -> list[str]:
                         if path.startswith(dir_path):
                             files.append(path)
             return files
-    except (httpx.HTTPError, json.JSONDecodeError):
+    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError):
         return []
 
 

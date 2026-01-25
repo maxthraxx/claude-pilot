@@ -411,10 +411,10 @@ run_installer() {
 	fi
 
 	if ! is_in_container && [ "$saved_mode" = "local" ]; then
-		uv run --python 3.12 --no-project --with rich --with httpx --with typer --with platformdirs \
+		uv run --python 3.12 --no-project --with rich \
 			python -m installer install --local-system $version_arg "$@"
 	else
-		uv run --python 3.12 --no-project --with rich --with httpx --with typer --with platformdirs \
+		uv run --python 3.12 --no-project --with rich \
 			python -m installer install $version_arg "$@"
 	fi
 }

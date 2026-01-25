@@ -270,9 +270,13 @@ def _configure_claude_mem_defaults() -> bool:
 
         settings.update(
             {
+                "ENDLESS_MODE_ENABLED": "true",
+                "ENDLESS_MODE_COMPRESSION_MODEL": "claude-haiku-4-5",
+                "PROCESSING_MODE": "normal",
                 "CLAUDEMD_ENABLED": "false",
                 "CLAUDE_MEM_FOLDER_CLAUDEMD_ENABLED": "false",
                 "RETENTION_ENABLED": "true",
+                "CLEANUP_AUTO_ENABLED": "true",
                 "CLAUDE_MEM_RETENTION_ENABLED": "true",
                 "RETENTION_MAX_COUNT": "1000",
                 "MAX_WORKERS": "1",

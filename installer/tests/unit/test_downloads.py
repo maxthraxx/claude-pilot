@@ -1,4 +1,4 @@
-"""Tests for downloads module with httpx."""
+"""Tests for downloads module."""
 
 from __future__ import annotations
 
