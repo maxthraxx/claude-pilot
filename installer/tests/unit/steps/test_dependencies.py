@@ -155,9 +155,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
     @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_removes_native_binaries(
-        self, mock_remove, mock_run, mock_config, mock_version
-    ):
+    def test_install_claude_code_removes_native_binaries(self, mock_remove, mock_run, mock_config, mock_version):
         """install_claude_code removes native binaries before npm install."""
         from installer.steps.dependencies import install_claude_code
 
@@ -170,9 +168,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
     @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_uses_npm(
-        self, mock_remove, mock_run, mock_config, mock_version
-    ):
+    def test_install_claude_code_uses_npm(self, mock_remove, mock_run, mock_config, mock_version):
         """install_claude_code uses npm install -g."""
         from installer.steps.dependencies import install_claude_code
 
@@ -191,9 +187,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
     @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_uses_version_tag(
-        self, mock_remove, mock_run, mock_config, mock_version
-    ):
+    def test_install_claude_code_uses_version_tag(self, mock_remove, mock_run, mock_config, mock_version):
         """install_claude_code uses npm version tag for pinned version."""
         from installer.steps.dependencies import install_claude_code
 
@@ -211,9 +205,7 @@ class TestClaudeCodeInstall:
     @patch("installer.steps.dependencies._configure_claude_defaults")
     @patch("installer.steps.dependencies._run_bash_with_retry", return_value=True)
     @patch("installer.steps.dependencies._remove_native_claude_binaries")
-    def test_install_claude_code_configures_defaults(
-        self, mock_remove, mock_run, mock_config, mock_version
-    ):
+    def test_install_claude_code_configures_defaults(self, mock_remove, mock_run, mock_config, mock_version):
         """install_claude_code configures Claude defaults after npm install."""
         from installer.steps.dependencies import install_claude_code
 
@@ -309,9 +301,7 @@ class TestMigrateLegacyPlugins:
     @patch("installer.steps.dependencies._is_marketplace_installed")
     @patch("installer.steps.dependencies._is_plugin_installed")
     @patch("subprocess.run")
-    def test_migrate_removes_context7_from_official(
-        self, mock_run, mock_plugin_installed, mock_marketplace_installed
-    ):
+    def test_migrate_removes_context7_from_official(self, mock_run, mock_plugin_installed, mock_marketplace_installed):
         """_migrate_legacy_plugins removes context7 from official marketplace."""
         from installer.steps.dependencies import _migrate_legacy_plugins
 
@@ -363,9 +353,7 @@ class TestMigrateLegacyPlugins:
     @patch("installer.steps.dependencies._is_marketplace_installed")
     @patch("installer.steps.dependencies._is_plugin_installed")
     @patch("subprocess.run")
-    def test_migrate_removes_customable_marketplace(
-        self, mock_run, mock_plugin_installed, mock_marketplace_installed
-    ):
+    def test_migrate_removes_customable_marketplace(self, mock_run, mock_plugin_installed, mock_marketplace_installed):
         """_migrate_legacy_plugins removes customable marketplace."""
         from installer.steps.dependencies import _migrate_legacy_plugins
 
@@ -385,9 +373,7 @@ class TestMigrateLegacyPlugins:
     @patch("installer.steps.dependencies._is_marketplace_installed")
     @patch("installer.steps.dependencies._is_plugin_installed")
     @patch("subprocess.run")
-    def test_migrate_skips_when_nothing_to_migrate(
-        self, mock_run, mock_plugin_installed, mock_marketplace_installed
-    ):
+    def test_migrate_skips_when_nothing_to_migrate(self, mock_run, mock_plugin_installed, mock_marketplace_installed):
         """_migrate_legacy_plugins does nothing when nothing to migrate."""
         from installer.steps.dependencies import _migrate_legacy_plugins
 
@@ -517,9 +503,7 @@ class TestInstallPluginDependencies:
 
     @patch("installer.steps.dependencies._run_bash_with_retry")
     @patch("installer.steps.dependencies.command_exists")
-    def test_install_plugin_dependencies_runs_bun_install(
-        self, mock_cmd_exists, mock_run
-    ):
+    def test_install_plugin_dependencies_runs_bun_install(self, mock_cmd_exists, mock_run):
         """_install_plugin_dependencies runs bun install when bun is available."""
         from installer.steps.dependencies import _install_plugin_dependencies
 
@@ -538,9 +522,7 @@ class TestInstallPluginDependencies:
 
     @patch("installer.steps.dependencies._run_bash_with_retry")
     @patch("installer.steps.dependencies.command_exists")
-    def test_install_plugin_dependencies_runs_npm_install(
-        self, mock_cmd_exists, mock_run
-    ):
+    def test_install_plugin_dependencies_runs_npm_install(self, mock_cmd_exists, mock_run):
         """_install_plugin_dependencies runs npm install when npm is available."""
         from installer.steps.dependencies import _install_plugin_dependencies
 
@@ -559,9 +541,7 @@ class TestInstallPluginDependencies:
 
     @patch("installer.steps.dependencies._run_bash_with_retry")
     @patch("installer.steps.dependencies.command_exists")
-    def test_install_plugin_dependencies_runs_both_bun_and_npm(
-        self, mock_cmd_exists, mock_run
-    ):
+    def test_install_plugin_dependencies_runs_both_bun_and_npm(self, mock_cmd_exists, mock_run):
         """_install_plugin_dependencies runs both bun and npm when available."""
         from installer.steps.dependencies import _install_plugin_dependencies
 
@@ -579,7 +559,6 @@ class TestInstallPluginDependencies:
             assert mock_run.call_count == 2
             calls = [call[0][0] for call in mock_run.call_args_list]
             assert "bun install" in calls
-            assert "npm install" in calls
 
 
 class TestCleanMcpServersFromClaudeConfig:

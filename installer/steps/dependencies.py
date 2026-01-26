@@ -568,10 +568,6 @@ def _install_plugin_dependencies(project_dir: Path, ui: Any = None) -> bool:
         if _run_bash_with_retry("bun install", cwd=plugin_dir):
             success = True
 
-    if command_exists("npm"):
-        if _run_bash_with_retry("npm install", cwd=plugin_dir):
-            success = True
-
     return success
 
 

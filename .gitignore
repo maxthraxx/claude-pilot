@@ -239,7 +239,7 @@ tmp/
 .claude/installer/
 docs/plans
 docs/license
+.install-version
 
 # Kiro
 .kiro/
-.claude/plugin/.install-version

@@ -1,7 +1,7 @@
 {
-  "name": "Claude CodePro",
-  "version": "0.1.0",
-  "description": "Additional Modules for Claude CodePro served as plugin",
+  "name": "claude-codepro-plugin",
+  "version": "1.0.0",
+  "description": "Claude CodePro Plugin",
   "author": {
     "name": "Max Ritter",
     "email": "mail@maxritter.net"

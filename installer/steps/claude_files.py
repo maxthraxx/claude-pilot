@@ -12,13 +12,8 @@ from installer.downloads import DownloadConfig, download_file, get_repo_files
 from installer.steps.base import BaseStep
 
 SETTINGS_FILE = "settings.local.json"
-PYTHON_CHECKER_HOOK = "uv run python .claude/hooks/file_checker_python.py"
-TYPESCRIPT_CHECKER_HOOK = "uv run python .claude/hooks/file_checker_ts.py"
-GOLANG_CHECKER_HOOK = "uv run python .claude/hooks/file_checker_go.py"
-HOOKS_PATH_PATTERN = ".claude/hooks/"
 BIN_PATH_PATTERN = ".claude/bin/"
 PLUGIN_PATH_PATTERN = ".claude/plugin"
-SOURCE_REPO_HOOKS_PATH = "/workspaces/claude-codepro/.claude/hooks/"
 SOURCE_REPO_BIN_PATH = "/workspaces/claude-codepro/.claude/bin/"
 SOURCE_REPO_PLUGIN_PATH = "/workspaces/claude-codepro/.claude/plugin"
 
@@ -26,19 +21,16 @@ SOURCE_REPO_PLUGIN_PATH = "/workspaces/claude-codepro/.claude/plugin"
 def patch_claude_paths(content: str, project_dir: Path) -> str:
     """Patch .claude paths to use absolute paths for the target project.
 
-    Handles both relative paths (.claude/hooks/, .claude/bin/, .claude/plugin) and existing
+    Handles both relative paths (.claude/bin/, .claude/plugin) and existing
     absolute paths from the source repo (/workspaces/claude-codepro/.claude/).
+    Hooks are in the plugin folder and use CLAUDE_PLUGIN_ROOT, so no separate patching needed.
     """
-    abs_hooks_path = str(project_dir / ".claude" / "hooks") + "/"
     abs_bin_path = str(project_dir / ".claude" / "bin") + "/"
     abs_plugin_path = str(project_dir / ".claude" / "plugin")
 
-    content = content.replace(SOURCE_REPO_HOOKS_PATH, abs_hooks_path)
     content = content.replace(SOURCE_REPO_BIN_PATH, abs_bin_path)
     content = content.replace(SOURCE_REPO_PLUGIN_PATH, abs_plugin_path)
 
-    content = content.replace(" " + HOOKS_PATH_PATTERN, " " + abs_hooks_path)
-    content = content.replace('"' + HOOKS_PATH_PATTERN, '"' + abs_hooks_path)
     content = content.replace(" " + BIN_PATH_PATTERN, " " + abs_bin_path)
     content = content.replace('"' + BIN_PATH_PATTERN, '"' + abs_bin_path)
     content = content.replace('"' + PLUGIN_PATH_PATTERN, '"' + abs_plugin_path)
