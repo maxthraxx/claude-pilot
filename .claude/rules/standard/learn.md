@@ -1,10 +1,18 @@
 ## Online Learning System
 
-**Rule:** Automatically evaluate and extract reusable knowledge after significant tasks.
+**Rule:** Evaluate sessions for extractable knowledge. Only act when there's something valuable.
 
-### Automatic Invocation (MANDATORY)
+### Stop Hook Response (CRITICAL)
 
-After completing ANY task involving these triggers, **invoke `/learn`**:
+When the `/learn check` hook fires at session end:
+
+1. **Quickly evaluate:** Does this session have a non-obvious solution OR repeatable workflow?
+2. **If YES** → Invoke `Skill(learn)` to extract the knowledge
+3. **If NO** → **Output NOTHING.** Do not respond. Do not say "nothing to learn". Just let the stop proceed silently.
+
+**The user should see NO response from you if there's nothing to extract.** Any response like "No learning needed" or "Nothing to extract" is noise that frustrates users.
+
+### Triggers for /learn
 
 | Trigger | Example |
 |---------|---------|
@@ -15,23 +23,18 @@ After completing ANY task involving these triggers, **invoke `/learn`**:
 | **Trial-and-error** | Tried multiple approaches before finding what worked |
 | **Repeatable workflow** | Multi-step task that will recur; worth standardizing |
 
-### Quick Self-Check
+### What NOT to Extract (Stay Silent)
 
-After significant tasks, ask yourself:
-- "What did I just learn that wasn't obvious before starting?"
-- "Would future-me benefit from having this documented?"
-- "Is this a multi-step workflow I'd repeat on similar tasks?"
-
-**If YES to any → Invoke `/learn` immediately.**
-
-### What NOT to Extract
-
-- Single-step tasks with no workflow value
+- Simple tasks (reading files, running commands, answering questions)
+- Single-step fixes with no workflow value
 - One-off fixes unlikely to recur
 - Knowledge easily found in official docs
 - Unverified or theoretical solutions
 
-### The Goal
+### Quick Decision Tree
 
-**Continuous, autonomous improvement.** Every valuable discovery should benefit future sessions.
-Failing to evaluate means knowledge is lost forever.
+```
+Hook fires → Was there non-obvious discovery OR multi-step reusable workflow?
+├─ YES → Invoke Skill(learn)
+└─ NO  → Output nothing, let stop proceed
+```

@@ -98,8 +98,9 @@ You'll be asked to choose between **Dev Container** or **Local Installation**.
 ### 📚 Modular Rules, Commands & Skills
 
 - **Rules** - Best practices for TDD, debugging, context management, and more
-- **Commands** - `/spec` for Spec-Driven Development and `/sync` updating rules
+- **Commands** - `/spec` for Spec-Driven Development and `/sync` for updating rules
 - **Skills** - Coding standards for Python, TypeScript, Go, testing, and components
+- **Online Learning** - Automatically extracts reusable workflows and solutions into skills
 - **Customizable** - Add your own rules, commands, and skills that survive updates
 
 ### 🧠 Enhanced Context Capabilities

@@ -3,6 +3,10 @@
 
 First stop: blocks with reminder (exit 2)
 Subsequent stops within 120s: passes through (exit 0)
+
+Claude should evaluate and either:
+- Invoke /learn if there's something extractable
+- Output NOTHING and let the stop proceed if trivial task
 """
 
 from __future__ import annotations
@@ -29,7 +33,8 @@ def main() -> int:
 
     STATE_FILE.write_text(str(now))
     print(
-        "🧠 EVALUATE: Non-obvious solution OR repeatable workflow? → Invoke Skill(learn)",
+        "🧠 /learn check: Non-obvious solution or repeatable workflow? "
+        "If YES → invoke Skill(learn). If NO → output nothing.",
         file=sys.stderr,
     )
     return 2
