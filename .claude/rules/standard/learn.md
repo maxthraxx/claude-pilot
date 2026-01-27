@@ -2,15 +2,15 @@
 
 **Rule:** Evaluate sessions for extractable knowledge. Only act when there's something valuable.
 
-### Stop Hook Response (CRITICAL)
+### Context Warning Response (80%+)
 
-When the `/learn check` hook fires at session end:
+When the context monitor shows the `/learn check` reminder at 80%+ context:
 
 1. **Quickly evaluate:** Does this session have a non-obvious solution OR repeatable workflow?
-2. **If YES** → Invoke `Skill(learn)` to extract the knowledge
-3. **If NO** → **Output NOTHING.** Do not respond. Do not say "nothing to learn". Just let the stop proceed silently.
+2. **If YES** → Invoke `Skill(learn)` to extract the knowledge before handoff
+3. **If NO** → Continue with normal handoff, no mention of learning needed
 
-**The user should see NO response from you if there's nothing to extract.** Any response like "No learning needed" or "Nothing to extract" is noise that frustrates users.
+**Do NOT say "nothing to learn" or similar.** Just proceed silently if there's nothing to extract.
 
 ### Triggers for /learn
 
