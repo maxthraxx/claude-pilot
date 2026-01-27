@@ -5,6 +5,7 @@ Only allows stopping when:
 1. Asking user for plan approval (AskUserQuestion tool)
 2. Asking user for an important decision (AskUserQuestion tool)
 3. No active plan exists (not in /spec mode)
+4. User stops again within 60s cooldown (escape hatch)
 """
 
 from __future__ import annotations
@@ -12,11 +13,15 @@ from __future__ import annotations
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 RED = "\033[0;31m"
 YELLOW = "\033[0;33m"
 NC = "\033[0m"
+
+STATE_FILE = Path("/tmp/claude-spec-stop-guard")
+COOLDOWN_SECONDS = 60
 
 
 def find_active_plan() -> tuple[Path | None, str | None]:
@@ -104,9 +109,28 @@ def main() -> int:
     if transcript_path and is_waiting_for_user_input(transcript_path):
         return 0
 
+    # Check cooldown - if user already tried to stop recently, let them escape
+    now = time.time()
+    if STATE_FILE.exists():
+        try:
+            last_block = float(STATE_FILE.read_text().strip())
+            if now - last_block < COOLDOWN_SECONDS:
+                # User stopped again within cooldown - allow escape
+                STATE_FILE.unlink(missing_ok=True)
+                return 0
+        except (ValueError, OSError):
+            pass
+
+    # Record this block attempt for cooldown
+    try:
+        STATE_FILE.write_text(str(now))
+    except OSError:
+        pass
+
     # Block stopping - active plan and not waiting for user
     print(f"{RED}⛔ /spec workflow active - cannot stop without user interaction{NC}", file=sys.stderr)
     print(f"{YELLOW}Active plan: {plan_path} (Status: {status}){NC}", file=sys.stderr)
+    print(f"{YELLOW}💡 Stop again within 60s to force exit{NC}", file=sys.stderr)
     print("", file=sys.stderr)
     print("You may only stop when:", file=sys.stderr)
     print("  • Asking user for plan approval (use AskUserQuestion)", file=sys.stderr)

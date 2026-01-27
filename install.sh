@@ -389,7 +389,6 @@ download_ccp_binary() {
 		fi
 	fi
 
-	# Extract version (handles both "v5.2.2" and "vdev-xxx" formats)
 	local installed_version
 	installed_version=$(echo "$ccp_version" | sed -n 's/.*CodePro v\(.*\)/\1/p')
 
@@ -495,7 +494,6 @@ download_ccp_binary
 
 run_installer $INSTALLER_ARGS
 
-# Restart CCP after update if requested
 if [ "$RESTART_CCP" = true ]; then
 	CCP_BIN=".claude/bin/ccp"
 	if [ -x "$CCP_BIN" ]; then

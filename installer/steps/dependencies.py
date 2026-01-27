@@ -327,8 +327,30 @@ def _configure_vexor_local() -> bool:
         return False
 
 
+def _is_vexor_local_model_installed() -> bool:
+    """Check if the local embedding model is already downloaded."""
+    cache_dirs = [
+        Path.home() / ".cache" / "huggingface" / "hub",
+        Path.home() / ".cache" / "torch" / "sentence_transformers",
+    ]
+    model_name = "intfloat--multilingual-e5-small"
+
+    for cache_dir in cache_dirs:
+        if cache_dir.exists():
+            for model_dir in cache_dir.glob(f"*{model_name}*"):
+                if model_dir.is_dir():
+                    return True
+            for model_dir in cache_dir.glob(f"models--{model_name}*"):
+                if model_dir.is_dir():
+                    return True
+    return False
+
+
 def _setup_vexor_local_model(ui: Any = None) -> bool:
     """Download and setup the local embedding model for Vexor."""
+    if _is_vexor_local_model_installed():
+        return True
+
     try:
         if ui:
             with ui.spinner("Downloading local embedding model..."):
@@ -352,8 +374,12 @@ def _setup_vexor_local_model(ui: Any = None) -> bool:
 def install_vexor(use_local: bool = False, ui: Any = None) -> bool:
     """Install Vexor semantic search tool and configure defaults."""
     if use_local:
-        if not _run_bash_with_retry("uv pip install 'vexor[local]'"):
-            return False
+        if command_exists("vexor") and _is_vexor_local_model_installed():
+            _configure_vexor_local()
+            return True
+        if not command_exists("vexor"):
+            if not _run_bash_with_retry("uv pip install 'vexor[local]'"):
+                return False
         _configure_vexor_local()
         return _setup_vexor_local_model(ui)
     else:
@@ -372,8 +398,23 @@ def install_mcp_cli() -> bool:
     return _run_bash_with_retry("bun install -g https://github.com/philschmid/mcp-cli")
 
 
+def _is_vtsls_installed() -> bool:
+    """Check if vtsls is already installed globally."""
+    try:
+        result = subprocess.run(
+            ["npm", "list", "-g", "@vtsls/language-server"],
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0 and "@vtsls/language-server" in result.stdout
+    except Exception:
+        return False
+
+
 def install_typescript_lsp() -> bool:
     """Install TypeScript language server and compiler globally."""
+    if _is_vtsls_installed():
+        return True
     return _run_bash_with_retry("npm install -g @vtsls/language-server typescript")
 
 
