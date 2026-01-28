@@ -730,16 +730,24 @@ This step exists because we often forget our own rules. By re-reading each rule 
 
 #### Process
 
-**Step 4a: Discover and read ALL rules**
+**Step 4a: Discover and read ALL rules (BOTH standard AND custom)**
+
+**⛔ CRITICAL: You MUST check BOTH directories. Checking only custom rules is NOT sufficient.**
 
 ```bash
-# List all rule files
-ls -la .claude/rules/standard/*.md .claude/rules/custom/*.md
+# List ALL rule files - BOTH directories are MANDATORY
+ls -la .claude/rules/standard/*.md   # Standard rules - REQUIRED
+ls -la .claude/rules/custom/*.md     # Custom rules - REQUIRED
 ```
 
-Then use `Read` tool to read EACH file completely:
-- `.claude/rules/standard/*.md` - All standard rules
-- `.claude/rules/custom/*.md` - All custom project rules
+Then use `Read` tool to read EACH file completely from BOTH directories:
+
+| Directory | What It Contains | Required? |
+|-----------|------------------|-----------|
+| `.claude/rules/standard/*.md` | Core development standards (TDD, testing, execution, Python/TS/Go rules, etc.) | **YES - MANDATORY** |
+| `.claude/rules/custom/*.md` | Project-specific rules (git commits, project conventions) | **YES - MANDATORY** |
+
+**DO NOT skip standard rules. They contain critical requirements like TDD enforcement, execution verification, and testing standards.**
 
 **Step 4b: For EACH rule file, create a compliance checklist**
 
@@ -784,15 +792,24 @@ For each violation found:
 
 **Step 4d: Output the compliance report**
 
+**⚠️ Report MUST include rules from BOTH standard/ AND custom/ directories:**
+
 ```
 ## Rules Compliance Audit Complete
 
-### Rules Checked: [N] files
+### Standard Rules Checked: [N] files
 - .claude/rules/standard/execution-verification.md ✅
 - .claude/rules/standard/tdd-enforcement.md ✅
+- .claude/rules/standard/testing-strategies-coverage.md ✅
 - .claude/rules/standard/python-rules.md ✅
+- .claude/rules/standard/verification-before-completion.md ✅
+- .claude/rules/standard/systematic-debugging.md ✅
+- ... (ALL standard rules)
+
+### Custom Rules Checked: [N] files
 - .claude/rules/custom/git-commits.md ✅
-...
+- .claude/rules/custom/project.md ✅
+- ... (ALL custom rules)
 
 ### Violations Found: [N]
 - [rule]: [violation] → [fix applied]
@@ -801,13 +818,18 @@ For each violation found:
 - [structural violation that couldn't be fixed]
 ```
 
+**If the report doesn't show BOTH sections, the audit is incomplete.**
+
 #### Completion Gate
 
 **DO NOT proceed to Step 5 until:**
-- Every rule file has been READ (not skipped)
+- Every rule file in `.claude/rules/standard/` has been READ
+- Every rule file in `.claude/rules/custom/` has been READ
 - Every key requirement has been checked
 - All fixable violations have been remediated
 - Compliance report has been output
+
+**⛔ If you only checked custom rules, GO BACK and check standard rules too.**
 
 ### Step 5: Call Chain Analysis
 
