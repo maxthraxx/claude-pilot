@@ -62,7 +62,7 @@ The user trusts you to leave the codebase better than you found it. If you ran t
 
 ### ⛔ Auto-Fix in /spec Workflow
 
-In /spec workflows, verification findings (from multi-pass code review) are **automatically implemented**:
+In /spec workflows, verification findings (from code review) are **automatically implemented**:
 
 - **must_fix** issues → Fix immediately without asking
 - **should_fix** issues → Fix immediately without asking

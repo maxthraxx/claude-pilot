@@ -72,24 +72,29 @@ Tasks 3 and 4 won't show as ready until Task 2 completes.
 
 ## ⛔ ABSOLUTE BANS
 
-### No Sub-Agents (Except Multi-Pass Verification)
+### No Sub-Agents (Except Verification Steps)
 **NEVER use the Task tool to spawn sub-agents during planning exploration or implementation.**
 - Use `Read`, `Grep`, `Glob`, `Bash` directly for exploration
 - Sub-agents lose context and make mistakes during implementation
 
-**Exception: Multi-pass verification in /spec workflow.**
+**Exception: Verification steps in /spec workflow.**
 
-There are TWO verification points that use parallel sub-agents:
+There are TWO verification points that use a single verifier sub-agent each:
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| **End of Planning** | `plan-verifier` | Verify plan captures user requirements before approval |
-| **End of Implementation** | `spec-verifier` | Verify code implements the plan correctly |
+| **End of Planning (Step 7)** | `plan-verifier` | Verify plan captures user requirements before approval |
+| **End of Implementation (Step 8)** | `spec-verifier` | Verify code implements the plan correctly |
 
-Both spawn 3 parallel agents for independent perspectives:
-- Each verifier runs with fresh context to avoid anchoring bias
-- Multiple passes catch different issues (60-70% per pass → 90%+ combined)
-- Issues found by 2+ passes have higher confidence
+**⛔ VERIFICATION STEPS ARE MANDATORY - NEVER SKIP THEM.**
+
+Even if:
+- Context is getting high (do handoff AFTER verification)
+- The plan/code seems simple or correct
+- You're confident in your work
+- Tests pass
+
+**None of these are valid reasons to skip verification. ALWAYS RUN THE VERIFIER.**
 
 **⚠️ Sub-agents do NOT inherit rules.** Rules are loaded by Claude Code at session start, but Task sub-agents start fresh. The verifier agents have key rules embedded directly and can read rule files from:
 - `~/.claude/rules/*.md` (global rules)
@@ -119,12 +124,14 @@ Plan → Verify Plan → Approve → Implement → Verify Code → Done
               ──────────┘         ←──────────────┘
 ```
 
-**Two Multi-Pass Verification Points:**
+**Two Verification Points (MANDATORY - NEVER SKIP):**
 
 | Point | What | When |
 |-------|------|------|
-| **Plan Verification** | 3 agents verify plan matches user requirements | Before approval |
-| **Code Verification** | 3 agents verify code matches plan | After implementation |
+| **Plan Verification (Step 7)** | Verifier checks plan matches user requirements | Before approval |
+| **Code Verification (Step 8)** | Verifier checks code implements plan correctly | After implementation |
+
+**⛔ Both verification steps are NON-NEGOTIABLE. Skipping is FORBIDDEN.**
 
 **⛔ CRITICAL: Only ONE user interaction point exists: Plan Approval.**
 

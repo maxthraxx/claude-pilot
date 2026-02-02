@@ -18,7 +18,7 @@ model: opus
 ## ⛔ CRITICAL RULES
 
 1. **NO sub-agents during planning/implementation** - Never use `Task` tool to spawn sub-agents during Phase 1 or Phase 2 (loses context). Use Read, Grep, Glob, Bash directly.
-   - **Exception:** Phase 3 (Verification) uses parallel sub-agents for multi-pass code review
+   - **Exception:** Plan verification (Step 7) and Code verification (Step 8) each use a single verifier sub-agent
    - Note: Task MANAGEMENT tools (TaskCreate, TaskList, TaskUpdate, TaskGet) ARE allowed for tracking progress
 2. **NO stopping between phases** - Flow continuously from planning → implementation → verification
 3. **NO built-in plan mode** - Never use EnterPlanMode or ExitPlanMode tools
@@ -417,15 +417,17 @@ Iterations: 0
 - [Decisions deferred to implementation]
 ```
 
-### Step 7: Multi-Pass Plan Verification (MANDATORY)
+### Step 7: Plan Verification (MANDATORY - NEVER SKIP)
 
-**⛔ THIS STEP IS NON-NEGOTIABLE. You MUST spawn 3 parallel verifiers before asking for approval.**
+**⛔ THIS STEP IS NON-NEGOTIABLE. You MUST run plan verification before asking for approval.**
 
-Before presenting the plan to the user, verify it independently with 3 parallel reviewers. This catches missing requirements, scope issues, and misalignments BEFORE the user sees the plan.
+**⚠️ SKIPPING THIS STEP IS FORBIDDEN.** Even if context is high, even if the plan seems simple, even if you're confident - YOU MUST VERIFY. No exceptions.
 
-#### 7a: Launch Parallel Plan Verification
+Before presenting the plan to the user, verify it with a dedicated verifier agent. This catches missing requirements, scope issues, and misalignments BEFORE the user sees the plan.
 
-Spawn 3 `plan-verifier` agents in parallel using the Task tool:
+#### 7a: Launch Plan Verification
+
+Spawn 1 `plan-verifier` agent using the Task tool:
 
 ```
 Task(
@@ -441,23 +443,18 @@ Task(
 )
 ```
 
-**CRITICAL:** Launch all 3 in a single message with 3 Task tool calls (parallel execution).
-
-Each verifier:
+The verifier:
 - Reviews plan against original user request
 - Checks if clarification answers are incorporated
 - Identifies missing requirements or scope issues
 - Returns structured JSON findings
 
-#### 7b: Aggregate and Fix Findings
+#### 7b: Fix All Findings
 
-After all passes complete:
+After verification completes:
 
-1. **Collect** all JSON findings from 3 passes
-2. **Deduplicate** on (title, plan_section) - same issue = one entry
-3. **Score confidence**: (passes finding issue) / 3 × 100%
-
-**For each issue found:**
+1. **Collect** all JSON findings from the verifier
+2. **Fix all issues by severity:**
 
 | Severity | Action |
 |----------|--------|
@@ -470,7 +467,7 @@ After all passes complete:
 ```
 ## Plan Verification Complete
 
-**Passes:** 3 | **Unique Issues:** X | **Fixed:** Y
+**Issues Found:** X | **Fixed:** Y
 
 Plan has been updated to address findings. Proceeding to approval...
 ```
@@ -851,46 +848,16 @@ For each violation found:
    - Document the violation
    - If critical, add fix task to plan and loop back
 
-**Step 4d: Output the compliance report**
-
-**⚠️ Report MUST include rules from BOTH standard/ AND custom/ directories:**
+**Step 4d: Output brief compliance report**
 
 ```
-## Rules Compliance Audit Complete
-
-### Standard Rules Checked: [N] files (from ~/.claude/rules/)
-- ~/.claude/rules/execution-verification.md ✅
-- ~/.claude/rules/tdd-enforcement.md ✅
-- ~/.claude/rules/testing-strategies-coverage.md ✅
-- ~/.claude/rules/python-rules.md ✅
-- ~/.claude/rules/verification-before-completion.md ✅
-- ~/.claude/rules/systematic-debugging.md ✅
-- ... (ALL standard rules)
-
-### Custom Rules Checked: [N] files (from .claude/rules/)
-- .claude/rules/git-commits.md ✅
-- .claude/rules/project.md ✅
-- ... (ALL custom rules)
-
-### Violations Found: [N]
-- [rule]: [violation] → [fix applied]
-
-### Violations Remaining: [N]
-- [structural violation that couldn't be fixed]
+## Rules Compliance Audit
+- Standard rules (~/.claude/rules/): [N] checked ✅
+- Custom rules (.claude/rules/): [N] checked ✅
+- Violations found: [N] | Fixed: [N]
 ```
 
-**If the report doesn't show BOTH sections, the audit is incomplete.**
-
-#### Completion Gate
-
-**DO NOT proceed to Step 5 until:**
-- Every rule file in `~/.claude/rules/` has been READ
-- Every rule file in `.claude/rules/` has been READ
-- Every key requirement has been checked
-- All fixable violations have been remediated
-- Compliance report has been output
-
-**⛔ If you only checked custom rules, GO BACK and check standard rules too.**
+**⛔ DO NOT proceed until BOTH directories are checked and all fixable violations are fixed.**
 
 ### Step 5: Call Chain Analysis
 
@@ -922,22 +889,17 @@ Verify test coverage meets requirements.
 
 Run automated quality tools and fix any issues found.
 
-### Step 8: Multi-Pass Code Review (MANDATORY - NEVER SKIP)
+### Step 8: Code Review Verification (MANDATORY - NEVER SKIP)
 
-**⛔ THIS STEP IS NON-NEGOTIABLE. You MUST spawn 3 parallel verifiers.**
+**⛔ THIS STEP IS NON-NEGOTIABLE. You MUST run code verification.**
 
-Do NOT skip this step because:
+**⚠️ SKIPPING THIS STEP IS FORBIDDEN.** Even if:
 - You're confident the code is correct
 - Context is getting high (do handoff AFTER verification, not instead of it)
 - Tests pass (tests don't catch everything)
 - The implementation seems simple
 
-**⚠️ Fresh contexts catch more issues. This step spawns 3 parallel reviewers.**
-
-A single code review pass catches ~60-70% of issues. Multiple independent passes with fresh contexts significantly increase coverage because:
-- Each fresh context samples different reasoning paths
-- Context anchoring causes blind spots - fresh reviewers don't have them
-- Issues found by 2+ passes have higher confidence
+**None of these are valid reasons to skip. ALWAYS VERIFY.**
 
 #### 8a: Identify Changed Files
 
@@ -946,9 +908,9 @@ Get list of files changed in this implementation:
 git status --short  # Shows staged and unstaged changes
 ```
 
-#### 8b: Launch Parallel Verification Passes
+#### 8b: Launch Code Verification
 
-Spawn 3 `spec-verifier` agents in parallel using the Task tool:
+Spawn 1 `spec-verifier` agent using the Task tool:
 
 ```
 Task(
@@ -964,46 +926,34 @@ Task(
 )
 ```
 
-**CRITICAL:** Launch all 3 in a single message with 3 Task tool calls (parallel execution).
-
-Each verifier:
+The verifier:
 - Receives the plan file path as source of truth
 - Reviews changed files against plan requirements
 - Can read related files for context (imports, dependencies, etc.)
 - Runs with fresh context (no anchoring bias)
-- Doesn't know what other passes found
 - Returns structured JSON findings
 
-#### 8c: Aggregate Findings
+#### 8c: Report Findings
 
-After all passes complete:
-
-1. **Collect** all JSON findings from 3 passes
-2. **Deduplicate** on (file, title) - same issue = one entry
-3. **Score confidence**: (passes finding issue) / 3 × 100%
-4. **Group** by severity, sort by confidence within groups
-
-#### 8d: Report Findings
-
-Present aggregated findings briefly:
+Present findings briefly:
 
 ```
-## Multi-Pass Verification Complete
+## Code Verification Complete
 
-**Passes:** 3 | **Unique Issues:** X
+**Issues Found:** X
 
 ### Must Fix (N) | Should Fix (N) | Suggestions (N)
 
 Implementing fixes automatically...
 ```
 
-#### 8e: Automatically Implement ALL Findings
+#### 8d: Automatically Implement ALL Findings
 
 **⛔ DO NOT ask user for permission. Fix everything automatically.**
 
 This is part of the automated /spec workflow. The user approved the plan - verification fixes are part of that approval. Never stop to ask "Should I fix these?" or "Want me to address these findings?"
 
-**Implementation order (by severity, then confidence):**
+**Implementation order (by severity):**
 
 1. **must_fix issues** - Fix immediately (security, crashes, TDD violations)
 2. **should_fix issues** - Fix immediately (spec deviations, missing tests, error handling)
@@ -1015,7 +965,7 @@ This is part of the automated /spec workflow. The user approved the plan - verif
 3. Log: "✅ Fixed: [issue title]"
 
 **After all fixes:**
-1. Re-run verification (spawn 3 new passes) to catch any regressions
+1. Re-run verification (spawn new verifier) to catch any regressions
 2. Repeat until no must_fix or should_fix issues remain (max 3 iterations)
 3. If iterations exhausted with remaining issues, add them to plan and loop back to Phase 2
 
@@ -1027,38 +977,11 @@ This is part of the automated /spec workflow. The user approved the plan - verif
 
 Run end-to-end tests to verify the complete user workflow works.
 
-#### For APIs: Manual or Automated API Testing
+#### For APIs
+Test endpoints with curl. Verify status codes, response content, and error handling.
 
-**When applicable:** REST APIs, GraphQL APIs, authentication systems, microservices
-
-**Test with curl:**
-```bash
-# Health check
-curl -s http://localhost:8000/health | jq
-
-# CRUD operations
-curl -X POST http://localhost:8000/api/resource -H "Content-Type: application/json" -d '{"name": "test"}'
-curl -s http://localhost:8000/api/resource/1 | jq
-curl -X PUT http://localhost:8000/api/resource/1 -H "Content-Type: application/json" -d '{"name": "updated"}'
-curl -X DELETE http://localhost:8000/api/resource/1
-```
-
-**Verify:**
-- All requests succeed with expected status codes
-- Response times are acceptable
-- Authentication flows work correctly
-- CRUD operations complete successfully
-- Error scenarios return proper error codes
-
-**If failures:** Analyze failure → Check API endpoint → Fix implementation → Re-run → Continue until all pass
-
-#### For Frontend/UI: Agent Browser E2E Testing
-
-**⚠️ MANDATORY for any app with a user interface (web apps, dashboards, forms).**
-
-Use `agent-browser` to test the actual UI renders correctly and user workflows complete successfully. API tests verify the backend; Agent Browser verifies **what the user sees**.
-
-See `~/.claude/rules/agent-browser.md` for commands and E2E testing patterns.
+#### For Frontend/UI
+Use `agent-browser` to verify UI renders and workflows complete. See `~/.claude/rules/agent-browser.md`.
 
 ### Step 10: Final Verification
 
@@ -1177,20 +1100,17 @@ If `send-clear` fails:
 
 # CRITICAL RULES SUMMARY
 
-1. **NO sub-agents during planning/implementation** - Never use `Task` tool to spawn sub-agents in Phase 1 or 2. Phase 3 (Verification) uses parallel sub-agents for multi-pass code review. Task MANAGEMENT tools are fine.
-2. **ONLY stopping point is plan approval** - Never stop/wait between phases, during context handoff, or for user acknowledgment. Execute session continuation automatically.
-3. **Batch questions together** - Don't interrupt user flow
-4. **Run explorations sequentially** - One at a time, never in parallel
-5. **NEVER write implementation code during planning** - Planning and implementing are separate phases
-6. **NEVER assume - verify by reading files** - Hypotheses must be confirmed
-8. **ALWAYS re-read the plan after user edits** - If they chose to make changes, re-read before asking again
-9. **The plan must be detailed enough that another developer could follow it**
-10. **NEVER use built-in ExitPlanMode or EnterPlanMode tools**
-12. **"Out of Scope" ≠ "Don't implement"** - Clarify with user
-13. **TDD is MANDATORY** - No production code without failing test first
-14. **Update plan checkboxes after EACH task** - Not at the end
-15. **Quality over speed** - Never rush due to context pressure
-16. **Plan file is source of truth** - Survives session clears
-17. **Always ask follow-up after VERIFIED** - Ask if user needs anything else
+1. **NO sub-agents during planning/implementation** - Phase 1 and 2 use direct tools only. Verification steps (Plan Step 7, Code Step 8) each use a single verifier sub-agent.
+2. **NEVER SKIP verification** - Plan verification (Step 7) and Code verification (Step 8) are mandatory. No exceptions.
+3. **ONLY stopping point is plan approval** - Everything else is automatic. Never ask "Should I fix these?"
+4. **Batch questions together** - Don't interrupt user flow
+5. **Run explorations sequentially** - One at a time, never in parallel
+6. **NEVER write code during planning** - Separate phases
+7. **NEVER assume - verify by reading files**
+8. **Re-read plan after user edits** - Before asking for approval again
+9. **TDD is MANDATORY** - No production code without failing test first
+10. **Update plan checkboxes after EACH task** - Not at the end
+11. **Quality over speed** - Never rush due to context pressure
+12. **Plan file is source of truth** - Survives session clears
 
 ARGUMENTS: $ARGUMENTS
