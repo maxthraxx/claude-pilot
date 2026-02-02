@@ -146,6 +146,13 @@ class TestAliasDetection:
             config.write_text("# some other config\n")
             assert alias_exists_in_file(config) is False
 
+    def test_alias_exists_in_file_detects_claude_alias_without_marker(self):
+        """alias_exists_in_file detects alias claude without marker."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / ".bashrc"
+            config.write_text("alias claude='something'\n")
+            assert alias_exists_in_file(config) is True
+
 
 class TestAliasRemoval:
     """Test alias removal for updates and migration."""
@@ -215,3 +222,30 @@ class TestAliasRemoval:
             result = remove_old_alias(config)
 
             assert result is False
+
+    def test_remove_old_alias_removes_claude_alias_without_marker(self):
+        """remove_old_alias removes alias claude without marker."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / ".bashrc"
+            config.write_text("# config\nalias claude='something'\n# more\n")
+
+            result = remove_old_alias(config)
+
+            assert result is True
+            content = config.read_text()
+            assert "alias claude" not in content
+
+    def test_remove_old_alias_removes_fish_function(self):
+        """remove_old_alias removes fish function definition."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = Path(tmpdir) / "config.fish"
+            config.write_text("# before\nfunction claude\n    echo 'hello'\nend\n# after\n")
+
+            result = remove_old_alias(config)
+
+            assert result is True
+            content = config.read_text()
+            assert "function claude" not in content
+            assert "end" not in content or "# after" in content
+            assert "# before" in content
+            assert "# after" in content

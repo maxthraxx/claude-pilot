@@ -316,3 +316,91 @@ class TestMigrationStep:
 
                 step.run(ctx)
                 step.run(ctx)
+
+
+class TestCleanupGlobalOldFolders:
+    """Test _cleanup_global_old_folders function."""
+
+    def test_removes_empty_config_directory(self):
+        """_cleanup_global_old_folders removes empty ~/.claude/config directory."""
+        from installer.steps.migration import _cleanup_global_old_folders
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                config_dir = Path(tmpdir) / ".claude" / "config"
+                config_dir.mkdir(parents=True)
+
+                removed = _cleanup_global_old_folders()
+
+                assert not config_dir.exists()
+                assert str(config_dir) in removed
+
+    def test_preserves_non_empty_config_directory(self):
+        """_cleanup_global_old_folders preserves ~/.claude/config with user files."""
+        from installer.steps.migration import _cleanup_global_old_folders
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                config_dir = Path(tmpdir) / ".claude" / "config"
+                config_dir.mkdir(parents=True)
+                (config_dir / "user-settings.json").write_text('{"custom": true}')
+
+                removed = _cleanup_global_old_folders()
+
+                assert config_dir.exists()
+                assert (config_dir / "user-settings.json").exists()
+                assert str(config_dir) not in removed
+
+    def test_removes_bin_directory(self):
+        """_cleanup_global_old_folders removes ~/.claude/bin directory."""
+        from installer.steps.migration import _cleanup_global_old_folders
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(Path, "home", return_value=Path(tmpdir)):
+                bin_dir = Path(tmpdir) / ".claude" / "bin"
+                bin_dir.mkdir(parents=True)
+                (bin_dir / "pilot").write_text("#!/bin/bash")
+
+                removed = _cleanup_global_old_folders()
+
+                assert not bin_dir.exists()
+                assert str(bin_dir) in removed
+
+
+class TestMigrateCustomRules:
+    """Test _migrate_custom_rules function."""
+
+    def test_does_not_overwrite_existing_rules(self):
+        """_migrate_custom_rules skips files that already exist at destination."""
+        from installer.steps.migration import _migrate_custom_rules
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_dir = Path(tmpdir)
+            old_custom_dir = project_dir / ".claude" / "rules" / "custom"
+            new_rules_dir = project_dir / ".claude" / "rules"
+            old_custom_dir.mkdir(parents=True)
+            new_rules_dir.mkdir(parents=True, exist_ok=True)
+
+            (old_custom_dir / "my-rule.md").write_text("# Old version")
+            (new_rules_dir / "my-rule.md").write_text("# New version - do not overwrite")
+
+            _migrate_custom_rules(project_dir)
+
+            assert (new_rules_dir / "my-rule.md").read_text() == "# New version - do not overwrite"
+
+    def test_migrates_new_rules(self):
+        """_migrate_custom_rules moves rules that don't exist at destination."""
+        from installer.steps.migration import _migrate_custom_rules
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_dir = Path(tmpdir)
+            old_custom_dir = project_dir / ".claude" / "rules" / "custom"
+            old_custom_dir.mkdir(parents=True)
+            (old_custom_dir / "new-rule.md").write_text("# New rule")
+
+            count = _migrate_custom_rules(project_dir)
+
+            new_rules_dir = project_dir / ".claude" / "rules"
+            assert count == 1
+            assert (new_rules_dir / "new-rule.md").exists()
+            assert (new_rules_dir / "new-rule.md").read_text() == "# New rule"

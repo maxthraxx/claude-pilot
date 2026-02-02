@@ -14,7 +14,6 @@ def _detect_codepro_installation(project_dir: Path) -> bool:
     """Detect if old CodePro installation exists in project directory."""
     old_ccp_dir = project_dir / ".claude" / "ccp"
     old_config = project_dir / ".claude" / "config" / "ccp-config.json"
-    # Also detect old rules structure that needs migration
     old_custom_rules = project_dir / ".claude" / "rules" / "custom"
     old_standard_rules = project_dir / ".claude" / "rules" / "standard"
     return old_ccp_dir.exists() or old_config.exists() or old_custom_rules.exists() or old_standard_rules.exists()
@@ -136,18 +135,22 @@ def _cleanup_global_old_folders() -> list[str]:
     """
     removed: list[str] = []
 
-    folders_to_remove = [
-        Path.home() / ".claude" / "bin",
-        Path.home() / ".claude" / "config",
-    ]
+    old_bin = Path.home() / ".claude" / "bin"
+    if old_bin.exists():
+        try:
+            shutil.rmtree(old_bin)
+            removed.append(str(old_bin))
+        except (OSError, IOError):
+            pass
 
-    for folder in folders_to_remove:
-        if folder.exists():
-            try:
-                shutil.rmtree(folder)
-                removed.append(str(folder))
-            except (OSError, IOError):
-                pass
+    old_config = Path.home() / ".claude" / "config"
+    if old_config.exists():
+        try:
+            if old_config.is_dir() and not any(old_config.iterdir()):
+                old_config.rmdir()
+                removed.append(str(old_config))
+        except (OSError, IOError):
+            pass
 
     return removed
 
@@ -169,12 +172,13 @@ def _migrate_custom_rules(project_dir: Path) -> int:
     for rule_file in old_custom_dir.glob("*.md"):
         try:
             dest = new_rules_dir / rule_file.name
+            if dest.exists():
+                continue
             shutil.move(str(rule_file), str(dest))
             migrated += 1
         except (OSError, IOError):
             pass
 
-    # Remove empty custom dir and .gitkeep
     gitkeep = old_custom_dir / ".gitkeep"
     if gitkeep.exists():
         try:

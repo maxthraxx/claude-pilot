@@ -24,7 +24,12 @@ def alias_exists_in_file(config_file: Path) -> bool:
     if not config_file.exists():
         return False
     content = config_file.read_text()
-    return CLAUDE_ALIAS_MARKER in content or OLD_CCP_MARKER in content or "alias ccp" in content
+    return (
+        CLAUDE_ALIAS_MARKER in content
+        or OLD_CCP_MARKER in content
+        or "alias ccp" in content
+        or "alias claude" in content
+    )
 
 
 def remove_old_alias(config_file: Path) -> bool:
@@ -37,8 +42,11 @@ def remove_old_alias(config_file: Path) -> bool:
         OLD_CCP_MARKER in content
         or CLAUDE_ALIAS_MARKER in content
         or "alias ccp" in content
+        or "alias claude" in content
         or "ccp()" in content
         or "claude()" in content
+        or "function ccp" in content
+        or "function claude" in content
     )
     if not has_old:
         return False
@@ -54,7 +62,12 @@ def remove_old_alias(config_file: Path) -> bool:
         if OLD_CCP_MARKER in line or CLAUDE_ALIAS_MARKER in line:
             continue
 
-        if stripped.startswith("alias ccp=") or stripped.startswith("alias claude="):
+        if (
+            stripped.startswith("alias ccp=")
+            or stripped.startswith("alias claude=")
+            or stripped.startswith("alias ccp ")
+            or stripped.startswith("alias claude ")
+        ):
             continue
 
         if stripped.startswith("ccp()") or stripped == "ccp () {":

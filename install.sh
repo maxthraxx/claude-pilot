@@ -7,6 +7,7 @@ REPO_FALLBACK="maxritter/claude-codepro"
 REPO="$REPO_PRIMARY"
 
 VERSION="${VERSION:-}"
+VERSION="${VERSION#v}"
 
 INSTALLER_ARGS=""
 RESTART_PILOT=false
