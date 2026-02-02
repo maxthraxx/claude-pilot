@@ -523,6 +523,11 @@ def create_parser() -> argparse.ArgumentParser:
         default=None,
         help="Target version/tag for downloads (e.g., dev-abc1234-20260124)",
     )
+    install_parser.add_argument(
+        "--restart-ccp",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
 
     subparsers.add_parser("version", help="Show version information")
 
