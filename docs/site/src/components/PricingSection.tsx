@@ -74,12 +74,17 @@ const PricingSection = () => {
               Most Popular
             </div>
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center
                 group-hover:bg-primary/30 group-hover:scale-110 transition-all duration-300">
                 <Check className="h-6 w-6 text-primary" />
               </div>
               <h3 className="text-xl font-bold text-foreground">Standard</h3>
+            </div>
+
+            <div className="mb-6">
+              <span className="text-4xl font-bold text-foreground">$14</span>
+              <span className="text-muted-foreground">/month</span>
             </div>
 
             <ul className="space-y-3 mb-8">
@@ -113,12 +118,17 @@ const PricingSection = () => {
               ${cardsInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-indigo-500/15 rounded-xl flex items-center justify-center
                 group-hover:bg-indigo-500/25 group-hover:scale-110 transition-all duration-300">
                 <Building2 className="h-6 w-6 text-indigo-500" />
               </div>
               <h3 className="text-xl font-bold text-foreground">Enterprise</h3>
+            </div>
+
+            <div className="mb-6">
+              <span className="text-4xl font-bold text-foreground">$35</span>
+              <span className="text-muted-foreground">/month</span>
             </div>
 
             <ul className="space-y-3 mb-8">
