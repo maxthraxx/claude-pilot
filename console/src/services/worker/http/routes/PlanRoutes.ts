@@ -5,11 +5,22 @@
  * Reads from docs/plans/ directory to show plan status in the viewer.
  */
 
+import { Database } from "bun:sqlite";
 import express, { Request, Response } from "express";
 import { readdirSync, readFileSync, statSync, existsSync } from "fs";
 import { execSync } from "child_process";
 import path from "path";
 import { BaseRouteHandler } from "../BaseRouteHandler.js";
+import type { DatabaseManager } from "../../DatabaseManager.js";
+import type { SSEBroadcaster } from "../../SSEBroadcaster.js";
+import {
+  associatePlan,
+  getPlanForSession,
+  getPlanByContentSessionId,
+  getAllActivePlans,
+  updatePlanStatus,
+  clearPlanAssociation,
+} from "../../../sqlite/plans/store.js";
 
 export interface GitInfo {
   branch: string | null;
@@ -31,8 +42,13 @@ export interface PlanInfo {
 }
 
 export class PlanRoutes extends BaseRouteHandler {
-  constructor() {
+  private dbManager: DatabaseManager | null;
+  private sseBroadcaster: SSEBroadcaster | null;
+
+  constructor(dbManager?: DatabaseManager, sseBroadcaster?: SSEBroadcaster) {
     super();
+    this.dbManager = dbManager ?? null;
+    this.sseBroadcaster = sseBroadcaster ?? null;
   }
 
   setupRoutes(app: express.Application): void {
@@ -41,6 +57,19 @@ export class PlanRoutes extends BaseRouteHandler {
     app.get("/api/plans/active", this.handleGetActiveSpecs.bind(this));
     app.get("/api/plan/content", this.handleGetPlanContent.bind(this));
     app.get("/api/git", this.handleGetGitInfo.bind(this));
+
+    app.post("/api/sessions/:sessionDbId/plan", this.handleAssociatePlan.bind(this));
+    app.post(
+      "/api/sessions/by-content-id/:contentSessionId/plan",
+      this.handleAssociatePlanByContentId.bind(this),
+    );
+    app.get("/api/sessions/:sessionDbId/plan", this.handleGetSessionPlan.bind(this));
+    app.get(
+      "/api/sessions/by-content-id/:contentSessionId/plan",
+      this.handleGetSessionPlanByContentId.bind(this),
+    );
+    app.delete("/api/sessions/:sessionDbId/plan", this.handleClearSessionPlan.bind(this));
+    app.put("/api/sessions/:sessionDbId/plan/status", this.handleUpdatePlanStatus.bind(this));
   }
 
   /**
@@ -141,6 +170,105 @@ export class PlanRoutes extends BaseRouteHandler {
       filePath: resolvedPath,
     });
   });
+
+
+  private handleAssociatePlan = this.wrapHandler((req: Request, res: Response): void => {
+    const sessionDbId = this.parseIntParam(req, res, "sessionDbId");
+    if (sessionDbId === null) return;
+    if (!this.validateRequired(req, res, ["planPath", "status"])) return;
+    const db = this.getDb(res);
+    if (!db) return;
+
+    const result = associatePlan(db, sessionDbId, req.body.planPath, req.body.status);
+    this.broadcastPlanChange();
+    res.json({ plan: result });
+  });
+
+  private handleAssociatePlanByContentId = this.wrapHandler((req: Request, res: Response): void => {
+    const contentSessionId = req.params.contentSessionId;
+    if (!contentSessionId) {
+      this.badRequest(res, "Missing contentSessionId");
+      return;
+    }
+    if (!this.validateRequired(req, res, ["planPath", "status"])) return;
+    const db = this.getDb(res);
+    if (!db) return;
+
+    const row = db.prepare("SELECT id FROM sdk_sessions WHERE content_session_id = ?").get(contentSessionId) as
+      | { id: number }
+      | null;
+    if (!row) {
+      this.notFound(res, "Session not found");
+      return;
+    }
+
+    const result = associatePlan(db, row.id, req.body.planPath, req.body.status);
+    this.broadcastPlanChange();
+    res.json({ plan: result });
+  });
+
+  private handleGetSessionPlan = this.wrapHandler((req: Request, res: Response): void => {
+    const sessionDbId = this.parseIntParam(req, res, "sessionDbId");
+    if (sessionDbId === null) return;
+    const db = this.getDb(res);
+    if (!db) return;
+
+    const plan = getPlanForSession(db, sessionDbId);
+    res.json({ plan });
+  });
+
+  private handleGetSessionPlanByContentId = this.wrapHandler((req: Request, res: Response): void => {
+    const contentSessionId = req.params.contentSessionId;
+    if (!contentSessionId) {
+      this.badRequest(res, "Missing contentSessionId");
+      return;
+    }
+    const db = this.getDb(res);
+    if (!db) return;
+
+    const plan = getPlanByContentSessionId(db, contentSessionId);
+    res.json({ plan });
+  });
+
+  private handleClearSessionPlan = this.wrapHandler((req: Request, res: Response): void => {
+    const sessionDbId = this.parseIntParam(req, res, "sessionDbId");
+    if (sessionDbId === null) return;
+    const db = this.getDb(res);
+    if (!db) return;
+
+    clearPlanAssociation(db, sessionDbId);
+    this.broadcastPlanChange();
+    res.json({ success: true });
+  });
+
+  private handleUpdatePlanStatus = this.wrapHandler((req: Request, res: Response): void => {
+    const sessionDbId = this.parseIntParam(req, res, "sessionDbId");
+    if (sessionDbId === null) return;
+    if (!this.validateRequired(req, res, ["status"])) return;
+    const db = this.getDb(res);
+    if (!db) return;
+
+    updatePlanStatus(db, sessionDbId, req.body.status);
+    this.broadcastPlanChange();
+    const plan = getPlanForSession(db, sessionDbId);
+    res.json({ plan });
+  });
+
+  /** Broadcast plan_association_changed SSE event to connected clients. */
+  private broadcastPlanChange(): void {
+    this.sseBroadcaster?.broadcast({
+      type: "plan_association_changed",
+    });
+  }
+
+  /** Get the raw bun:sqlite Database from dbManager, or send 503 if unavailable. */
+  private getDb(res: Response): Database | null {
+    if (!this.dbManager) {
+      res.status(503).json({ error: "Database not available" });
+      return null;
+    }
+    return this.dbManager.getSessionStore().db;
+  }
 
   /**
    * Get info about active plan from docs/plans/ directory.

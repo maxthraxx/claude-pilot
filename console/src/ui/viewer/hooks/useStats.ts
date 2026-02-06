@@ -51,6 +51,16 @@ interface GitInfo {
   untracked: number;
 }
 
+export interface DashboardSession {
+  session_db_id: number;
+  content_session_id: string;
+  project: string;
+  status: string;
+  started_at: string;
+  plan_path: string | null;
+  plan_status: string | null;
+}
+
 interface UseStatsResult {
   stats: Stats;
   workerStatus: WorkerStatus;
@@ -58,6 +68,7 @@ interface UseStatsResult {
   recentActivity: ActivityItem[];
   planStatus: PlanStatus;
   gitInfo: GitInfo;
+  activeSessions: DashboardSession[];
   isLoading: boolean;
   refreshStats: () => Promise<void>;
 }
@@ -79,17 +90,19 @@ export function useStats(): UseStatsResult {
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [planStatus, setPlanStatus] = useState<PlanStatus>({ active: false, plan: null });
   const [gitInfo, setGitInfo] = useState<GitInfo>({ branch: null, staged: 0, unstaged: 0, untracked: 0 });
+  const [activeSessions, setActiveSessions] = useState<DashboardSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadStats = useCallback(async () => {
     try {
-      const [statsRes, healthRes, activityRes, projectsRes, planRes, gitRes] = await Promise.all([
+      const [statsRes, healthRes, activityRes, projectsRes, planRes, gitRes, sessionsRes] = await Promise.all([
         fetch('/api/stats'),
         fetch('/health'),
         fetch('/api/observations?limit=5'),
         fetch('/api/projects'),
         fetch('/api/plan'),
         fetch('/api/git'),
+        fetch('/api/dashboard/sessions'),
       ]);
 
       const statsData = await statsRes.json();
@@ -98,6 +111,7 @@ export function useStats(): UseStatsResult {
       const projectsData = await projectsRes.json();
       const planData = await planRes.json();
       const gitData = await gitRes.json();
+      const sessionsData = await sessionsRes.json();
 
       setStats({
         observations: statsData.database?.observations || 0,
@@ -144,6 +158,8 @@ export function useStats(): UseStatsResult {
         unstaged: gitData.unstaged || 0,
         untracked: gitData.untracked || 0,
       });
+
+      setActiveSessions(sessionsData.sessions || []);
     } catch (error) {
       console.error('Failed to load stats:', error);
       setWorkerStatus({ status: 'offline' });
@@ -169,7 +185,7 @@ export function useStats(): UseStatsResult {
           }));
         }
 
-        if (data.type === 'new_observation' || data.type === 'new_summary') {
+        if (data.type === 'new_observation' || data.type === 'new_summary' || data.type === 'plan_association_changed') {
           loadStats();
         }
       } catch (e) {
@@ -186,6 +202,7 @@ export function useStats(): UseStatsResult {
     recentActivity,
     planStatus,
     gitInfo,
+    activeSessions,
     isLoading,
     refreshStats: loadStats,
   };

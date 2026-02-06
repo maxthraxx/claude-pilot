@@ -5,10 +5,11 @@ import { VectorDbStatus } from './VectorDbStatus';
 import { PlanStatus } from './PlanStatus';
 import { GitStatus } from './GitStatus';
 import { RecentActivity } from './RecentActivity';
+import { ActiveSessions } from './ActiveSessions';
 import { useStats } from '../../hooks/useStats';
 
 export function DashboardView() {
-  const { stats, workerStatus, vectorDbStatus, recentActivity, planStatus, gitInfo, isLoading } = useStats();
+  const { stats, workerStatus, vectorDbStatus, recentActivity, planStatus, gitInfo, activeSessions, isLoading } = useStats();
 
   if (isLoading) {
     return (
@@ -32,6 +33,7 @@ export function DashboardView() {
           active={planStatus.active}
           plan={planStatus.plan}
         />
+        <ActiveSessions sessions={activeSessions} />
         <WorkerStatus
           status={workerStatus.status}
           version={workerStatus.version}

@@ -1,6 +1,7 @@
 ---
 description: "Spec implementation phase - TDD loop for each task in the plan"
 argument-hint: "<path/to/plan.md>"
+user-invocable: false
 model: opus
 ---
 # /spec-implement - Implementation Phase
@@ -213,7 +214,7 @@ If response shows `"status": "CLEAR_NEEDED"` (context >= 90%):
 
 **Step 1: Write continuation file (GUARANTEED BACKUP)**
 
-Write to `/tmp/claude-continuation.md`:
+Write to `~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md`:
 
 ```markdown
 # Session Continuation (/spec)

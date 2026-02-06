@@ -1,6 +1,7 @@
 ---
 description: Spec-driven development - plan, implement, verify workflow
 argument-hint: "<task description>" or "<path/to/plan.md>"
+user-invocable: true
 model: opus
 ---
 # /spec - Unified Spec-Driven Development
@@ -57,7 +58,7 @@ Parse the arguments: $ARGUMENTS
 ```
 IF arguments start with "--continue":
     plan_path = extract path after "--continue"
-    1. Read /tmp/claude-continuation.md if it exists
+    1. Read ~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md if it exists
     2. Delete the continuation file after reading
     3. Read plan file, check Status AND Approved fields
     → Dispatch to appropriate phase based on status
@@ -71,6 +72,14 @@ ELSE:
     task_description = arguments
     → Invoke planning phase: Skill(skill='spec-plan', args='<task_description>')
 ```
+
+**After reading the plan file, register the plan association (non-blocking):**
+
+```bash
+python ~/.claude/pilot/scripts/register_plan.py "<plan_path>" "<status>" 2>/dev/null || true
+```
+
+This tells Console which session is working on which plan. Failure is silently ignored.
 
 ## 0.2 Status-Based Dispatch
 
@@ -117,7 +126,7 @@ If response shows `"status": "CLEAR_NEEDED"` (context >= 90%):
 
 **Step 1: Write continuation file (GUARANTEED BACKUP)**
 
-Write to `/tmp/claude-continuation.md`:
+Write to `~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md`:
 
 ```markdown
 # Session Continuation (/spec)

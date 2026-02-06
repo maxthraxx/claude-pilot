@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
@@ -14,8 +15,21 @@ THRESHOLD_STOP = 90
 THRESHOLD_CRITICAL = 95
 LEARN_THRESHOLDS = [40, 60, 80]
 
-CACHE_FILE = Path("/tmp/.claude_context_cache.json")
 CACHE_TTL = 30
+
+
+def _sessions_base() -> Path:
+    """Get base sessions directory."""
+    return Path.home() / ".pilot" / "sessions"
+
+
+def get_session_cache_path() -> Path:
+    """Get session-scoped context cache path."""
+    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
+    cache_dir = _sessions_base() / session_id
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir / "context-cache.json"
+
 
 RED = "\033[0;31m"
 YELLOW = "\033[0;33m"
@@ -136,9 +150,9 @@ def get_cached_context(session_id: str) -> tuple[int, bool, list[int], bool]:
 
     Returns: (tokens, is_cached, shown_learn_thresholds, shown_80_warn)
     """
-    if CACHE_FILE.exists():
+    if get_session_cache_path().exists():
         try:
-            with CACHE_FILE.open() as f:
+            with get_session_cache_path().open() as f:
                 cache = json.load(f)
                 if cache.get("session_id") == session_id and time.time() - cache.get("timestamp", 0) < CACHE_TTL:
                     return cache.get("tokens", 0), True, cache.get("shown_learn", []), cache.get("shown_80_warn", False)
@@ -149,9 +163,9 @@ def get_cached_context(session_id: str) -> tuple[int, bool, list[int], bool]:
 
 def get_session_flags(session_id: str) -> tuple[list[int], bool]:
     """Get shown flags for this session (learn thresholds, 80% warning)."""
-    if CACHE_FILE.exists():
+    if get_session_cache_path().exists():
         try:
-            with CACHE_FILE.open() as f:
+            with get_session_cache_path().open() as f:
                 cache = json.load(f)
                 if cache.get("session_id") == session_id:
                     return cache.get("shown_learn", []), cache.get("shown_80_warn", False)
@@ -166,9 +180,9 @@ def save_cache(
     """Save context calculation to cache with session ID."""
     existing_shown: list[int] = []
     existing_80_warn = False
-    if CACHE_FILE.exists():
+    if get_session_cache_path().exists():
         try:
-            with CACHE_FILE.open() as f:
+            with get_session_cache_path().open() as f:
                 cache = json.load(f)
                 if cache.get("session_id") == session_id:
                     existing_shown = cache.get("shown_learn", [])
@@ -182,7 +196,7 @@ def save_cache(
         existing_80_warn = True
 
     try:
-        with CACHE_FILE.open("w") as f:
+        with get_session_cache_path().open("w") as f:
             json.dump(
                 {
                     "tokens": tokens,
@@ -260,7 +274,10 @@ def run_context_monitor() -> int:
         print("", file=sys.stderr)
         print(f"{RED}🚨 CONTEXT {percentage:.0f}% - CRITICAL: HANDOFF IMMEDIATELY{NC}", file=sys.stderr)
         print(f"{RED}Do NOT write code, fix errors, or run commands.{NC}", file=sys.stderr)
-        print(f"{RED}ONLY action: write /tmp/claude-continuation.md then run:{NC}", file=sys.stderr)
+        print(
+            f"{RED}ONLY action: write ~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md then run:{NC}",
+            file=sys.stderr,
+        )
         print(f"{RED}  ~/.pilot/bin/pilot send-clear [plan-path|--general]{NC}", file=sys.stderr)
         return 2
 

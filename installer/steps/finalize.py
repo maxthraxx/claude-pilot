@@ -130,6 +130,10 @@ class FinalizeStep(BaseStep):
                     "Just chat → For bug fixes and small changes without a spec",
                 ),
                 (
+                    "Multi-Session",
+                    "Run multiple pilot sessions in the same project — each session is isolated",
+                ),
+                (
                     "Team Vault (Optional)",
                     "/sync → Share rules, commands, and skills via a private Git repository",
                 ),

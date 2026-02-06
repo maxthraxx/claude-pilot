@@ -215,7 +215,7 @@ export class WorkerService {
     this.server.registerRoutes(new MemoryRoutes(this.dbManager, "pilot-memory"));
     this.server.registerRoutes(new BackupRoutes(this.dbManager));
     this.server.registerRoutes(new RetentionRoutes(this.dbManager));
-    this.server.registerRoutes(new PlanRoutes());
+    this.server.registerRoutes(new PlanRoutes(this.dbManager, this.sseBroadcaster));
 
     this.metricsService = new MetricsService(this.dbManager, this.sessionManager, this.startTime);
     this.server.registerRoutes(new MetricsRoutes(this.metricsService));

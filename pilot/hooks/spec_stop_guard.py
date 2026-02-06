@@ -11,6 +11,7 @@ Only allows stopping when:
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
@@ -21,8 +22,20 @@ YELLOW = "\033[0;33m"
 CYAN = "\033[0;36m"
 NC = "\033[0m"
 
-STATE_FILE = Path("/tmp/claude-spec-stop-guard")
 COOLDOWN_SECONDS = 60
+
+
+def _sessions_base() -> Path:
+    """Get base sessions directory."""
+    return Path.home() / ".pilot" / "sessions"
+
+
+def get_stop_guard_path() -> Path:
+    """Get session-scoped stop guard state path."""
+    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
+    guard_dir = _sessions_base() / session_id
+    guard_dir.mkdir(parents=True, exist_ok=True)
+    return guard_dir / "spec-stop-guard"
 
 
 def find_active_plan() -> tuple[Path | None, str | None, bool]:
@@ -122,17 +135,18 @@ def main() -> int:
         return 0
 
     now = time.time()
-    if STATE_FILE.exists():
+    state_file = get_stop_guard_path()
+    if state_file.exists():
         try:
-            last_block = float(STATE_FILE.read_text().strip())
+            last_block = float(state_file.read_text().strip())
             if now - last_block < COOLDOWN_SECONDS:
-                STATE_FILE.unlink(missing_ok=True)
+                state_file.unlink(missing_ok=True)
                 return 0
         except (ValueError, OSError):
             pass
 
     try:
-        STATE_FILE.write_text(str(now))
+        state_file.write_text(str(now))
     except OSError:
         pass
 

@@ -23,6 +23,10 @@
 - The "fix ALL errors" rule is **suspended** at 90%+ - incomplete fixes are expected and acceptable
 - The next session will continue exactly where you left off - nothing is lost
 
+## Session Identity
+
+Continuation files are stored under `~/.pilot/sessions/$PILOT_SESSION_ID/` where `PILOT_SESSION_ID` is an environment variable set by the Pilot wrapper (defaults to `"default"` if not set). This ensures parallel sessions don't interfere with each other's continuation state.
+
 ## How It Works
 
 This enables "endless mode" for any development session, not just /spec workflows:
@@ -80,7 +84,7 @@ Then check the Status field in the most recent plan file(s). An **active plan** 
 
 **Step 3: Write Session Summary to File (GUARANTEED BACKUP)**
 
-Write the summary to `/tmp/claude-continuation.md` using the Write tool. Include VERIFIED status with actual command output.
+Write the summary to `~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md` using the Write tool. Include VERIFIED status with actual command output.
 
 ```markdown
 # Session Continuation
@@ -156,7 +160,7 @@ When a new session starts with a continuation prompt:
 
 1. **Check for continuation file first:**
    ```bash
-   cat /tmp/claude-continuation.md 2>/dev/null
+   cat ~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md 2>/dev/null
    ```
    If it exists, read it and use it as your source of truth.
 
@@ -168,7 +172,7 @@ When a new session starts with a continuation prompt:
 
 5. **Clean up** - After resuming, delete the continuation file:
    ```bash
-   rm -f /tmp/claude-continuation.md
+   rm -f ~/.pilot/sessions/$PILOT_SESSION_ID/continuation.md
    ```
 
 ## Integration with /spec
