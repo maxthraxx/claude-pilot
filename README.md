@@ -2,9 +2,9 @@
 
 <img src="docs/img/logo.png" alt="Claude Pilot" width="400">
 
-### Production-Grade Development with Claude Code
+### Claude Code is powerful. Pilot makes it reliable.
 
-Claude Code ships fast but breaks things — Pilot fixes that.</br>
+Ship code you can actually trust. Pilot is your quality autopilot.</br>
 **Tests enforced. Context preserved. Quality automated.**
 
 [![Version](https://img.shields.io/github/v/release/maxritter/claude-pilot?label=Version&color=orange)](https://github.com/maxritter/claude-pilot/releases)
@@ -66,11 +66,6 @@ The complexity is in the system, not in your workflow.
 
 **Claude Subscription:** [Max](https://www.anthropic.com/max), [Team](https://claude.ai/pricing/team), or [Enterprise](https://www.anthropic.com/enterprise) recommended
 
-**Choose your environment:**
-
-- **Local Installation** — Install directly on your system using Homebrew. Works on macOS, Linux, and Windows (WSL2).
-- **Dev Container** — Pre-configured, isolated environment with all tools ready. No system conflicts and works on any OS.
-
 ### Installation
 
 `cd` into your project folder, then run:
@@ -78,6 +73,11 @@ The complexity is in the system, not in your workflow.
 ```bash
 curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install.sh | bash
 ```
+
+**Choose your environment:**
+
+- **Local Installation** — Install directly on your system using Homebrew. Works on macOS, Linux, and Windows (WSL2).
+- **Dev Container** — Pre-configured, isolated environment with all tools ready. No system conflicts and works on any OS.
 
 After installation, run `pilot` or `ccp` in your project folder to start Claude Pilot.
 
@@ -409,13 +409,6 @@ Access the web-based Claude Pilot Console at **http://localhost:41777** to visua
 
 <img src="docs/img/console.png" alt="Claude Pilot Console" width="700">
 
-**Features:**
-
-- Real-time observation stream
-- Session management and context usage display
-- Full-text and semantic search across all observations
-- Memory status and license information
-
 ---
 
 ## License
@@ -424,7 +417,6 @@ Claude Pilot is source-available under a commercial license. See the [LICENSE](L
 
 | Tier           | Includes                                                         |
 | :------------- | :--------------------------------------------------------------- |
-| **Trial**      | All features for 7 days, no credit card required                 |
 | **Standard**   | All features, continuous updates, GitHub support                 |
 | **Enterprise** | Standard + dedicated email support and priority feature requests |
 

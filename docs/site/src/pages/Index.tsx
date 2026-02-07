@@ -15,7 +15,7 @@ const Index = () => {
     "@type": "WebSite",
     "name": "Claude Pilot",
     "url": "https://www.claude-pilot.com",
-    "description": "Claude Code ships fast but breaks things — Pilot fixes that. Tests enforced, context preserved, quality automated.",
+    "description": "Ship code you can actually trust. Pilot is your quality autopilot. Tests enforced, context preserved, quality automated.",
     "publisher": {
       "@type": "Organization",
       "name": "Claude Pilot",
@@ -47,7 +47,7 @@ const Index = () => {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Claude Pilot",
-    "description": "Production-grade development framework for Claude Code with 22 rules, 7 automated hooks, 14 coding skills, 3 language servers, and 5 MCP servers. Tests enforced, context preserved, quality automated.",
+    "description": "Claude Code is powerful. Pilot makes it reliable. 22 rules, 7 automated hooks, 14 coding skills, 3 language servers, and 5 MCP servers. Tests enforced, context preserved, quality automated.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Linux, macOS, Windows",
     "offers": {
@@ -68,8 +68,8 @@ const Index = () => {
   return (
     <>
       <SEO
-        title="Claude Pilot - Production-Grade Development with Claude Code"
-        description="Claude Code ships fast but breaks things — Pilot fixes that. 22 rules, 7 automated hooks, 14 coding skills, 3 language servers, and 5 MCP servers. Tests enforced, context preserved, quality automated."
+        title="Claude Pilot - Claude Code is powerful. Pilot makes it reliable."
+        description="Ship code you can actually trust. Pilot is your quality autopilot. 22 rules, 7 automated hooks, 14 coding skills, 3 language servers, and 5 MCP servers. Tests enforced, context preserved, quality automated."
         structuredData={[websiteStructuredData, breadcrumbStructuredData, softwareStructuredData]}
       />
       <NavBar />

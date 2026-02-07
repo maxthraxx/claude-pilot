@@ -11,8 +11,8 @@ interface SEOProps {
 }
 
 const SEO = ({
-  title = "Claude Pilot - Production-Grade Development with Claude Code",
-  description = "Claude Code ships fast but breaks things — Pilot fixes that. Tests enforced, context preserved, quality automated.",
+  title = "Claude Pilot - Claude Code is powerful. Pilot makes it reliable.",
+  description = "Ship code you can actually trust. Pilot is your quality autopilot. Tests enforced, context preserved, quality automated.",
   keywords = "Claude Pilot, Claude Code, AI coding assistant, AI pair programming, TDD enforcement, Test-Driven Development, code quality automation, linting, formatting, type checking, spec-driven development, dev containers, VS Code, Cursor, Windsurf, Claude API, Anthropic, AI development tools, automated testing, code review, persistent memory, semantic code search",
   canonicalUrl = "https://www.claude-pilot.com",
   ogImage = "https://www.claude-pilot.com/logo.png",

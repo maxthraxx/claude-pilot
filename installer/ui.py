@@ -137,17 +137,27 @@ class Console:
 
         tagline = Text()
         tagline.append("  ✈ ", style="cyan")
-        tagline.append("Production-Grade Development with Claude Code", style="bold white")
+        tagline.append("Claude Code is powerful. Pilot makes it reliable.", style="bold white")
         self._console.print(tagline)
         self._console.print()
 
         self._console.print("  [bold white]What You're Getting[/bold white]")
         self._console.print()
-        self._console.print("    [yellow]♾️[/yellow]  [bold green]Endless Mode[/bold green] [white]— Seamless continuity across sessions[/white]")
-        self._console.print("    [yellow]📋[/yellow] [bold green]Two Dev Modes[/bold green] [white]— /spec for planning, Quick Mode for fixes[/white]")
-        self._console.print("    [yellow]💡[/yellow] [bold green]Rules System[/bold green] [white]— Standards + custom rules as project memory[/white]")
-        self._console.print("    [yellow]🛠️[/yellow]  [bold green]Quality Hooks[/bold green] [white]— TDD, linting, type checking, context monitor[/white]")
-        self._console.print("    [yellow]🔌[/yellow] [bold green]Capabilities[/bold green] [white]— Vexor, Context7, web-search, mcp-cli[/white]")
+        self._console.print(
+            "    [yellow]♾️[/yellow]  [bold green]Endless Mode[/bold green] [white]— Seamless continuity across sessions[/white]"
+        )
+        self._console.print(
+            "    [yellow]📋[/yellow] [bold green]Two Dev Modes[/bold green] [white]— /spec for planning, Quick Mode for fixes[/white]"
+        )
+        self._console.print(
+            "    [yellow]💡[/yellow] [bold green]Rules System[/bold green] [white]— Standards + custom rules as project memory[/white]"
+        )
+        self._console.print(
+            "    [yellow]🛠️[/yellow]  [bold green]Quality Hooks[/bold green] [white]— TDD, linting, type checking, context monitor[/white]"
+        )
+        self._console.print(
+            "    [yellow]🔌[/yellow] [bold green]Capabilities[/bold green] [white]— Vexor, Context7, web-search, mcp-cli[/white]"
+        )
         self._console.print()
 
         tier = license_info.get("tier") if license_info else None

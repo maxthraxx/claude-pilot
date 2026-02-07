@@ -32,8 +32,8 @@ const HeroSection = () => {
             variant="outline"
             className="px-2 xs:px-3 sm:px-4 py-1 xs:py-1.5 text-[10px] xs:text-xs sm:text-sm border-primary/50 text-primary"
           >
-            <span className="hidden xs:inline">Production-Grade Development with Claude Code</span>
-            <span className="xs:hidden">Production-Grade</span>
+            <span className="hidden xs:inline">Claude Code is powerful. Pilot makes it reliable.</span>
+            <span className="xs:hidden">Reliable Claude Code</span>
           </Badge>
         </div>
 
@@ -45,7 +45,7 @@ const HeroSection = () => {
         {/* Subtitle */}
         <div className="animate-fade-in-up animation-delay-200 mb-6 xs:mb-8 px-1">
           <p className="text-muted-foreground text-[11px] xs:text-xs sm:text-sm md:text-base lg:text-lg max-w-[90%] xs:max-w-xl sm:max-w-2xl mx-auto leading-relaxed">
-            Claude Code ships fast but breaks things — Pilot fixes that.
+            Ship code you can actually trust. Pilot is your quality autopilot.
           </p>
           <p className="text-muted-foreground/70 text-[10px] xs:text-xs sm:text-sm md:text-base max-w-[90%] xs:max-w-xl sm:max-w-2xl mx-auto mt-2 leading-relaxed">
             Tests enforced. Context preserved. Quality automated.
@@ -84,9 +84,6 @@ const HeroSection = () => {
         <div className="flex flex-wrap justify-center gap-1.5 xs:gap-2 mb-6 xs:mb-8 animate-fade-in-up animation-delay-300 px-2">
           <Badge variant="secondary" className="text-[10px] xs:text-xs">
             TDD Enforced
-          </Badge>
-          <Badge variant="secondary" className="text-[10px] xs:text-xs">
-            Quality Hooks
           </Badge>
           <Badge variant="secondary" className="text-[10px] xs:text-xs">
             Spec-Driven
