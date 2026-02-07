@@ -88,7 +88,7 @@ const PricingSection = () => {
             <ul className="space-y-3 mb-8">
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">22 rules, 7 hooks, 14 skills, 3 LSPs</span>
+                <span className="text-muted-foreground text-sm group-hover:text-foreground/80 transition-colors">Rules, hooks, skills, LSPs, MCP servers</span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -167,13 +167,13 @@ const PricingSection = () => {
             <div className="flex flex-col items-center gap-2">
               <Shield className="h-6 w-6 text-primary" />
               <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">2,900+ lines</span> of production-tested rules and best practices loaded into every session
+                <span className="text-foreground font-medium">Production-tested rules</span> and best practices loaded into every session
               </p>
             </div>
             <div className="flex flex-col items-center gap-2">
               <Zap className="h-6 w-6 text-primary" />
               <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">7 automated hooks</span> enforcing quality on every file edit — formatting, linting, type checking, TDD
+                <span className="text-foreground font-medium">Automated hooks</span> enforcing quality on every file edit — formatting, linting, type checking, TDD
               </p>
             </div>
             <div className="flex flex-col items-center gap-2">

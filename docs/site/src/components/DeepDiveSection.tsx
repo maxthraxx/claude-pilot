@@ -39,7 +39,7 @@ const hooksPipeline = [
       "Go quality: gofmt + golangci-lint + type check",
       "TDD enforcer: warns if no failing test exists",
       "Memory observation: captures development context",
-      "Context monitor: warns at 80% / 90% / 95%",
+      "Context monitor: automatic session handoff",
     ],
     color: "text-primary",
     bgColor: "bg-primary/10",
@@ -148,8 +148,8 @@ const DeepDiveSection = () => {
             Under the Hood
           </h2>
           <p className="text-muted-foreground text-lg sm:text-xl max-w-3xl mx-auto">
-            Pilot isn't a thin wrapper — it's a deeply engineered system with 22 rules, 7 automated hooks,
-            14 coding skills, 3 language servers, and 5 MCP servers working together on every edit.
+            Pilot isn't a thin wrapper — it's a deeply engineered system with rules, hooks,
+            skills, language servers, and MCP servers working together on every edit.
           </p>
         </div>
 
@@ -164,7 +164,7 @@ const DeepDiveSection = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-foreground">Hooks Pipeline</h3>
-              <p className="text-sm text-muted-foreground">7 hooks fire automatically at every stage of development</p>
+              <p className="text-sm text-muted-foreground">Hooks fire automatically at every stage of development</p>
             </div>
           </div>
 
@@ -253,8 +253,8 @@ const DeepDiveSection = () => {
               <Layers className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-foreground">22 Built-in Rules</h3>
-              <p className="text-sm text-muted-foreground">Loaded every session — 2,900+ lines of best practices always in context</p>
+              <h3 className="text-2xl font-bold text-foreground">Built-in Rules</h3>
+              <p className="text-sm text-muted-foreground">Loaded every session — production-tested best practices always in context</p>
             </div>
           </div>
 
@@ -325,7 +325,7 @@ const DeepDiveSection = () => {
                   <Globe className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">5 MCP Servers</h3>
+                  <h3 className="text-xl font-bold text-foreground">MCP Servers</h3>
                   <p className="text-sm text-muted-foreground">External context, always available</p>
                 </div>
               </div>
@@ -352,7 +352,7 @@ const DeepDiveSection = () => {
                   <Eye className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">3 Language Servers</h3>
+                  <h3 className="text-xl font-bold text-foreground">Language Servers</h3>
                   <p className="text-sm text-muted-foreground">Real-time diagnostics and go-to-definition</p>
                 </div>
               </div>

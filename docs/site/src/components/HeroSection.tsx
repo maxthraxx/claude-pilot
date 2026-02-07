@@ -52,26 +52,31 @@ const HeroSection = () => {
           </p>
         </div>
 
-        {/* Stats bar */}
+        {/* Feature highlights */}
         <div className="flex flex-wrap justify-center gap-3 xs:gap-4 sm:gap-6 mb-6 xs:mb-8 animate-fade-in-up animation-delay-300 px-2">
           <div className="text-center">
-            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">22</div>
-            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Rules</div>
+            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">Rules</div>
+            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Best Practices</div>
           </div>
           <div className="w-px h-8 bg-border/50 hidden xs:block" />
           <div className="text-center">
-            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">7</div>
-            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Quality Hooks</div>
+            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">Hooks</div>
+            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Quality Gates</div>
           </div>
           <div className="w-px h-8 bg-border/50 hidden xs:block" />
           <div className="text-center">
-            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">14</div>
-            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Built-in Skills</div>
+            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">Skills</div>
+            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">On-Demand</div>
           </div>
           <div className="w-px h-8 bg-border/50 hidden xs:block" />
           <div className="text-center">
-            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">5</div>
-            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">MCP Servers</div>
+            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">MCP</div>
+            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">External Context</div>
+          </div>
+          <div className="w-px h-8 bg-border/50 hidden xs:block" />
+          <div className="text-center">
+            <div className="text-lg xs:text-xl sm:text-2xl font-bold text-primary">LSP</div>
+            <div className="text-[9px] xs:text-[10px] sm:text-xs text-muted-foreground">Diagnostics</div>
           </div>
         </div>
 
@@ -90,7 +95,7 @@ const HeroSection = () => {
             Endless Mode
           </Badge>
           <Badge variant="secondary" className="text-[10px] xs:text-xs">
-            LSP Integration
+            Team Vault
           </Badge>
         </div>
 

@@ -8,13 +8,13 @@ const ComparisonSection = () => {
 
   const comparison = [
     { without: "Writes code, skips tests", with: "TDD enforced — RED, GREEN, REFACTOR on every feature" },
-    { without: "No quality checks", with: "7 hooks auto-lint, format, type-check on every file edit" },
-    { without: "Context degrades mid-task", with: "Endless Mode with 80%/90%/95% thresholds and auto-handoff" },
+    { without: "No quality checks", with: "Hooks auto-lint, format, type-check on every file edit" },
+    { without: "Context degrades mid-task", with: "Endless Mode with automatic session handoff" },
     { without: "Every session starts fresh", with: "Persistent memory across sessions via Pilot Console" },
     { without: "Hope it works", with: "Verifier sub-agents perform code review before marking complete" },
-    { without: "No codebase knowledge", with: "22 rules (2,900+ lines) loaded into every session" },
-    { without: "Generic suggestions", with: "14 coding skills activated dynamically when relevant" },
-    { without: "Manual tool setup", with: "5 MCP servers + 3 LSP servers pre-configured and ready" },
+    { without: "No codebase knowledge", with: "Production-tested rules loaded into every session" },
+    { without: "Generic suggestions", with: "Coding skills activated dynamically when relevant" },
+    { without: "Manual tool setup", with: "MCP servers + language servers pre-configured and ready" },
   ];
 
   return (

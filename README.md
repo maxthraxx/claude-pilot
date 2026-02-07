@@ -33,13 +33,11 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/claude-pilot/main/install
 
 ## Why I Built This
 
-I'm a freelance software engineer. My clients hire me to ship production-quality code — not prototypes, not "it works on my machine" demos. When something goes into production under my name, it needs to be tested, typed, formatted, and reviewed.
+I'm a senior IT freelancer from Germany. My clients hire me to ship production-quality code — tested, typed, formatted, and reviewed. When something goes into production under my name, quality isn't optional.
 
-Claude Code is incredible at writing code fast. But fast isn't enough when quality matters. Without structure, it skips tests, loses context mid-task, forgets decisions from previous sessions, and produces inconsistent results. That's not acceptable when you're building for companies that depend on what you ship.
+Claude Code writes code fast. But without structure, it skips tests, loses context, and produces inconsistent results. I tried other frameworks — they burned tokens on bloated prompts without adding real value. Some added process without enforcement. Others were prompt templates that Claude ignored when context got tight. None made Claude reliably produce production-grade code.
 
-I tried other frameworks. Some added layers of process without actual enforcement. Others were just prompt templates that Claude ignored when context got tight. None of them made Claude _reliably_ produce production-grade code.
-
-So I built Pilot. Instead of adding process on top, it bakes quality into every edit. TDD isn't a suggestion — it's enforced by hooks. Linting isn't optional — it runs automatically on every file change. Context doesn't decay — it's monitored and preserved across sessions.
+So I built Pilot. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is monitored and preserved across sessions. Every piece of work goes through verification before it's marked done.
 
 The complexity is in the system, not in your workflow.
 
@@ -50,13 +48,13 @@ The complexity is in the system, not in your workflow.
 | Without Pilot              | With Pilot                                                      |
 | -------------------------- | --------------------------------------------------------------- |
 | Writes code, skips tests   | TDD enforced — RED, GREEN, REFACTOR on every feature            |
-| No quality checks          | 7 hooks auto-lint, format, type-check on every file edit        |
-| Context degrades mid-task  | Endless Mode with 80%/90%/95% thresholds and auto-handoff       |
+| No quality checks          | Hooks auto-lint, format, type-check on every file edit          |
+| Context degrades mid-task  | Endless Mode with automatic session handoff                     |
 | Every session starts fresh | Persistent memory across sessions via Pilot Console             |
 | Hope it works              | Verifier sub-agents perform code review before marking complete |
-| No codebase knowledge      | 22 rules (2,900+ lines) loaded into every session               |
-| Generic suggestions        | 14 coding skills activated dynamically when relevant            |
-| Manual tool setup          | 5 MCP servers + 3 LSP servers pre-configured and ready          |
+| No codebase knowledge      | Production-tested rules loaded into every session               |
+| Generic suggestions        | Coding skills activated dynamically when relevant               |
+| Manual tool setup          | MCP servers + language servers pre-configured and ready         |
 
 ---
 
@@ -251,7 +249,7 @@ Run `/sync` after adding servers to generate documentation.
 
 ### The Hooks Pipeline
 
-**7 hooks** fire automatically at every stage of development:
+**Hooks** fire automatically at every stage of development:
 
 #### SessionStart (on startup, clear, or compact)
 
@@ -271,7 +269,7 @@ After **every single file edit**, these hooks fire:
 | `file_checker_go.py`     | Blocking     | Runs gofmt + golangci-lint + type checking on `.go` files. Auto-fixes formatting.                                                                                    |
 | `tdd_enforcer.py`        | Non-blocking | Checks if implementation files were modified without failing tests first. Shows reminder to write tests. Excludes test files, docs, config, TSX, and infrastructure. |
 | Memory observer          | Async        | Captures development observations to persistent memory.                                                                                                              |
-| `context_monitor.py`     | Non-blocking | Monitors context window usage. Warns at 80%, forces handoff at 90%, emergency at 95%. Caches for 15 seconds to avoid spam.                                           |
+| `context_monitor.py`     | Non-blocking | Monitors context window usage. Warns as usage grows, forces handoff before hitting limits. Caches for 15 seconds to avoid spam.                                       |
 
 #### PreToolUse (before search, web, or task tools)
 
@@ -290,19 +288,15 @@ After **every single file edit**, these hooks fire:
 
 The context monitor tracks usage in real-time and manages multi-session continuity:
 
-| Threshold | Level    | Action                                                                                                                        |
-| --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **80%**   | WARN     | Prepare for continuation. Saves state, wraps up current work, prepares handoff notes.                                         |
-| **90%**   | CRITICAL | Mandatory handoff. Saves session state to `~/.pilot/sessions/`, writes continuation file, picks up seamlessly in new session. |
-| **95%**   | URGENT   | Emergency handoff. All progress preserved — no work lost.                                                                     |
-
-- At 70%+ during `/spec`, Pilot won't start a new phase — it hands off to the next session
+- As context grows, Pilot warns, then forces a handoff before hitting limits
+- Session state is saved to `~/.pilot/sessions/` with continuation files — picks up seamlessly in the next session
+- During `/spec`, Pilot won't start a new phase when context is high — it hands off instead
 - Multiple Pilot sessions can run in parallel on the same project without interference
 - Status line shows live context usage, memory status, active plan, and license info
 
-### 22 Built-in Rules
+### Built-in Rules
 
-2,900+ lines of best practices loaded into **every session**. These aren't suggestions — they're enforced standards.
+Production-tested best practices loaded into **every session**. These aren't suggestions — they're enforced standards.
 
 <details>
 <summary><b>Quality Enforcement (4 rules)</b></summary>
@@ -356,7 +350,7 @@ The context monitor tracks usage in real-time and manages multi-session continui
 
 </details>
 
-### 14 Built-in Coding Skills
+### Built-in Coding Skills
 
 Dynamically activated when relevant — specialized knowledge loaded on demand:
 
@@ -377,7 +371,7 @@ Dynamically activated when relevant — specialized knowledge loaded on demand:
 | DB Migrations        | Schema changes, data transformation, rollback strategy           |
 | Query Optimization   | Indexing, N+1 problems, query patterns, performance              |
 
-### 5 MCP Servers
+### MCP Servers
 
 External context always available to every session:
 
@@ -389,7 +383,7 @@ External context always available to every session:
 | **grep-mcp**   | GitHub code search — find real-world usage patterns across repos |
 | **web-fetch**  | Web page fetching — read documentation, APIs, references         |
 
-### 3 Language Servers (LSP)
+### Language Servers (LSP)
 
 Real-time diagnostics and go-to-definition, auto-installed and configured:
 

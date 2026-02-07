@@ -34,26 +34,26 @@ const insideItems: InsideItem[] = [
   {
     icon: ShieldCheck,
     title: "Quality Automation",
-    description: "7 hooks on every file edit",
+    description: "Hooks on every file edit",
     summary: "Auto-formatting, linting, and type checking for Python, TypeScript, and Go. TDD enforcer warns when code changes lack tests. Status line shows live session info.",
   },
   {
     icon: FileCode2,
     title: "Rules, Commands & Skills",
-    description: "22 rules · 7 commands · 14 skills",
-    summary: "2,900+ lines of best practices loaded every session. Structured workflows via /spec, /sync, /vault, /learn. Custom rules and skills survive updates.",
+    description: "Rules · Commands · Skills",
+    summary: "Production-tested best practices loaded every session. Structured workflows via /spec, /sync, /vault, /learn. Custom rules and skills survive updates.",
   },
   {
     icon: Plug2,
     title: "Enhanced Context",
-    description: "5 MCP servers + 3 language servers",
+    description: "MCP servers + language servers",
     summary: "Library docs, persistent memory, web search, GitHub code search, and real-time LSP diagnostics — all pre-configured and always available.",
   },
   {
     icon: Container,
     title: "One-Command Installer",
     description: "Ready in minutes, auto-updates",
-    summary: "8-step installer with progress tracking, rollback on failure, and idempotent re-runs. Shell integration, Dev Container support, and automated updates.",
+    summary: "Step-based installer with progress tracking, rollback on failure, and idempotent re-runs. Shell integration, Dev Container support, and automated updates.",
   },
   {
     icon: Users,
