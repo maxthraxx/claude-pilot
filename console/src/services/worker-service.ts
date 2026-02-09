@@ -201,18 +201,22 @@ export class WorkerService {
   private registerRoutes(): void {
     this.server.app.get("/api/context/inject", async (req, res, next) => {
       const timeoutMs = 300000;
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Initialization timeout")), timeoutMs),
-      );
+      try {
+        const timeoutPromise = new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error("Initialization timeout")), timeoutMs),
+        );
 
-      await Promise.race([this.initializationComplete, timeoutPromise]);
+        await Promise.race([this.initializationComplete, timeoutPromise]);
 
-      if (!this.searchRoutes) {
-        res.status(503).json({ error: "Search routes not initialized" });
-        return;
+        if (!this.searchRoutes) {
+          res.status(503).json({ error: "Search routes not initialized" });
+          return;
+        }
+
+        next();
+      } catch {
+        res.status(503).json({ error: "Service initialization timed out" });
       }
-
-      next();
     });
 
     this.server.registerRoutes(new AuthRoutes());

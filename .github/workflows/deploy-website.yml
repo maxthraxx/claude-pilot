@@ -59,6 +59,10 @@ jobs:
           VERCEL_PROJECT_ID: prj_TXccrJI83HyNvQUZxqStUFgus9NB
         run: vercel pull --yes --token=$VERCEL_TOKEN
 
+      - name: Install dependencies
+        working-directory: docs/site
+        run: npm install
+
       - name: Build
         working-directory: docs/site
         env:
