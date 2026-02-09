@@ -77,6 +77,52 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
 
 ---
 
+### Step 2.1b: Create or Resume Worktree
+
+**All implementation happens in an isolated git worktree.** This keeps the main branch clean until verification passes and the user approves sync.
+
+1. **Extract plan slug** from the plan file path:
+   - `docs/plans/2026-02-09-add-auth.md` → plan_slug = `add-auth` (strip date prefix and `.md`)
+
+2. **Check for existing worktree** (continuation session or verify→implement feedback loop):
+   ```bash
+   # Use the worktree module to detect an existing worktree
+   uv run python -c "
+   from launcher.worktree import detect_worktree
+   from pathlib import Path
+   info = detect_worktree(Path('<project_root>'), '<plan_slug>')
+   if info: print(f'FOUND:{info.path}:{info.branch}:{info.base_branch}')
+   else: print('NONE')
+   "
+   ```
+
+3. **If worktree exists:** Resume it — set CWD to the worktree path via wrapper pipe command:
+   ```bash
+   ~/.pilot/bin/pilot pipe set-worktree <worktree_path>
+   ```
+   Then `cd` to the worktree path for all subsequent commands.
+
+4. **If no worktree exists:** Create one:
+   ```bash
+   uv run python -c "
+   from launcher.worktree import create_worktree
+   from pathlib import Path
+   info = create_worktree(Path('<project_root>'), '<plan_slug>')
+   print(f'CREATED:{info.path}:{info.branch}:{info.base_branch}')
+   "
+   ```
+   Then set CWD via wrapper pipe command and `cd` to the worktree path.
+
+5. **If creation fails due to dirty working tree:** Report to user and ask them to stash or commit changes first. Do NOT proceed with implementation until the worktree is created.
+
+6. **If creation fails due to old git version** (error contains "git >= 2.15 required"): Log a warning and continue without worktree isolation. Implementation will happen directly on the current branch. This is a graceful fallback for systems with older git versions.
+
+7. **Verify worktree is active:** Run `git branch --show-current` in the worktree to confirm you're on the `spec/<plan_slug>` branch.
+
+**⚠️ All subsequent implementation steps happen inside the worktree directory.** The plan file exists at the same relative path in the worktree (e.g., `docs/plans/...`). Commits within the worktree are expected and allowed.
+
+---
+
 ### Step 2.2: Set Up Task List (MANDATORY)
 
 **After reading the plan, set up task tracking using the Task management tools.**

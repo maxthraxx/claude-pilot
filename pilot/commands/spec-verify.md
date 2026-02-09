@@ -69,6 +69,8 @@ Run mechanical verification tools. These check process adherence that the code r
 3. **Coverage** — Run with coverage flag, verify ≥ 80%
 4. **Build** — Clean build with no errors
 
+5. **File length** — Check all changed production files (non-test). Any file >300 lines must be refactored (split into focused modules using TDD: write tests first, then extract). Files >500 lines are a hard blocker.
+
 **Fix all errors before proceeding.** Warnings are acceptable; errors are blockers.
 
 **Note:** The spec-verifier agent handles code quality, spec compliance, and rules enforcement. This step only covers mechanical tool checks that produce binary pass/fail results.
@@ -363,6 +365,95 @@ Run the test suite and type checker one final time to catch any regressions from
 3. Verify build still succeeds
 
 **If no code changed during Phase B** (no bugs found during execution/E2E), this confirms the same green state from Phase A. Still run it — it's cheap insurance.
+
+### Step 3.11b: Worktree Sync (if worktree is active)
+
+**After all verification passes, sync worktree changes back to the original branch with user approval.**
+
+This is the SECOND user interaction point in the `/spec` workflow (first is plan approval).
+
+1. **Check for active worktree:**
+   ```bash
+   uv run python -c "
+   from launcher.worktree import detect_worktree
+   from pathlib import Path
+   import re
+   plan_path = '<plan-path>'
+   slug = re.sub(r'^\d{4}-\d{2}-\d{2}-', '', Path(plan_path).stem)
+   info = detect_worktree(Path('<project_root>'), slug)
+   if info: print(f'ACTIVE:{info.path}:{info.branch}:{info.base_branch}')
+   else: print('NONE')
+   "
+   ```
+
+2. **If no worktree is active:** Skip to Step 3.12 (this is a non-worktree spec run or worktree was already synced).
+
+3. **Show diff summary:**
+   ```bash
+   uv run python -c "
+   from launcher.worktree import detect_worktree, list_worktree_changes
+   from pathlib import Path
+   import re
+   plan_path = '<plan-path>'
+   slug = re.sub(r'^\d{4}-\d{2}-\d{2}-', '', Path(plan_path).stem)
+   info = detect_worktree(Path('<project_root>'), slug)
+   if info:
+       changes = list_worktree_changes(info, Path('<project_root>'))
+       for c in changes: print(f'{c.status}\t{c.path}')
+       print(f'---\nTotal: {len(changes)} files changed')
+   "
+   ```
+
+4. **Ask user for sync decision:**
+   ```
+   AskUserQuestion:
+     question: "Sync worktree changes to <base_branch>?"
+     options:
+       - "Yes, squash merge" (Recommended) — Merge all changes as a single commit on <base_branch>
+       - "No, keep worktree" — Leave the worktree intact for manual review
+       - "Discard all changes" — Remove worktree and branch without merging
+   ```
+
+5. **Handle user choice:**
+
+   **If "Yes, squash merge":**
+   ```bash
+   uv run python -c "
+   from launcher.worktree import detect_worktree, sync_worktree, cleanup_worktree
+   from pathlib import Path
+   import re, json
+   plan_path = '<plan-path>'
+   slug = re.sub(r'^\d{4}-\d{2}-\d{2}-', '', Path(plan_path).stem)
+   info = detect_worktree(Path('<project_root>'), slug)
+   result = sync_worktree(info, Path('<project_root>'))
+   if result.success:
+       cleanup_worktree(info, Path('<project_root>'))
+       print(json.dumps({'success': True, 'files_changed': result.files_changed, 'commit_hash': result.commit_hash}))
+   else:
+       print(json.dumps({'success': False, 'error': result.error}))
+   "
+   ```
+   Then clear worktree from wrapper: `~/.pilot/bin/pilot pipe clear-worktree`
+   Report: "✅ Changes synced to `<base_branch>` — N files changed, commit `<hash>`"
+
+   **If "No, keep worktree":**
+   Report: "Worktree preserved at `<worktree_path>`. You can sync later via `pilot worktree sync <plan-slug>` or discard via `pilot worktree cleanup <plan-slug>`."
+
+   **If "Discard all changes":**
+   ```bash
+   uv run python -c "
+   from launcher.worktree import detect_worktree, cleanup_worktree
+   from pathlib import Path
+   import re
+   plan_path = '<plan-path>'
+   slug = re.sub(r'^\d{4}-\d{2}-\d{2}-', '', Path(plan_path).stem)
+   info = detect_worktree(Path('<project_root>'), slug)
+   cleanup_worktree(info, Path('<project_root>'))
+   print('DISCARDED')
+   "
+   ```
+   Then clear worktree from wrapper: `~/.pilot/bin/pilot pipe clear-worktree`
+   Report: "Worktree and branch discarded."
 
 ### Step 3.12: Update Plan Status
 

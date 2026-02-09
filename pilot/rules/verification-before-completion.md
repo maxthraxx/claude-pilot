@@ -30,6 +30,7 @@ Before ANY claim of success, completion, or correctness:
 | "Requirements met"      | Line-by-line checklist      | Tests passing               |
 | "Output is correct"     | Compare against source data | Logs look reasonable        |
 | "UI works"              | playwright-cli snapshot shows correct state | "API returns 200" |
+| "File size OK"          | No file exceeds 300 lines (500 hard limit) | "It's not that long" |
 
 ### ⛔ Output Correctness - Don't Trust Logs Alone
 
@@ -55,6 +56,7 @@ When verification reveals errors, fix ALL of them - not just the ones "related" 
 - ❌ "Type errors in other files" → Fix them anyway
 - ❌ "Should I fix these?" → **NEVER ASK** - just fix them
 - ❌ "Want me to address these findings?" → **NEVER ASK** - just fix them
+- ❌ "The file is long but it works" → **Refactor it** - split into focused modules
 
 **Valid response:** Fix the error silently, then continue.
 

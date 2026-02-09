@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardBody, Badge, Icon, Button, Spinner, Progress, Tooltip, ScopeBadge } from '../../components/ui';
 import { SpecContent } from './SpecContent';
+import { WorktreePanel } from './WorktreePanel';
 import { TIMING } from '../../constants/timing';
 
 interface PlanInfo {
@@ -361,6 +362,9 @@ export function SpecView() {
               )}
             </CardBody>
           </Card>
+
+          {/* Worktree isolation panel */}
+          <WorktreePanel />
 
           {/* Implementation Tasks - Markdown */}
           {parsed.implementationSection && (

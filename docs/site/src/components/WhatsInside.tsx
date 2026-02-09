@@ -63,9 +63,9 @@ const insideItems: InsideItem[] = [
   },
   {
     icon: GitBranch,
-    title: "Online Learning",
-    description: "Captures discoveries as reusable skills",
-    summary: "Automatically extracts non-obvious debugging patterns and workarounds into .claude/skills/ with quality gates to ensure reusability.",
+    title: "Isolated Workspaces",
+    description: "Safe experimentation, clean git history",
+    summary: "Spec implementation runs in isolated git worktrees. Review changes, squash merge when verified, or discard without touching your main branch. Worktree state survives session restarts.",
   },
 ];
 

@@ -54,6 +54,7 @@ The complexity is in the system, not in your workflow.
 | Hope it works              | Verifier sub-agents perform code review before marking complete |
 | No codebase knowledge      | Production-tested rules loaded into every session               |
 | Generic suggestions        | Coding skills activated dynamically when relevant               |
+| Changes mixed into branch  | Isolated worktrees — review and squash merge when verified      |
 | Manual tool setup          | MCP servers + language servers pre-configured and ready         |
 
 ---
@@ -166,10 +167,11 @@ Plan  →  Approve  →  Implement  →  Verify
 <details>
 <summary><b>Implement Phase</b></summary>
 
-1. Writes a failing test first (RED phase of TDD)
-2. Implements code to make the test pass (GREEN phase)
-3. Refactors while keeping tests green (REFACTOR phase)
-4. Quality hooks auto-lint, format, and type-check every file edit
+1. Creates an isolated git worktree on a dedicated branch — main branch stays clean
+2. Writes a failing test first (RED phase of TDD)
+3. Implements code to make the test pass (GREEN phase)
+4. Refactors while keeping tests green (REFACTOR phase)
+5. Quality hooks auto-lint, format, and type-check every file edit
 
 </details>
 
@@ -182,6 +184,7 @@ Plan  →  Approve  →  Implement  →  Verify
 4. **Spec-verifier sub-agent** performs independent code review against the plan
 5. Auto-fixes all findings, then re-verifies until clean
 6. Loops back to implementation if structural issues remain
+7. On success, shows diff summary and offers to squash merge worktree back to main branch
 
 </details>
 

@@ -63,6 +63,7 @@ import { RetentionRoutes } from "./worker/http/routes/RetentionRoutes.js";
 import { MetricsRoutes } from "./worker/http/routes/MetricsRoutes.js";
 import { AuthRoutes } from "./worker/http/routes/AuthRoutes.js";
 import { PlanRoutes } from "./worker/http/routes/PlanRoutes.js";
+import { WorktreeRoutes } from "./worker/http/routes/WorktreeRoutes.js";
 import { VexorRoutes } from "./worker/http/routes/VexorRoutes.js";
 import { MetricsService } from "./worker/MetricsService.js";
 import { startRetentionScheduler, stopRetentionScheduler } from "./worker/RetentionScheduler.js";
@@ -240,6 +241,7 @@ export class WorkerService {
     this.server.registerRoutes(new BackupRoutes(this.dbManager));
     this.server.registerRoutes(new RetentionRoutes(this.dbManager));
     this.server.registerRoutes(new PlanRoutes(this.dbManager, this.sseBroadcaster));
+    this.server.registerRoutes(new WorktreeRoutes());
 
     this.metricsService = new MetricsService(this.dbManager, this.sessionManager, this.startTime);
     this.server.registerRoutes(new MetricsRoutes(this.metricsService));
