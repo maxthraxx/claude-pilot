@@ -209,6 +209,19 @@ Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
 
 </details>
 
+### Smart Model Routing
+
+Pilot uses the right model for each phase — Opus where reasoning quality matters most, Sonnet where speed and cost matter:
+
+| Phase | Model | Why |
+| ----- | ----- | --- |
+| **Planning** | Opus | Exploring your codebase, designing architecture, and writing the spec requires deep reasoning. A good plan is the foundation of everything. |
+| **Plan Verification** | Opus | Catching gaps, missing edge cases, and requirement mismatches before implementation saves expensive rework. |
+| **Implementation** | Sonnet | With a solid plan, writing code is straightforward. Sonnet is fast, cost-effective, and produces high-quality code when guided by a clear spec. |
+| **Code Verification** | Opus | Independent code review against the plan requires the same reasoning depth as planning — catching subtle bugs, logic errors, and spec deviations. |
+
+**The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
+
 ### Quick Mode
 
 Just chat. No plan file, no approval gate. All quality hooks and TDD enforcement still apply.
@@ -240,6 +253,54 @@ pilot
 - **Pull** — Install shared assets from your team's vault
 - **Push** — Share your custom rules and skills with teammates
 - **Version** — Assets are versioned automatically (v1, v2, v3...)
+
+### Pilot CLI
+
+The `pilot` binary (`~/.pilot/bin/pilot`) manages sessions, worktrees, licensing, and context. Run `pilot` or `ccp` with no arguments to start Claude with Endless Mode.
+
+<details>
+<summary><b>Session & Context</b></summary>
+
+| Command | Purpose |
+| ------- | ------- |
+| `pilot` | Start Claude with Endless Mode, auto-update, and license check |
+| `pilot run [args...]` | Same as above, with optional flags (e.g., `--skip-update-check`) |
+| `pilot check-context --json` | Get current context usage percentage |
+| `pilot send-clear <plan.md>` | Trigger Endless Mode continuation with plan context |
+| `pilot send-clear --general` | Trigger continuation without a plan |
+| `pilot register-plan <path> <status>` | Associate a plan file with the current session |
+
+</details>
+
+<details>
+<summary><b>Worktree Isolation</b></summary>
+
+| Command | Purpose |
+| ------- | ------- |
+| `pilot worktree create --json <slug>` | Create isolated git worktree for safe experimentation |
+| `pilot worktree detect --json <slug>` | Check if a worktree already exists |
+| `pilot worktree diff --json <slug>` | List changed files in the worktree |
+| `pilot worktree sync --json <slug>` | Squash merge worktree changes back to base branch |
+| `pilot worktree cleanup --json <slug>` | Remove worktree and branch when done |
+| `pilot worktree status --json` | Show active worktree info for current session |
+
+</details>
+
+<details>
+<summary><b>License & Auth</b></summary>
+
+| Command | Purpose |
+| ------- | ------- |
+| `pilot activate <key>` | Activate a license key on this machine |
+| `pilot deactivate` | Deactivate license on this machine |
+| `pilot status [--json]` | Show current license status |
+| `pilot verify [--json]` | Verify license (used by hooks) |
+| `pilot trial --check [--json]` | Check trial eligibility |
+| `pilot trial --start [--json]` | Start a trial |
+
+</details>
+
+All commands support `--json` for structured output. Multiple Pilot sessions can run in parallel on the same project — each session tracks its own worktree and context state independently.
 
 ### Rules, Commands & Skills
 

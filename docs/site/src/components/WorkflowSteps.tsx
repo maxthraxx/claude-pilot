@@ -1,4 +1,4 @@
-import { FileText, Code2, CheckCircle2, RefreshCw, Zap, Search, MessageSquare, Shield, Bug, Brain, GitBranch } from "lucide-react";
+import { FileText, Code2, CheckCircle2, RefreshCw, Zap, Search, MessageSquare, Shield, Bug, Brain, GitBranch, Terminal } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
 const specSteps = [
@@ -127,6 +127,19 @@ const WorkflowSteps = () => {
           </div>
         </div>
 
+        {/* Model Routing */}
+        <div
+          className={`rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm mb-8 ${diagramInView ? "animate-fade-in-up animation-delay-300" : "opacity-0"}`}
+        >
+          <h3 className="text-base font-semibold text-foreground mb-3 text-center">Smart Model Routing</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-2xl mx-auto mb-4">
+            Pilot uses <span className="text-violet-400 font-medium">Opus</span> for planning and verification — where reasoning quality matters most — and <span className="text-primary font-medium">Sonnet</span> for implementation, where a clear spec makes fast execution predictable and cost-effective.
+          </p>
+          <p className="text-xs text-muted-foreground/70 text-center max-w-xl mx-auto">
+            Implementation is the easy part when the plan is good and verification is thorough. Pilot invests reasoning power where it has the highest impact.
+          </p>
+        </div>
+
         {/* Detailed Phase Breakdowns */}
         <div
           ref={detailsRef}
@@ -139,6 +152,7 @@ const WorkflowSteps = () => {
                 <FileText className="h-4 w-4 text-sky-400" />
               </div>
               <h4 className="font-semibold text-foreground">Plan Phase</h4>
+              <span className="ml-auto text-[10px] font-mono font-medium text-violet-400 bg-violet-400/10 px-2 py-0.5 rounded-full">OPUS</span>
             </div>
             <ul className="space-y-2.5">
               {planDetails.map((item) => {
@@ -160,6 +174,7 @@ const WorkflowSteps = () => {
                 <Code2 className="h-4 w-4 text-primary" />
               </div>
               <h4 className="font-semibold text-foreground">Implement Phase</h4>
+              <span className="ml-auto text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">SONNET</span>
             </div>
             <ul className="space-y-2.5">
               {implementDetails.map((item) => {
@@ -181,6 +196,7 @@ const WorkflowSteps = () => {
                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
               </div>
               <h4 className="font-semibold text-foreground">Verify Phase</h4>
+              <span className="ml-auto text-[10px] font-mono font-medium text-violet-400 bg-violet-400/10 px-2 py-0.5 rounded-full">OPUS</span>
             </div>
             <ul className="space-y-2.5">
               {verifyDetails.map((item) => {
@@ -240,6 +256,48 @@ const WorkflowSteps = () => {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Pilot CLI */}
+        <div
+          className={`rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm mt-8 ${commandsInView ? "animate-fade-in-up animation-delay-200" : "opacity-0"}`}
+        >
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Terminal className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">Pilot CLI</h3>
+          </div>
+          <p className="text-sm text-muted-foreground text-center mb-5">
+            The <code className="text-primary text-xs">pilot</code> binary manages sessions, worktrees, licensing, and context
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="rounded-xl p-3 border border-border/40 bg-background/30">
+              <code className="text-xs font-medium text-primary">pilot</code>
+              <p className="text-[11px] text-muted-foreground mt-1">Start Claude with Endless Mode, auto-update, and license verification</p>
+            </div>
+            <div className="rounded-xl p-3 border border-border/40 bg-background/30">
+              <code className="text-xs font-medium text-primary">pilot activate &lt;key&gt;</code>
+              <p className="text-[11px] text-muted-foreground mt-1">Activate a license key on this machine</p>
+            </div>
+            <div className="rounded-xl p-3 border border-border/40 bg-background/30">
+              <code className="text-xs font-medium text-primary">pilot status</code>
+              <p className="text-[11px] text-muted-foreground mt-1">Show current license and session status</p>
+            </div>
+            <div className="rounded-xl p-3 border border-border/40 bg-background/30">
+              <code className="text-xs font-medium text-primary">pilot worktree create &lt;slug&gt;</code>
+              <p className="text-[11px] text-muted-foreground mt-1">Create isolated git worktree for safe experimentation</p>
+            </div>
+            <div className="rounded-xl p-3 border border-border/40 bg-background/30">
+              <code className="text-xs font-medium text-primary">pilot worktree sync &lt;slug&gt;</code>
+              <p className="text-[11px] text-muted-foreground mt-1">Squash merge worktree changes back to base branch</p>
+            </div>
+            <div className="rounded-xl p-3 border border-border/40 bg-background/30">
+              <code className="text-xs font-medium text-primary">pilot check-context</code>
+              <p className="text-[11px] text-muted-foreground mt-1">Monitor context usage for Endless Mode handoffs</p>
+            </div>
+          </div>
+          <p className="text-[11px] text-muted-foreground/60 text-center mt-4">
+            All commands support <code className="text-primary/70">--json</code> for structured output. Multiple sessions run in parallel without interference.
+          </p>
         </div>
       </div>
     </section>
