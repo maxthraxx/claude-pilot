@@ -69,6 +69,60 @@ class TestIsPlaywrightCliReady:
         assert _is_playwright_cli_ready() is False
 
 
+class TestInstallPlaywrightSystemDeps:
+    """Test _install_playwright_system_deps function."""
+
+    @patch("installer.steps.dependencies.subprocess")
+    def test_runs_install_deps_command(self, mock_subprocess):
+        """Runs npx playwright install-deps."""
+        from installer.steps.dependencies import _install_playwright_system_deps
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_subprocess.run.return_value = mock_result
+        assert _install_playwright_system_deps() is True
+        mock_subprocess.run.assert_called_once_with(
+            ["npx", "-y", "playwright", "install-deps"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+
+    @patch("installer.steps.dependencies.subprocess")
+    def test_returns_false_on_failure(self, mock_subprocess):
+        """Returns False when install-deps fails."""
+        from installer.steps.dependencies import _install_playwright_system_deps
+
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_subprocess.run.return_value = mock_result
+        assert _install_playwright_system_deps() is False
+
+    @patch("installer.steps.dependencies.subprocess")
+    def test_returns_false_on_exception(self, mock_subprocess):
+        """Returns False when subprocess raises exception."""
+        from installer.steps.dependencies import _install_playwright_system_deps
+
+        mock_subprocess.run.side_effect = OSError("command not found")
+        assert _install_playwright_system_deps() is False
+
+    @patch("installer.steps.dependencies.subprocess")
+    def test_uses_ui_spinner(self, mock_subprocess):
+        """Uses UI spinner when UI is provided."""
+        from installer.steps.dependencies import _install_playwright_system_deps
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_subprocess.run.return_value = mock_result
+
+        ui = MagicMock()
+        ui.spinner.return_value.__enter__ = MagicMock()
+        ui.spinner.return_value.__exit__ = MagicMock(return_value=False)
+
+        assert _install_playwright_system_deps(ui) is True
+        ui.spinner.assert_called_once_with("Installing browser system dependencies...")
+
+
 class TestInstallPlaywrightCli:
     """Test install_playwright_cli function."""
 
@@ -80,16 +134,19 @@ class TestInstallPlaywrightCli:
         mock_ready.return_value = True
         assert install_playwright_cli() is True
 
+    @patch("installer.steps.dependencies._install_playwright_system_deps")
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
-    def test_installs_npm_package(self, mock_run, mock_ready):
-        """Installs @playwright/cli@latest via npm."""
+    def test_installs_npm_package_and_system_deps(self, mock_run, mock_ready, mock_deps):
+        """Installs @playwright/cli@latest via npm then runs install-deps."""
         from installer.steps.dependencies import install_playwright_cli
 
         mock_ready.side_effect = [False, True]
         mock_run.return_value = True
+        mock_deps.return_value = True
         assert install_playwright_cli() is True
         mock_run.assert_called_once_with("npm install -g @playwright/cli@latest")
+        mock_deps.assert_called_once_with(None)
 
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
@@ -101,18 +158,20 @@ class TestInstallPlaywrightCli:
         mock_run.return_value = False
         assert install_playwright_cli() is False
 
+    @patch("installer.steps.dependencies._install_playwright_system_deps")
     @patch("installer.steps.dependencies.subprocess")
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
-    def test_installs_browser_when_npm_succeeds_but_not_ready(self, mock_run, mock_ready, mock_subprocess):
-        """Runs playwright-cli install when npm succeeds but Chromium not cached."""
+    def test_installs_browser_and_deps_when_not_ready(self, mock_run, mock_ready, mock_subprocess, mock_deps):
+        """Runs playwright-cli install then install-deps when Chromium not cached."""
         from installer.steps.dependencies import install_playwright_cli
 
-        mock_ready.side_effect = [False, False, False]
+        mock_ready.side_effect = [False, False]
         mock_run.return_value = True
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_subprocess.run.return_value = mock_result
+        mock_deps.return_value = True
         assert install_playwright_cli() is True
         mock_subprocess.run.assert_called_once_with(
             ["playwright-cli", "install"],
@@ -120,19 +179,22 @@ class TestInstallPlaywrightCli:
             text=True,
             timeout=300,
         )
+        mock_deps.assert_called_once_with(None)
 
+    @patch("installer.steps.dependencies._install_playwright_system_deps")
     @patch("installer.steps.dependencies.subprocess")
     @patch("installer.steps.dependencies._is_playwright_cli_ready")
     @patch("installer.steps.dependencies._run_bash_with_retry")
-    def test_install_browser_with_ui_spinner(self, mock_run, mock_ready, mock_subprocess):
+    def test_install_browser_with_ui_spinner(self, mock_run, mock_ready, mock_subprocess, mock_deps):
         """Uses UI spinner when downloading browser with UI provided."""
         from installer.steps.dependencies import install_playwright_cli
 
-        mock_ready.side_effect = [False, False, False]
+        mock_ready.side_effect = [False, False]
         mock_run.return_value = True
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_subprocess.run.return_value = mock_result
+        mock_deps.return_value = True
 
         ui = MagicMock()
         ui.spinner.return_value.__enter__ = MagicMock()
@@ -140,6 +202,23 @@ class TestInstallPlaywrightCli:
 
         assert install_playwright_cli(ui=ui) is True
         ui.spinner.assert_called_once_with("Downloading Chromium browser...")
+        mock_deps.assert_called_once_with(ui)
+
+    @patch("installer.steps.dependencies._install_playwright_system_deps")
+    @patch("installer.steps.dependencies.subprocess")
+    @patch("installer.steps.dependencies._is_playwright_cli_ready")
+    @patch("installer.steps.dependencies._run_bash_with_retry")
+    def test_returns_false_when_browser_install_fails(self, mock_run, mock_ready, mock_subprocess, mock_deps):
+        """Returns False when playwright-cli install fails."""
+        from installer.steps.dependencies import install_playwright_cli
+
+        mock_ready.side_effect = [False, False]
+        mock_run.return_value = True
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_subprocess.run.return_value = mock_result
+        assert install_playwright_cli() is False
+        mock_deps.assert_not_called()
 
 
 class TestInstallPlaywrightCliWithUi:

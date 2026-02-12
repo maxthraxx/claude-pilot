@@ -470,6 +470,34 @@ def _is_playwright_cli_ready() -> bool:
     return False
 
 
+def _install_playwright_system_deps(ui: Any = None) -> bool:
+    """Install OS-level system dependencies required by Playwright browsers.
+
+    Runs 'npx playwright install-deps' which installs system libraries
+    (libglib, libatk, etc.) needed by Chromium. Required on Linux/devcontainers,
+    no-op on macOS.
+    """
+    try:
+        if ui:
+            with ui.spinner("Installing browser system dependencies..."):
+                result = subprocess.run(
+                    ["npx", "-y", "playwright", "install-deps"],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
+        else:
+            result = subprocess.run(
+                ["npx", "-y", "playwright", "install-deps"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
 def install_playwright_cli(ui: Any = None) -> bool:
     """Install playwright-cli for headless browser automation.
 
@@ -483,6 +511,7 @@ def install_playwright_cli(ui: Any = None) -> bool:
         return False
 
     if _is_playwright_cli_ready():
+        _install_playwright_system_deps(ui)
         return True
 
     try:
@@ -502,9 +531,13 @@ def install_playwright_cli(ui: Any = None) -> bool:
                 text=True,
                 timeout=300,
             )
-        return result.returncode == 0
+        if result.returncode != 0:
+            return False
     except Exception:
         return False
+
+    _install_playwright_system_deps(ui)
+    return True
 
 
 def _install_with_spinner(ui: Any, name: str, install_fn: Any, *args: Any) -> bool:
