@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.4.3] - 2026-02-12
+
+### Bug Fixes
+
+- Improve installer reliability, console UX, and vault auth flow
+
 ## [6.4.2] - 2026-02-12
 
 ### Bug Fixes
