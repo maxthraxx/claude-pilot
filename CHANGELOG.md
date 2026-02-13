@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.5.0] - 2026-02-13
+
+### Features
+
+- Add Usage tab with cost/token tracking 
+
 ## [6.4.5] - 2026-02-12
 
 ### Bug Fixes
