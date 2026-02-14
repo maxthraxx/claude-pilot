@@ -64,10 +64,10 @@ import { MetricsRoutes } from "./worker/http/routes/MetricsRoutes.js";
 import { AuthRoutes } from "./worker/http/routes/AuthRoutes.js";
 import { PlanRoutes } from "./worker/http/routes/PlanRoutes.js";
 import { WorktreeRoutes } from "./worker/http/routes/WorktreeRoutes.js";
-import { VexorRoutes } from "./worker/http/routes/VexorRoutes.js";
 import { UsageRoutes } from "./worker/http/routes/UsageRoutes.js";
 import { LicenseRoutes } from "./worker/http/routes/LicenseRoutes.js";
 import { VaultRoutes } from "./worker/http/routes/VaultRoutes.js";
+import { VexorRoutes } from "./worker/http/routes/VexorRoutes.js";
 import { MetricsService } from "./worker/MetricsService.js";
 import { startRetentionScheduler, stopRetentionScheduler } from "./worker/RetentionScheduler.js";
 
@@ -197,6 +197,18 @@ export class WorkerService {
       this.isShuttingDown = shutdownRef.value;
       handler("SIGINT");
     });
+
+    if (process.platform !== "win32") {
+      process.on("SIGHUP", () => {
+        const isDaemon = process.argv.includes("--daemon");
+        if (isDaemon) {
+          logger.info("SYSTEM", "Received SIGHUP in daemon mode, ignoring", {});
+        } else {
+          this.isShuttingDown = shutdownRef.value;
+          handler("SIGHUP");
+        }
+      });
+    }
   }
 
   /**
@@ -284,13 +296,8 @@ export class WorkerService {
       await cleanupOrphanedClaudeProcesses();
 
       const { ModeManager } = await import("./domain/ModeManager.js");
-      const { SettingsDefaultsManager } = await import("../shared/SettingsDefaultsManager.js");
-      const { USER_SETTINGS_PATH } = await import("../shared/paths.js");
-
-      const settings = SettingsDefaultsManager.loadFromFile(USER_SETTINGS_PATH);
-      const modeId = settings.CLAUDE_PILOT_MODE;
-      ModeManager.getInstance().loadMode(modeId);
-      logger.info("SYSTEM", `Mode loaded: ${modeId}`);
+      ModeManager.getInstance().loadMode();
+      logger.info("SYSTEM", "Mode loaded: Code Development");
 
       await this.dbManager.initialize();
 
@@ -717,6 +724,19 @@ async function main() {
 
     case "--daemon":
     default: {
+      process.on("unhandledRejection", (reason, promise) => {
+        logger.failure(
+          "SYSTEM",
+          "Unhandled rejection in daemon mode",
+          { promise: String(promise) },
+          reason instanceof Error ? reason : new Error(String(reason)),
+        );
+      });
+
+      process.on("uncaughtException", (error) => {
+        logger.failure("SYSTEM", "Uncaught exception in daemon mode", {}, error);
+      });
+
       const worker = new WorkerService();
       worker.start().catch((error) => {
         logger.failure("SYSTEM", "Worker failed to start", {}, error as Error);

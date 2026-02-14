@@ -51,7 +51,7 @@ export const SHORTCUTS: Record<string, Shortcut> = {
 export const SEQUENCE_SHORTCUTS: SequenceShortcut[] = [
   { sequence: ['g', 'd'], description: 'Go to Dashboard', action: 'navigate:/' },
   { sequence: ['g', 'm'], description: 'Go to Memories', action: 'navigate:/memories' },
-  { sequence: ['g', 'r'], description: 'Go to Search', action: 'navigate:/search' },
+  { sequence: ['g', 'v'], description: 'Go to Vault', action: 'navigate:/vault' },
 ];
 
 export interface Command {

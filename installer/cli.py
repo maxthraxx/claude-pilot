@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 
 from installer import __build__
-from installer.config import load_config, save_config
 from installer.context import InstallContext
 from installer.errors import FatalInstallError, InstallationCancelled
 from installer.steps.base import BaseStep
@@ -17,7 +16,6 @@ from installer.steps.claude_files import ClaudeFilesStep
 from installer.steps.config_files import ConfigFilesStep
 from installer.steps.dependencies import DependenciesStep
 from installer.steps.finalize import FinalizeStep
-from installer.steps.migration import MigrationStep
 from installer.steps.prerequisites import PrerequisitesStep
 from installer.steps.shell_config import ShellConfigStep
 from installer.steps.vscode_extensions import VSCodeExtensionsStep
@@ -28,7 +26,6 @@ def get_all_steps() -> list[BaseStep]:
     """Get all installation steps in order."""
     return [
         PrerequisitesStep(),
-        MigrationStep(),
         ClaudeFilesStep(),
         ConfigFilesStep(),
         DependenciesStep(),
@@ -322,61 +319,6 @@ def _handle_license_flow(
     return None
 
 
-def _prompt_for_features(
-    console: Console,
-    saved_config: dict,
-    skip_python: bool,
-    skip_typescript: bool,
-    skip_golang: bool,
-    skip_prompts: bool,
-) -> tuple[bool, bool, bool]:
-    """Prompt for feature installation preferences. Returns (python, typescript, golang)."""
-    enable_python = not skip_python
-    if not skip_python:
-        if "enable_python" in saved_config:
-            enable_python = saved_config["enable_python"]
-            if not skip_prompts:
-                console.print()
-                console.print(f"  [dim]Using saved preference: Python support = {enable_python}[/dim]")
-        elif not skip_prompts:
-            console.print()
-            console.print("  [bold]Do you want to install advanced Python features?[/bold]")
-            console.print("  This includes: uv, ruff, basedpyright, and Python quality hooks")
-            enable_python = console.confirm("Install Python support?", default=True)
-        else:
-            enable_python = False
-
-    enable_typescript = not skip_typescript
-    if not skip_typescript:
-        if "enable_typescript" in saved_config:
-            enable_typescript = saved_config["enable_typescript"]
-            if not skip_prompts:
-                console.print(f"  [dim]Using saved preference: TypeScript support = {enable_typescript}[/dim]")
-        elif not skip_prompts:
-            console.print()
-            console.print("  [bold]Do you want to install TypeScript features?[/bold]")
-            console.print("  This includes: TypeScript quality hooks (eslint, tsc, prettier)")
-            enable_typescript = console.confirm("Install TypeScript support?", default=True)
-        else:
-            enable_typescript = False
-
-    enable_golang = not skip_golang
-    if not skip_golang:
-        if "enable_golang" in saved_config:
-            enable_golang = saved_config["enable_golang"]
-            if not skip_prompts:
-                console.print(f"  [dim]Using saved preference: Go support = {enable_golang}[/dim]")
-        elif not skip_prompts:
-            console.print()
-            console.print("  [bold]Do you want to install Go features?[/bold]")
-            console.print("  This includes: Go quality hooks (gofmt, go vet, golangci-lint)")
-            enable_golang = console.confirm("Install Go support?", default=True)
-        else:
-            enable_golang = False
-
-    return enable_python, enable_typescript, enable_golang
-
-
 def cmd_install(args: argparse.Namespace) -> int:
     """Install Claude Pilot."""
     console = Console(non_interactive=args.non_interactive, quiet=args.quiet)
@@ -384,7 +326,6 @@ def cmd_install(args: argparse.Namespace) -> int:
     effective_local_repo_dir = args.local_repo_dir if args.local_repo_dir else (Path.cwd() if args.local else None)
     skip_prompts = args.non_interactive
     project_dir = Path.cwd()
-    saved_config = load_config()
 
     license_info = _get_license_info(project_dir, args.local, effective_local_repo_dir, console)
     license_acknowledged = license_info is not None and license_info.get("tier") in (
@@ -404,21 +345,8 @@ def cmd_install(args: argparse.Namespace) -> int:
         if exit_code is not None:
             return exit_code
 
-    enable_python, enable_typescript, enable_golang = _prompt_for_features(
-        console, saved_config, args.skip_python, args.skip_typescript, args.skip_golang, skip_prompts
-    )
-
-    if not skip_prompts:
-        saved_config["enable_python"] = enable_python
-        saved_config["enable_typescript"] = enable_typescript
-        saved_config["enable_golang"] = enable_golang
-        save_config(saved_config)
-
     ctx = InstallContext(
         project_dir=project_dir,
-        enable_python=enable_python,
-        enable_typescript=enable_typescript,
-        enable_golang=enable_golang,
         non_interactive=args.non_interactive,
         skip_env=args.skip_env,
         local_mode=args.local,
@@ -507,21 +435,6 @@ def create_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help="Local repository directory",
-    )
-    install_parser.add_argument(
-        "--skip-python",
-        action="store_true",
-        help="Skip Python support installation",
-    )
-    install_parser.add_argument(
-        "--skip-typescript",
-        action="store_true",
-        help="Skip TypeScript support installation",
-    )
-    install_parser.add_argument(
-        "--skip-golang",
-        action="store_true",
-        help="Skip Go support installation",
     )
     install_parser.add_argument(
         "--local-system",

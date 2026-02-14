@@ -79,7 +79,6 @@ export interface Settings {
 
   CLAUDE_PILOT_SKIP_TOOLS?: string;
   CLAUDE_PILOT_LOG_LEVEL?: string;
-  CLAUDE_PILOT_MODE?: string;
   CLAUDE_PILOT_FOLDER_MD_EXCLUDE?: string;
 }
 

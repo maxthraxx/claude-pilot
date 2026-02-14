@@ -152,6 +152,15 @@ def _search_test_dirs(test_dirs: list[Path], base_name: str, extensions: list[st
     return False
 
 
+def _search_test_dirs_prefix(test_dirs: list[Path], prefix: str, extensions: list[str]) -> bool:
+    """Search test directories for files whose name starts with prefix (e.g. 'vault' matches 'vault-view.test.ts')."""
+    for test_dir in test_dirs:
+        for ext in extensions:
+            if list(test_dir.glob(f"**/{prefix}{ext}")) or list(test_dir.glob(f"**/{prefix}-*{ext}")):
+                return True
+    return False
+
+
 def has_python_test_file(impl_path: str) -> bool:
     """Check if corresponding Python test file exists (sibling or in test dirs)."""
     path = Path(impl_path)
@@ -164,6 +173,13 @@ def has_python_test_file(impl_path: str) -> bool:
 
     test_dirs = _find_test_dirs(path.parent)
     return _search_test_dirs(test_dirs, "", [f"test_{module_name}.py", f"{module_name}_test.py"])
+
+
+def _pascal_to_kebab(name: str) -> str:
+    """Convert PascalCase/camelCase to kebab-case."""
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", name)
+    s = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1-\2", s)
+    return s.lower()
 
 
 def has_typescript_test_file(impl_path: str) -> bool:
@@ -179,12 +195,25 @@ def has_typescript_test_file(impl_path: str) -> bool:
     else:
         return False
 
-    for ext in extensions:
-        if (path.parent / f"{base_name}{ext}").exists():
-            return True
+    kebab_name = _pascal_to_kebab(base_name)
+    names = [base_name] if kebab_name == base_name else [base_name, kebab_name]
+
+    for name in names:
+        for ext in extensions:
+            if (path.parent / f"{name}{ext}").exists():
+                return True
 
     test_dirs = _find_test_dirs(path.parent)
-    return _search_test_dirs(test_dirs, base_name, extensions)
+    for name in names:
+        if _search_test_dirs(test_dirs, name, extensions):
+            return True
+
+    parent_kebab = _pascal_to_kebab(path.parent.name)
+    if parent_kebab and parent_kebab not in (n.lower() for n in names):
+        if _search_test_dirs_prefix(test_dirs, parent_kebab, extensions):
+            return True
+
+    return False
 
 
 def has_go_test_file(impl_path: str) -> bool:

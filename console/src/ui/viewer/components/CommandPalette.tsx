@@ -52,20 +52,20 @@ export function CommandPalette({
         action: () => onNavigate('/memories'),
       },
       {
-        id: 'nav-search',
-        label: 'Go to Search',
-        shortcut: 'G R',
-        category: 'navigation',
-        icon: 'lucide:search',
-        action: () => onNavigate('/search'),
-      },
-      {
         id: 'nav-usage',
         label: 'Go to Usage',
         shortcut: 'G U',
         category: 'navigation',
         icon: 'lucide:bar-chart-3',
         action: () => onNavigate('/usage'),
+      },
+      {
+        id: 'nav-vault',
+        label: 'Go to Vault',
+        shortcut: 'G V',
+        category: 'navigation',
+        icon: 'lucide:archive',
+        action: () => onNavigate('/vault'),
       },
       {
         id: 'action-theme',

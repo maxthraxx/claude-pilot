@@ -14,6 +14,7 @@ function createMockDeps(): EnsureWorkerDeps {
     spawnDaemon: mock(() => 12345 as number | undefined),
     writePidFile: mock(() => {}),
     removePidFile: mock(() => {}),
+    cleanStalePidFile: mock(() => {}),
     getPlatformTimeout: mock((ms: number) => ms),
   };
 }
@@ -23,6 +24,16 @@ describe("ensureWorkerDaemon", () => {
 
   beforeEach(() => {
     deps = createMockDeps();
+  });
+
+  describe("stale PID cleanup", () => {
+    it("should clean stale PID file before health checks", async () => {
+      (deps.waitForHealth as ReturnType<typeof mock>).mockResolvedValueOnce(true);
+
+      await ensureWorkerDaemon(PORT, SCRIPT_PATH, deps);
+
+      expect(deps.cleanStalePidFile).toHaveBeenCalled();
+    });
   });
 
   describe("already healthy worker", () => {

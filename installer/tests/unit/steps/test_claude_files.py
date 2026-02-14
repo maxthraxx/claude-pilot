@@ -62,152 +62,19 @@ class TestPatchClaudePaths:
 class TestProcessSettings:
     """Test the process_settings function."""
 
-    def test_process_settings_preserves_python_hook_when_enabled(self):
-        """process_settings keeps Python hook when enable_python=True."""
+    def test_process_settings_round_trips_json(self):
+        """process_settings parses and re-serializes JSON with consistent formatting."""
         from installer.steps.claude_files import process_settings
 
-        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
-        settings = {
-            "hooks": {
-                "PostToolUse": [
-                    {
-                        "matcher": "Write|Edit|MultiEdit",
-                        "hooks": [
-                            {"type": "command", "command": python_hook},
-                        ],
-                    }
-                ]
-            }
-        }
-
-        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True, enable_golang=True)
+        settings = {"hooks": {"PostToolUse": [{"matcher": "Write", "hooks": []}]}, "model": "opus"}
+        result = process_settings(json.dumps(settings))
         parsed = json.loads(result)
 
-        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
-        commands = [h["command"] for h in hooks]
-        assert any("file_checker_python.py" in cmd for cmd in commands)
-        assert len(hooks) == 1
+        assert parsed == settings
+        assert result.endswith("\n")
 
-    def test_process_settings_removes_python_hook_when_disabled(self):
-        """process_settings removes Python hook when enable_python=False."""
-        from installer.steps.claude_files import process_settings
-
-        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
-        ts_hook = "uv run python ~/.claude/pilot/hooks/file_checker_ts.py"
-        settings = {
-            "hooks": {
-                "PostToolUse": [
-                    {
-                        "matcher": "Write|Edit|MultiEdit",
-                        "hooks": [
-                            {"type": "command", "command": python_hook},
-                            {"type": "command", "command": ts_hook},
-                        ],
-                    }
-                ]
-            }
-        }
-
-        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=True, enable_golang=True)
-        parsed = json.loads(result)
-
-        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
-        commands = [h["command"] for h in hooks]
-        assert not any("file_checker_python.py" in cmd for cmd in commands)
-        assert any("file_checker_ts.py" in cmd for cmd in commands)
-        assert len(hooks) == 1
-
-    def test_process_settings_handles_missing_hooks(self):
-        """process_settings handles settings without hooks gracefully."""
-        from installer.steps.claude_files import process_settings
-
-        settings = {"model": "opus", "env": {"key": "value"}}
-
-        result = process_settings(
-            json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True
-        )
-        parsed = json.loads(result)
-
-        assert parsed["model"] == "opus"
-        assert parsed["env"]["key"] == "value"
-
-    def test_process_settings_preserves_other_settings(self):
-        """process_settings preserves all other settings unchanged."""
-        from installer.steps.claude_files import process_settings
-
-        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
-        settings = {
-            "model": "opus",
-            "env": {"DISABLE_TELEMETRY": "true"},
-            "permissions": {"allow": ["Read", "Write"]},
-            "hooks": {
-                "PostToolUse": [
-                    {
-                        "matcher": "Write|Edit|MultiEdit",
-                        "hooks": [{"type": "command", "command": python_hook}],
-                    }
-                ]
-            },
-        }
-
-        result = process_settings(json.dumps(settings), enable_python=False, enable_typescript=True, enable_golang=True)
-        parsed = json.loads(result)
-
-        assert parsed["model"] == "opus"
-        assert parsed["env"]["DISABLE_TELEMETRY"] == "true"
-        assert parsed["permissions"]["allow"] == ["Read", "Write"]
-
-    def test_process_settings_handles_malformed_structure(self):
-        """process_settings handles malformed settings gracefully without crashing."""
-        from installer.steps.claude_files import process_settings
-
-        malformed_cases = [
-            {"hooks": {"PostToolUse": None}},
-            {"hooks": {"PostToolUse": "not a list"}},
-            {"hooks": {"PostToolUse": [{"hooks": None}]}},
-            {"hooks": {"PostToolUse": [None, "string"]}},
-            {"hooks": None},
-            {"no_hooks": "at all"},
-        ]
-
-        for settings in malformed_cases:
-            result = process_settings(
-                json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True
-            )
-            parsed = json.loads(result)
-            assert parsed is not None
-
-    def test_process_settings_removes_typescript_hook_when_disabled(self):
-        """process_settings removes TypeScript hook when enable_typescript=False."""
-        from installer.steps.claude_files import process_settings
-
-        ts_hook = "uv run python ~/.claude/pilot/hooks/file_checker_ts.py"
-        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
-        settings = {
-            "hooks": {
-                "PostToolUse": [
-                    {
-                        "matcher": "Write|Edit|MultiEdit",
-                        "hooks": [
-                            {"type": "command", "command": go_hook},
-                            {"type": "command", "command": ts_hook},
-                        ],
-                    }
-                ]
-            }
-        }
-
-        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=False, enable_golang=True)
-        parsed = json.loads(result)
-
-        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
-        commands = [h["command"] for h in hooks]
-        assert not any("file_checker_ts.py" in cmd for cmd in commands)
-        assert any("file_checker_go.py" in cmd for cmd in commands)
-        assert len(hooks) == 1
-
-    def test_process_settings_removes_both_hooks_when_both_disabled(self):
-        """process_settings removes both Python and TypeScript hooks when both disabled."""
+    def test_process_settings_preserves_all_hooks(self):
+        """process_settings preserves all language hooks without filtering."""
         from installer.steps.claude_files import process_settings
 
         python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
@@ -228,74 +95,11 @@ class TestProcessSettings:
             }
         }
 
-        result = process_settings(
-            json.dumps(settings), enable_python=False, enable_typescript=False, enable_golang=True
-        )
+        result = process_settings(json.dumps(settings))
         parsed = json.loads(result)
 
         hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
-        commands = [h["command"] for h in hooks]
-        assert not any("file_checker_python.py" in cmd for cmd in commands)
-        assert not any("file_checker_ts.py" in cmd for cmd in commands)
-        assert any("file_checker_go.py" in cmd for cmd in commands)
-        assert len(hooks) == 1
-
-    def test_process_settings_removes_golang_hook_when_disabled(self):
-        """process_settings removes Go hook when enable_golang=False."""
-        from installer.steps.claude_files import process_settings
-
-        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
-        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
-        settings = {
-            "hooks": {
-                "PostToolUse": [
-                    {
-                        "matcher": "Write|Edit|MultiEdit",
-                        "hooks": [
-                            {"type": "command", "command": python_hook},
-                            {"type": "command", "command": go_hook},
-                        ],
-                    }
-                ]
-            }
-        }
-
-        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True, enable_golang=False)
-        parsed = json.loads(result)
-
-        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
-        commands = [h["command"] for h in hooks]
-        assert not any("file_checker_go.py" in cmd for cmd in commands)
-        assert any("file_checker_python.py" in cmd for cmd in commands)
-        assert len(hooks) == 1
-
-    def test_process_settings_preserves_golang_hook_when_enabled(self):
-        """process_settings keeps Go hook when enable_golang=True."""
-        from installer.steps.claude_files import process_settings
-
-        go_hook = "uv run python ~/.claude/pilot/hooks/file_checker_go.py"
-        python_hook = "uv run python ~/.claude/pilot/hooks/file_checker_python.py"
-        settings = {
-            "hooks": {
-                "PostToolUse": [
-                    {
-                        "matcher": "Write|Edit|MultiEdit",
-                        "hooks": [
-                            {"type": "command", "command": python_hook},
-                            {"type": "command", "command": go_hook},
-                        ],
-                    }
-                ]
-            }
-        }
-
-        result = process_settings(json.dumps(settings), enable_python=True, enable_typescript=True, enable_golang=True)
-        parsed = json.loads(result)
-
-        hooks = parsed["hooks"]["PostToolUse"][0]["hooks"]
-        commands = [h["command"] for h in hooks]
-        assert any("file_checker_go.py" in cmd for cmd in commands)
-        assert len(hooks) == 2
+        assert len(hooks) == 3
 
 
 class TestClaudeFilesStep:
@@ -385,111 +189,6 @@ class TestClaudeFilesStep:
                 step.run(ctx)
 
             assert (home_dir / ".claude" / "settings.json").exists()
-
-    def test_claude_files_skips_python_when_disabled(self):
-        """ClaudeFilesStep skips Python rules when enable_python=False."""
-        from installer.context import InstallContext
-        from installer.steps.claude_files import ClaudeFilesStep
-        from installer.ui import Console
-
-        step = ClaudeFilesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            home_dir = Path(tmpdir) / "home"
-            home_dir.mkdir()
-
-            source_pilot = Path(tmpdir) / "source" / "pilot"
-            source_rules = source_pilot / "rules"
-            source_rules.mkdir(parents=True)
-            (source_rules / "python-rules.md").write_text("# python rules")
-            (source_rules / "other-rules.md").write_text("# other rules")
-
-            dest_dir = Path(tmpdir) / "dest"
-            dest_dir.mkdir()
-
-            ctx = InstallContext(
-                project_dir=dest_dir,
-                enable_python=False,
-                ui=Console(non_interactive=True),
-                local_mode=True,
-                local_repo_dir=Path(tmpdir) / "source",
-            )
-
-            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
-                step.run(ctx)
-
-            global_rules = home_dir / ".claude" / "rules"
-            assert not (global_rules / "python-rules.md").exists()
-            assert (global_rules / "other-rules.md").exists()
-
-    def test_claude_files_skips_typescript_when_disabled(self):
-        """ClaudeFilesStep skips TypeScript rules when enable_typescript=False."""
-        from installer.context import InstallContext
-        from installer.steps.claude_files import ClaudeFilesStep
-        from installer.ui import Console
-
-        step = ClaudeFilesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            home_dir = Path(tmpdir) / "home"
-            home_dir.mkdir()
-
-            source_pilot = Path(tmpdir) / "source" / "pilot"
-            source_rules = source_pilot / "rules"
-            source_rules.mkdir(parents=True)
-            (source_rules / "typescript-rules.md").write_text("# typescript rules")
-            (source_rules / "python-rules.md").write_text("# python rules")
-
-            dest_dir = Path(tmpdir) / "dest"
-            dest_dir.mkdir()
-
-            ctx = InstallContext(
-                project_dir=dest_dir,
-                enable_typescript=False,
-                ui=Console(non_interactive=True),
-                local_mode=True,
-                local_repo_dir=Path(tmpdir) / "source",
-            )
-
-            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
-                step.run(ctx)
-
-            global_rules = home_dir / ".claude" / "rules"
-            assert not (global_rules / "typescript-rules.md").exists()
-            assert (global_rules / "python-rules.md").exists()
-
-    def test_claude_files_skips_golang_when_disabled(self):
-        """ClaudeFilesStep skips Go rules when enable_golang=False."""
-        from installer.context import InstallContext
-        from installer.steps.claude_files import ClaudeFilesStep
-        from installer.ui import Console
-
-        step = ClaudeFilesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            home_dir = Path(tmpdir) / "home"
-            home_dir.mkdir()
-
-            source_pilot = Path(tmpdir) / "source" / "pilot"
-            source_rules = source_pilot / "rules"
-            source_rules.mkdir(parents=True)
-            (source_rules / "golang-rules.md").write_text("# golang rules")
-            (source_rules / "python-rules.md").write_text("# python rules")
-
-            dest_dir = Path(tmpdir) / "dest"
-            dest_dir.mkdir()
-
-            ctx = InstallContext(
-                project_dir=dest_dir,
-                enable_golang=False,
-                ui=Console(non_interactive=True),
-                local_mode=True,
-                local_repo_dir=Path(tmpdir) / "source",
-            )
-
-            with patch("installer.steps.claude_files.Path.home", return_value=home_dir):
-                step.run(ctx)
-
-            global_rules = home_dir / ".claude" / "rules"
-            assert not (global_rules / "golang-rules.md").exists()
-            assert (global_rules / "python-rules.md").exists()
 
 
 class TestClaudeFilesCustomRulesPreservation:

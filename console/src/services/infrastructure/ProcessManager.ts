@@ -79,6 +79,54 @@ export function removePidFile(): void {
 }
 
 /**
+ * Check if a process is alive using signal 0 (existence check)
+ * Returns true if process exists, false otherwise
+ *
+ * Handles edge cases:
+ * - PID 0 (Windows sentinel): returns true
+ * - EPERM error (process exists but different user): returns true
+ * - ESRCH error (no such process): returns false
+ * - Invalid PIDs (negative, non-integer): returns false
+ */
+export function isProcessAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid < 0) {
+    return false;
+  }
+
+  if (pid === 0) {
+    return true;
+  }
+
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error: unknown) {
+    const errCode = error instanceof Error ? (error as NodeJS.ErrnoException).code : undefined;
+    if (errCode === 'EPERM') {
+      return true;
+    }
+    return false;
+  }
+}
+
+/**
+ * Clean up stale PID file left behind by crashed daemon
+ * Checks if recorded process is still alive, removes file if dead
+ */
+export function cleanStalePidFile(): void {
+  const pidInfo = readPidFile();
+  if (!pidInfo) {
+    return;
+  }
+
+  const isAlive = isProcessAlive(pidInfo.pid);
+  if (!isAlive) {
+    logger.info('SYSTEM', 'Removing stale PID file', { pid: pidInfo.pid });
+    removePidFile();
+  }
+}
+
+/**
  * Get platform-adjusted timeout (Windows socket cleanup is slower)
  */
 export function getPlatformTimeout(baseMs: number): number {
@@ -422,7 +470,7 @@ export async function cleanupOrphanedProcesses(): Promise<void> {
         const pid = proc.ProcessId;
         if (!Number.isInteger(pid) || pid <= 0 || pid === currentPid) continue;
 
-        const creationMatch = proc.CreationDate?.match(/\/Date\((\d+)\)\//);
+        const creationMatch = proc.CreationDate?.match(/\/Date\((\d+)\)\/\//);
 
         if (creationMatch) {
           const creationTime = parseInt(creationMatch[1], 10);

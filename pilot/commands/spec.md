@@ -97,7 +97,7 @@ AskUserQuestion:
   question: "Use git worktree isolation for this spec?"
   header: "Worktree"
   options:
-    - "Yes (Recommended)" - Isolate work on a dedicated branch; safe to experiment, easy to discard or squash merge
+    - "Yes" - Isolate work on a dedicated branch; safe to experiment, easy to discard or squash merge
     - "No" - Work directly on the current branch without worktree isolation
 ```
 
@@ -222,20 +222,20 @@ Pilot will restart with `/spec --continue <plan-path>`
 
 ## 0.5 Rules Summary (Quick Reference)
 
-| #   | Rule                                                                                                                                                                  |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #   | Rule                                                                                                                                                                                                                                                             |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **NO sub-agents except verification** - Phases 1 and 2 use direct tools only. Verification steps (Step 1.7, Step 3.0/3.5) launch paired review agents via the **Task tool** (`subagent_type="pilot:*"`). Task tool is the ONLY allowed mechanism for sub-agents. |
-| 2   | **NEVER SKIP verification** - Plan verification (Step 1.7) and Code verification (Step 3.5) are mandatory. No exceptions.                                             |
-| 3   | **ONLY stopping point is plan approval** - Everything else is automatic. Never ask "Should I fix these?"                                                              |
-| 4   | **Batch questions together** - Don't interrupt user flow                                                                                                              |
-| 5   | **Run explorations sequentially** - One at a time, never in parallel                                                                                                  |
-| 6   | **NEVER write code during planning** - Separate phases                                                                                                                |
-| 7   | **NEVER assume - verify by reading files**                                                                                                                            |
-| 8   | **Re-read plan after user edits** - Before asking for approval again                                                                                                  |
-| 9   | **TDD is MANDATORY** - No production code without failing test first                                                                                                  |
-| 10  | **Update plan checkboxes after EACH task** - Not at the end                                                                                                           |
-| 11  | **Quality over speed** - Never rush due to context pressure. But at 90%+ context, handoff overrides everything - do NOT start new fix cycles                          |
-| 12  | **Plan file is source of truth** - Survives session clears                                                                                                            |
-| 13  | **Phase Transition Context Guard** - Check context before EVERY phase transition. If >= 80%, hand off instead of starting next phase (Section 0.3)                    |
+| 2   | **NEVER SKIP verification** - Plan verification (Step 1.7) and Code verification (Step 3.5) are mandatory. No exceptions.                                                                                                                                        |
+| 3   | **ONLY stopping point is plan approval** - Everything else is automatic. Never ask "Should I fix these?"                                                                                                                                                         |
+| 4   | **Batch questions together** - Don't interrupt user flow                                                                                                                                                                                                         |
+| 5   | **Run explorations sequentially** - One at a time, never in parallel                                                                                                                                                                                             |
+| 6   | **NEVER write code during planning** - Separate phases                                                                                                                                                                                                           |
+| 7   | **NEVER assume - verify by reading files**                                                                                                                                                                                                                       |
+| 8   | **Re-read plan after user edits** - Before asking for approval again                                                                                                                                                                                             |
+| 9   | **TDD is MANDATORY** - No production code without failing test first                                                                                                                                                                                             |
+| 10  | **Update plan checkboxes after EACH task** - Not at the end                                                                                                                                                                                                      |
+| 11  | **Quality over speed** - Never rush due to context pressure. But at 90%+ context, handoff overrides everything - do NOT start new fix cycles                                                                                                                     |
+| 12  | **Plan file is source of truth** - Survives session clears                                                                                                                                                                                                       |
+| 13  | **Phase Transition Context Guard** - Check context before EVERY phase transition. If >= 80%, hand off instead of starting next phase (Section 0.3)                                                                                                               |
 
 ARGUMENTS: $ARGUMENTS

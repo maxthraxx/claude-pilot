@@ -1,10 +1,15 @@
 export const HOOK_TIMEOUTS = {
   DEFAULT: 300000,
-  HEALTH_CHECK: 30000,
+  // Healthy worker responds in <100ms; 3s is generous (reduced from 30s)
+  HEALTH_CHECK: 3000,
+  // Wait for daemon to start after spawn (macOS: <1s startup)
+  POST_SPAWN_WAIT: 5000,
+  // Wait when port occupied but health failing
+  PORT_IN_USE_WAIT: 3000,
   WORKER_STARTUP_WAIT: 1000,
-  WORKER_STARTUP_RETRIES: 300,
   PRE_RESTART_SETTLE_DELAY: 2000,
   POWERSHELL_COMMAND: 10000,
+  // Hook-side Windows multiplier (worker-side uses 2.0x)
   WINDOWS_MULTIPLIER: 1.5,
 } as const;
 

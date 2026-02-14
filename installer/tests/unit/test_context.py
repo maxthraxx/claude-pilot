@@ -20,7 +20,6 @@ class TestInstallContext:
         from installer.context import InstallContext
 
         ctx = InstallContext(project_dir=Path("/tmp/test"))
-        assert ctx.enable_python is True
         assert ctx.non_interactive is False
         assert ctx.local_mode is False
         assert ctx.local_repo_dir is None

@@ -575,23 +575,20 @@ The verifiers work in parallel:
 
 Both agents persist their findings JSON to the session directory for reliable retrieval.
 
-#### Collect and Merge Findings
+#### Collect and Fix Findings (Progressive)
 
 **⛔ NEVER use `TaskOutput` to retrieve agent results.** TaskOutput dumps the full verbose agent transcript (all JSON messages, hook progress, tool calls) into context, wasting thousands of tokens. Instead, poll the output files with the Read tool.
 
-**Polling approach:**
+**Progressive polling — fix findings as each agent completes:**
 
-1. **Wait briefly** (the agents write findings JSON to the session directory when done)
-2. **Read findings from files** using the Read tool on the paths defined above
-3. **If a file doesn't exist yet**, wait a few seconds and retry (agents may still be running)
+1. **Attempt to read BOTH findings files** using the Read tool on the paths defined above
+2. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
+3. After fixing the first batch, **poll for the second file** (retry if not yet ready)
 4. **If a file is still missing after 2-3 retries**, re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
-5. Collect findings from both agents
-6. **Deduplicate**: If both agents found the same issue, keep the one with higher severity
-7. Combine into a single findings list
+5. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
+6. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
 
-#### Fix All Findings
-
-After merging findings, fix all issues by severity:
+**Severity actions:**
 
 | Severity       | Action                                               |
 | -------------- | ---------------------------------------------------- |

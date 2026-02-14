@@ -7,7 +7,6 @@ The `pilot` binary is at `~/.pilot/bin/pilot`. These are **all** available comma
 | Command | Purpose | Example |
 |---------|---------|---------|
 | `pilot` | Start Claude with Endless Mode (primary entry point) | Just type `pilot` or `ccp` |
-| `pilot run [args...]` | Start with optional flags | `pilot run --skip-update-check` |
 | `pilot check-context --json` | Get context usage percentage | Returns `{"status": "OK", "percentage": 47.0}` or `{"status": "CLEAR_NEEDED", ...}` |
 | `pilot send-clear <plan.md>` | Trigger Endless Mode continuation with plan | `pilot send-clear docs/plans/2026-02-11-foo.md` |
 | `pilot send-clear --general` | Trigger continuation without plan | Only when no active plan exists |

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { DashboardLayout } from './layouts';
 import { Router, useRouter } from './router';
-import { DashboardView, MemoriesView, SearchView, SessionsView, SpecView, UsageView } from './views';
+import { DashboardView, MemoriesView, SessionsView, SpecView, UsageView, VaultView } from './views';
 import { LogsDrawer } from './components/LogsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { useTheme } from './hooks/useTheme';
@@ -16,7 +16,7 @@ const routes = [
   { path: '/memories/:type', component: MemoriesView },
   { path: '/sessions', component: SessionsView },
   { path: '/usage', component: UsageView },
-  { path: '/search', component: SearchView },
+  { path: '/vault', component: VaultView },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = 'pilot-memory-sidebar-collapsed';

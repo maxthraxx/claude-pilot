@@ -16,7 +16,7 @@ describe("VaultRoutes", () => {
       expect(routes).toBeInstanceOf(VaultRoutes);
     });
 
-    it("registers status and install routes", () => {
+    it("registers status, install, and detail routes", () => {
       const routes = new VaultRoutes();
       const registered: { method: string; path: string }[] = [];
       const fakeApp = {
@@ -27,12 +27,12 @@ describe("VaultRoutes", () => {
 
       expect(registered).toContainEqual({ method: "GET", path: "/api/vault/status" });
       expect(registered).toContainEqual({ method: "POST", path: "/api/vault/install" });
+      expect(registered).toContainEqual({ method: "GET", path: "/api/vault/detail/:name" });
     });
   });
 
   describe("emptyStatus", () => {
     it("returns correct empty status shape", () => {
-      const routes = new VaultRoutes();
       const status: VaultStatus = {
         installed: false,
         version: null,
@@ -127,7 +127,7 @@ describe("VaultRoutes", () => {
 
       let statusHandler: any;
       const fakeApp = {
-        get: (_path: string, handler: any) => { statusHandler = handler; },
+        get: (path: string, handler: any) => { if (path === "/api/vault/status") statusHandler = handler; },
         post: () => {},
       };
       routes.setupRoutes(fakeApp as any);
@@ -154,7 +154,7 @@ describe("VaultRoutes", () => {
 
       let statusHandler: any;
       const fakeApp = {
-        get: (_path: string, handler: any) => { statusHandler = handler; },
+        get: (path: string, handler: any) => { if (path === "/api/vault/status") statusHandler = handler; },
         post: () => {},
       };
       routes.setupRoutes(fakeApp as any);
@@ -182,7 +182,7 @@ describe("VaultRoutes", () => {
 
       let statusHandler: any;
       const fakeApp = {
-        get: (_path: string, handler: any) => { statusHandler = handler; },
+        get: (path: string, handler: any) => { if (path === "/api/vault/status") statusHandler = handler; },
         post: () => {},
       };
       routes.setupRoutes(fakeApp as any);
@@ -204,7 +204,7 @@ describe("VaultRoutes", () => {
 
       let statusHandler: any;
       const fakeApp = {
-        get: (_path: string, handler: any) => { statusHandler = handler; },
+        get: (path: string, handler: any) => { if (path === "/api/vault/status") statusHandler = handler; },
         post: () => {},
       };
       routes.setupRoutes(fakeApp as any);
@@ -295,6 +295,7 @@ describe("VaultRoutes", () => {
 
       expect((routes as any)._isInstalling).toBe(false);
       expect((routes as any).statusCache).toBeNull();
+      expect((routes as any).detailCache.size).toBe(0);
     });
 
     it("passes --target with project root to install command", async () => {
@@ -346,6 +347,203 @@ describe("VaultRoutes", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect((routes as any)._isInstalling).toBe(false);
+    });
+  });
+
+  describe("detail endpoint behavior", () => {
+    it("returns asset detail with version history for valid name", async () => {
+      const routes = new VaultRoutes();
+      (routes as any).resolveSxBinary = () => "/usr/local/bin/sx";
+      (routes as any).runSxCommand = async (args: string[]) => {
+        if (args.includes("vault") && args.includes("show")) {
+          return JSON.stringify({
+            name: "lsp-cleaner",
+            type: "skill",
+            metadata: {
+              description: "Clean up unused code",
+              authors: ["test"],
+            },
+            versions: [
+              { version: "3", createdAt: "2026-02-14", filesCount: 5 },
+              { version: "2", createdAt: "2026-02-10", filesCount: 4 },
+              { version: "1", createdAt: "2026-02-01", filesCount: 3 },
+            ],
+          });
+        }
+        return "{}";
+      };
+
+      let detailHandler: any;
+      const fakeApp = {
+        get: (path: string, handler: any) => {
+          if (path === "/api/vault/detail/:name") detailHandler = handler;
+        },
+        post: () => {},
+      };
+      routes.setupRoutes(fakeApp as any);
+
+      let responseData: any;
+      const fakeReq = { params: { name: "lsp-cleaner" } };
+      const fakeRes = {
+        json: (data: any) => { responseData = data; },
+        status: () => fakeRes,
+      };
+
+      await detailHandler(fakeReq, fakeRes);
+
+      expect(responseData).toBeDefined();
+      expect(responseData.name).toBe("lsp-cleaner");
+      expect(responseData.type).toBe("skill");
+      expect(responseData.metadata?.description).toBe("Clean up unused code");
+      expect(responseData.versions).toHaveLength(3);
+      expect(responseData.versions[0].version).toBe("3");
+    });
+
+    it("returns 400 for asset name with special characters", async () => {
+      const routes = new VaultRoutes();
+
+      let detailHandler: any;
+      const fakeApp = {
+        get: (path: string, handler: any) => {
+          if (path === "/api/vault/detail/:name") detailHandler = handler;
+        },
+        post: () => {},
+      };
+      routes.setupRoutes(fakeApp as any);
+
+      let statusCode = 200;
+      let responseData: any;
+      const fakeReq = { params: { name: "lsp-cleaner; rm -rf /" } };
+      const fakeRes = {
+        status: (code: number) => { statusCode = code; return fakeRes; },
+        json: (data: any) => { responseData = data; },
+      };
+
+      await detailHandler(fakeReq, fakeRes);
+
+      expect(statusCode).toBe(400);
+      expect(responseData.error).toContain("Invalid asset name");
+    });
+
+    it("returns 404 for nonexistent asset", async () => {
+      const routes = new VaultRoutes();
+      (routes as any).resolveSxBinary = () => "/usr/local/bin/sx";
+      (routes as any).runSxCommand = async () => {
+        throw new Error("sx exited with code 1: Asset not found");
+      };
+
+      let detailHandler: any;
+      const fakeApp = {
+        get: (path: string, handler: any) => {
+          if (path === "/api/vault/detail/:name") detailHandler = handler;
+        },
+        post: () => {},
+      };
+      routes.setupRoutes(fakeApp as any);
+
+      let statusCode = 200;
+      let responseData: any;
+      const fakeReq = { params: { name: "nonexistent" } };
+      const fakeRes = {
+        status: (code: number) => { statusCode = code; return fakeRes; },
+        json: (data: any) => { responseData = data; },
+      };
+
+      await detailHandler(fakeReq, fakeRes);
+
+      expect(statusCode).toBe(404);
+      expect(responseData.error).toContain("not found");
+    });
+
+    it("returns 502 for malformed sx output", async () => {
+      const routes = new VaultRoutes();
+      (routes as any).resolveSxBinary = () => "/usr/local/bin/sx";
+      (routes as any).runSxCommand = async () => {
+        return JSON.stringify({ type: "skill" });
+      };
+
+      let detailHandler: any;
+      const fakeApp = {
+        get: (path: string, handler: any) => {
+          if (path === "/api/vault/detail/:name") detailHandler = handler;
+        },
+        post: () => {},
+      };
+      routes.setupRoutes(fakeApp as any);
+
+      let statusCode = 200;
+      let responseData: any;
+      const fakeReq = { params: { name: "test-asset" } };
+      const fakeRes = {
+        status: (code: number) => { statusCode = code; return fakeRes; },
+        json: (data: any) => { responseData = data; },
+      };
+
+      await detailHandler(fakeReq, fakeRes);
+
+      expect(statusCode).toBe(502);
+      expect(responseData.error).toContain("Unexpected sx response format");
+    });
+
+    it("caches detail responses for 60s", async () => {
+      const routes = new VaultRoutes();
+      (routes as any).resolveSxBinary = () => "/usr/local/bin/sx";
+      let callCount = 0;
+      (routes as any).runSxCommand = async () => {
+        callCount++;
+        return JSON.stringify({
+          name: "test-asset",
+          type: "rule",
+          versions: [{ version: "1", createdAt: "2026-02-14", filesCount: 2 }],
+        });
+      };
+
+      let detailHandler: any;
+      const fakeApp = {
+        get: (path: string, handler: any) => {
+          if (path === "/api/vault/detail/:name") detailHandler = handler;
+        },
+        post: () => {},
+      };
+      routes.setupRoutes(fakeApp as any);
+
+      const fakeReq = { params: { name: "test-asset" } };
+      const fakeRes = {
+        json: () => {},
+        status: () => fakeRes,
+      };
+
+      await detailHandler(fakeReq, fakeRes);
+      await detailHandler(fakeReq, fakeRes);
+
+      expect(callCount).toBe(1);
+    });
+
+    it("returns 500 when sx binary is not found", async () => {
+      const routes = new VaultRoutes();
+      (routes as any).resolveSxBinary = () => null;
+
+      let detailHandler: any;
+      const fakeApp = {
+        get: (path: string, handler: any) => {
+          if (path === "/api/vault/detail/:name") detailHandler = handler;
+        },
+        post: () => {},
+      };
+      routes.setupRoutes(fakeApp as any);
+
+      let statusCode = 200;
+      let responseData: any;
+      const fakeReq = { params: { name: "test-asset" } };
+      const fakeRes = {
+        status: (code: number) => { statusCode = code; return fakeRes; },
+        json: (data: any) => { responseData = data; },
+      };
+
+      await detailHandler(fakeReq, fakeRes);
+
+      expect(statusCode).toBe(500);
+      expect(responseData.error).toContain("sx CLI not found");
     });
   });
 });

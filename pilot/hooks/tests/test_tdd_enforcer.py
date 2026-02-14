@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from tdd_enforcer import (
     _find_test_dirs,
+    _pascal_to_kebab,
     _search_test_dirs,
     has_go_test_file,
     has_python_test_file,
@@ -92,6 +93,26 @@ class TestFindTestDirs:
 
             dirs = _find_test_dirs(src)
             assert dirs == []
+
+
+class TestPascalToKebab:
+    def test_pascal_case(self):
+        assert _pascal_to_kebab("VaultRoutes") == "vault-routes"
+
+    def test_multi_word_pascal(self):
+        assert _pascal_to_kebab("BaseRouteHandler") == "base-route-handler"
+
+    def test_single_word(self):
+        assert _pascal_to_kebab("App") == "app"
+
+    def test_already_lowercase(self):
+        assert _pascal_to_kebab("vault-routes") == "vault-routes"
+
+    def test_camel_case(self):
+        assert _pascal_to_kebab("vaultRoutes") == "vault-routes"
+
+    def test_acronym_prefix(self):
+        assert _pascal_to_kebab("APIClient") == "api-client"
 
 
 class TestSearchTestDirs:
@@ -229,6 +250,87 @@ class TestHasTypescriptTestFile:
             (tests / "Foo.test.ts").touch()
 
             assert has_typescript_test_file(str(impl)) is True
+
+    def test_finds_kebab_case_test_in_tests_dir(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src = Path(tmpdir) / "src" / "services"
+            src.mkdir(parents=True)
+            impl = src / "VaultRoutes.ts"
+            impl.touch()
+            tests = Path(tmpdir) / "tests" / "worker"
+            tests.mkdir(parents=True)
+            (tests / "vault-routes.test.ts").touch()
+
+            assert has_typescript_test_file(str(impl)) is True
+
+    def test_finds_kebab_case_sibling_test(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            impl = Path(tmpdir) / "BaseRouteHandler.ts"
+            impl.touch()
+            (Path(tmpdir) / "base-route-handler.test.ts").touch()
+
+            assert has_typescript_test_file(str(impl)) is True
+
+    def test_finds_kebab_case_tsx_test(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            impl = Path(tmpdir) / "VaultStatus.tsx"
+            impl.touch()
+            (Path(tmpdir) / "vault-status.test.tsx").touch()
+
+            assert has_typescript_test_file(str(impl)) is True
+
+    def test_finds_parent_dir_prefixed_test_in_tests_dir(self):
+        """Test files inside a feature directory (e.g. views/Vault/VaultAssetDetail.tsx)
+        are found when the test is named after the parent dir (e.g. vault-view.test.ts)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src = Path(tmpdir) / "src" / "views" / "Vault"
+            src.mkdir(parents=True)
+            impl = src / "VaultAssetDetail.tsx"
+            impl.touch()
+            tests = Path(tmpdir) / "tests" / "ui"
+            tests.mkdir(parents=True)
+            (tests / "vault-view.test.ts").touch()
+
+            assert has_typescript_test_file(str(impl)) is True
+
+    def test_finds_parent_dir_prefixed_test_for_index(self):
+        """index.tsx inside a feature dir is found via parent-dir-prefixed test."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src = Path(tmpdir) / "src" / "views" / "Usage"
+            src.mkdir(parents=True)
+            impl = src / "index.tsx"
+            impl.touch()
+            tests = Path(tmpdir) / "tests" / "ui"
+            tests.mkdir(parents=True)
+            (tests / "usage-view.test.ts").touch()
+
+            assert has_typescript_test_file(str(impl)) is True
+
+    def test_finds_parent_dir_exact_test(self):
+        """Parent dir exact match (e.g. vault.test.ts for files in Vault/)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src = Path(tmpdir) / "src" / "views" / "Auth"
+            src.mkdir(parents=True)
+            impl = src / "LoginForm.tsx"
+            impl.touch()
+            tests = Path(tmpdir) / "tests"
+            tests.mkdir()
+            (tests / "auth.test.ts").touch()
+
+            assert has_typescript_test_file(str(impl)) is True
+
+    def test_no_false_positive_from_unrelated_parent_prefix(self):
+        """Don't match test files that happen to share a generic parent dir name."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            src = Path(tmpdir) / "src" / "Foo"
+            src.mkdir(parents=True)
+            impl = src / "Bar.ts"
+            impl.touch()
+            tests = Path(tmpdir) / "tests"
+            tests.mkdir()
+            (tests / "baz.test.ts").touch()
+
+            assert has_typescript_test_file(str(impl)) is False
 
     def test_returns_false_when_no_test(self):
         with tempfile.TemporaryDirectory() as tmpdir:

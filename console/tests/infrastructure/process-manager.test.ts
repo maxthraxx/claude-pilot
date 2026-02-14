@@ -7,6 +7,8 @@ import {
   readPidFile,
   removePidFile,
   getPlatformTimeout,
+  isProcessAlive,
+  cleanStalePidFile,
   type PidInfo
 } from '../../src/services/infrastructure/index.js';
 
@@ -186,6 +188,77 @@ describe('ProcessManager', () => {
       const result = getPlatformTimeout(333);
 
       expect(result).toBe(666);
+    });
+  });
+
+  describe('isProcessAlive', () => {
+    it('should return true for current process', () => {
+      const result = isProcessAlive(process.pid);
+      expect(result).toBe(true);
+    });
+
+    it('should return false for non-existent PID', () => {
+      // Use a very high PID that's unlikely to exist
+      const result = isProcessAlive(999999);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for invalid PIDs', () => {
+      expect(isProcessAlive(-1)).toBe(false);
+      expect(isProcessAlive(NaN)).toBe(false);
+      expect(isProcessAlive(1.5)).toBe(false);
+    });
+
+    it('should return true for PID 0 (Windows sentinel)', () => {
+      const result = isProcessAlive(0);
+      expect(result).toBe(true);
+    });
+
+    it('should handle process.kill errors correctly', () => {
+      // This test ensures ESRCH (no such process) returns false
+      const result = isProcessAlive(999999);
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('cleanStalePidFile', () => {
+    it('should not remove PID file if process is alive', () => {
+      const testInfo: PidInfo = {
+        pid: process.pid,
+        port: 41777,
+        startedAt: new Date().toISOString()
+      };
+      writePidFile(testInfo);
+
+      cleanStalePidFile();
+
+      expect(existsSync(PID_FILE)).toBe(true);
+    });
+
+    it('should remove PID file if process is dead', () => {
+      const testInfo: PidInfo = {
+        pid: 999999,
+        port: 41777,
+        startedAt: new Date().toISOString()
+      };
+      writePidFile(testInfo);
+
+      cleanStalePidFile();
+
+      expect(existsSync(PID_FILE)).toBe(false);
+    });
+
+    it('should not throw if PID file does not exist', () => {
+      removePidFile();
+
+      expect(() => cleanStalePidFile()).not.toThrow();
+    });
+
+    it('should not throw if PID file is corrupted', () => {
+      const { writeFileSync } = require('fs');
+      writeFileSync(PID_FILE, 'invalid json');
+
+      expect(() => cleanStalePidFile()).not.toThrow();
     });
   });
 });

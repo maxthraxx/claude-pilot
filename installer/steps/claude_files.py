@@ -44,41 +44,15 @@ def patch_claude_paths(content: str) -> str:
     return content.replace('"~/.pilot/bin/', '"' + abs_bin_path)
 
 
-def process_settings(
-    settings_content: str,
-    enable_python: bool,
-    enable_typescript: bool,
-    enable_golang: bool,
-) -> str:
-    """Process settings JSON, optionally removing Python/TypeScript/Go-specific hooks."""
+def process_settings(settings_content: str) -> str:
+    """Process settings JSON - parse and re-serialize with consistent formatting."""
     config: dict[str, Any] = json.loads(settings_content)
-
-    files_to_remove: list[str] = []
-    if not enable_python:
-        files_to_remove.append("file_checker_python.py")
-    if not enable_typescript:
-        files_to_remove.append("file_checker_ts.py")
-    if not enable_golang:
-        files_to_remove.append("file_checker_go.py")
-
-    if files_to_remove:
-        try:
-            for hook_group in config["hooks"]["PostToolUse"]:
-                hook_group["hooks"] = [
-                    h for h in hook_group["hooks"] if not any(f in h.get("command", "") for f in files_to_remove)
-                ]
-        except (KeyError, TypeError, AttributeError):
-            pass
-
     return json.dumps(config, indent=2) + "\n"
 
 
-def _should_skip_file(file_path: str, ctx: InstallContext, hooks_to_skip: list[str]) -> bool:
+def _should_skip_file(file_path: str) -> bool:
     """Check if a file should be skipped during installation."""
     if not file_path:
-        return True
-
-    if "/hooks/" in file_path and any(h in file_path for h in hooks_to_skip):
         return True
 
     if any(pattern in file_path for pattern in SKIP_PATTERNS):
@@ -88,18 +62,6 @@ def _should_skip_file(file_path: str, ctx: InstallContext, hooks_to_skip: list[s
         return True
     if Path(file_path).name == ".gitignore":
         return True
-
-    if not ctx.enable_python:
-        if "file_checker_python.py" in file_path or "python-rules.md" in file_path:
-            return True
-
-    if not ctx.enable_typescript:
-        if "file_checker_ts.py" in file_path or "typescript-rules.md" in file_path:
-            return True
-
-    if not ctx.enable_golang:
-        if "file_checker_go.py" in file_path or "golang-rules.md" in file_path:
-            return True
 
     return False
 
@@ -214,17 +176,9 @@ class ClaudeFilesStep(BaseStep):
             "settings": [],
         }
 
-        hooks_to_skip: list[str] = []
-        if not ctx.enable_python:
-            hooks_to_skip.append("file_checker_python.py")
-        if not ctx.enable_typescript:
-            hooks_to_skip.append("file_checker_ts.py")
-        if not ctx.enable_golang:
-            hooks_to_skip.append("file_checker_go.py")
-
         for file_info in pilot_files:
             file_path = file_info.path
-            if _should_skip_file(file_path, ctx, hooks_to_skip):
+            if _should_skip_file(file_path):
                 continue
 
             category = _categorize_file(file_path)
@@ -381,9 +335,6 @@ class ClaudeFilesStep(BaseStep):
                         file_path,
                         dest_file,
                         config,
-                        ctx.enable_python,
-                        ctx.enable_typescript,
-                        ctx.enable_golang,
                     )
                     if success:
                         installed.append(str(dest_file))
@@ -434,10 +385,10 @@ class ClaudeFilesStep(BaseStep):
 
         self._make_scripts_executable(home_pilot_plugin_dir)
 
-        self._update_lsp_config(home_pilot_plugin_dir, ctx)
+        self._update_lsp_config(home_pilot_plugin_dir)
 
         if not ctx.local_mode:
-            self._update_hooks_config(home_pilot_plugin_dir, ctx)
+            self._update_hooks_config(home_pilot_plugin_dir)
 
         self._ensure_project_rules_dir(ctx)
 
@@ -454,63 +405,28 @@ class ClaudeFilesStep(BaseStep):
             except (OSError, IOError):
                 pass
 
-    def _update_lsp_config(self, plugin_dir: Path, ctx: InstallContext) -> None:
-        """Remove disabled languages from LSP config."""
+    def _update_lsp_config(self, plugin_dir: Path) -> None:
+        """Process LSP config with consistent formatting."""
         lsp_config_path = plugin_dir / ".lsp.json"
         if not lsp_config_path.exists():
             return
 
         try:
             lsp_config = json.loads(lsp_config_path.read_text())
-            if not ctx.enable_python and "python" in lsp_config:
-                del lsp_config["python"]
-            if not ctx.enable_typescript and "typescript" in lsp_config:
-                del lsp_config["typescript"]
-            if not ctx.enable_golang and "go" in lsp_config:
-                del lsp_config["go"]
             lsp_config_path.write_text(json.dumps(lsp_config, indent=2) + "\n")
         except (json.JSONDecodeError, OSError, IOError):
             pass
 
-    def _update_hooks_config(self, plugin_dir: Path, ctx: InstallContext) -> None:
-        """Remove disabled language hooks from hooks.json."""
+    def _update_hooks_config(self, plugin_dir: Path) -> None:
+        """Process hooks config with path patching and consistent formatting."""
         hooks_json_path = plugin_dir / "hooks" / "hooks.json"
         if not hooks_json_path.exists():
             return
-
-        files_to_remove: list[str] = []
-        if not ctx.enable_python:
-            files_to_remove.append("file_checker_python.py")
-        if not ctx.enable_typescript:
-            files_to_remove.append("file_checker_ts.py")
-        if not ctx.enable_golang:
-            files_to_remove.append("file_checker_go.py")
-
-        hooks_dir = plugin_dir / "hooks"
-        for hook_file in files_to_remove:
-            hook_path = hooks_dir / hook_file
-            if hook_path.exists():
-                try:
-                    hook_path.unlink()
-                except (OSError, IOError):
-                    pass
 
         try:
             hooks_content = hooks_json_path.read_text()
             hooks_content = patch_claude_paths(hooks_content)
             hooks_config = json.loads(hooks_content)
-
-            if files_to_remove:
-                hooks_section = hooks_config.get("hooks", {})
-                if "PostToolUse" in hooks_section:
-                    for hook_group in hooks_section["PostToolUse"]:
-                        if "hooks" in hook_group:
-                            hook_group["hooks"] = [
-                                h
-                                for h in hook_group["hooks"]
-                                if not any(f in h.get("command", "") for f in files_to_remove)
-                            ]
-
             hooks_json_path.write_text(json.dumps(hooks_config, indent=2) + "\n")
         except (json.JSONDecodeError, OSError, IOError):
             pass
@@ -544,9 +460,6 @@ class ClaudeFilesStep(BaseStep):
         source_path: str,
         dest_path: Path,
         config: DownloadConfig,
-        install_python: bool,
-        install_typescript: bool,
-        install_golang: bool,
     ) -> bool:
         """Download and process settings file."""
         import tempfile
@@ -558,9 +471,7 @@ class ClaudeFilesStep(BaseStep):
 
             try:
                 settings_content = temp_file.read_text()
-                processed_content = process_settings(
-                    settings_content, install_python, install_typescript, install_golang
-                )
+                processed_content = process_settings(settings_content)
                 processed_content = patch_claude_paths(processed_content)
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
                 dest_path.write_text(processed_content)

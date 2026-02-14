@@ -45,7 +45,7 @@ export function VaultStatus(props: VaultStatusProps) {
       <Card>
         <CardBody>
           <div className="flex items-center justify-between mb-4">
-            <CardTitle>Team Vault</CardTitle>
+            <CardTitle>Vault</CardTitle>
             <Badge variant="ghost">Loading...</Badge>
           </div>
           <div className="space-y-3 animate-pulse">
@@ -65,7 +65,7 @@ export function VaultStatus(props: VaultStatusProps) {
       <Card>
         <CardBody>
           <div className="flex items-center justify-between mb-4">
-            <CardTitle>Team Vault</CardTitle>
+            <CardTitle>Vault</CardTitle>
             <Badge variant="ghost">Not Installed</Badge>
           </div>
           <div className="text-sm text-base-content/60">
@@ -82,7 +82,7 @@ export function VaultStatus(props: VaultStatusProps) {
         <CardBody>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <CardTitle>Team Vault</CardTitle>
+              <CardTitle>Vault</CardTitle>
               {version && <Badge variant="ghost" size="sm">v{version}</Badge>}
             </div>
             <Badge variant="warning">Not Configured</Badge>
@@ -100,7 +100,7 @@ export function VaultStatus(props: VaultStatusProps) {
       <CardBody className="flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <CardTitle>Team Vault</CardTitle>
+            <CardTitle>Vault</CardTitle>
             <Badge variant="ghost" size="sm">Workspace</Badge>
           </div>
           <Badge variant="success">Connected</Badge>

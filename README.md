@@ -42,18 +42,18 @@ So I built Pilot. Instead of adding process on top, it bakes quality into every 
 
 ## Before & After
 
-| Without Pilot              | With Pilot                                                      |
-| -------------------------- | --------------------------------------------------------------- |
-| Writes code, skips tests   | TDD enforced — RED, GREEN, REFACTOR on every feature            |
-| No quality checks          | Hooks auto-lint, format, type-check on every file edit          |
-| Context degrades mid-task  | Endless Mode with automatic session handoff                     |
-| Every session starts fresh | Persistent memory across sessions via Pilot Console             |
-| Hope it works              | Verifier sub-agents perform code review before marking complete |
-| No codebase knowledge      | Production-tested rules loaded into every session               |
-| Generic suggestions        | Coding standards activated conditionally by file type           |
-| Changes mixed into branch  | Isolated worktrees — review and squash merge when verified      |
-| Manual tool setup          | MCP servers + language servers pre-configured and ready         |
-| Requires constant oversight| Start a task, grab a coffee, come back to verified results      |
+| Without Pilot               | With Pilot                                                      |
+| --------------------------- | --------------------------------------------------------------- |
+| Writes code, skips tests    | TDD enforced — RED, GREEN, REFACTOR on every feature            |
+| No quality checks           | Hooks auto-lint, format, type-check on every file edit          |
+| Context degrades mid-task   | Endless Mode with automatic session handoff                     |
+| Every session starts fresh  | Persistent memory across sessions via Pilot Console             |
+| Hope it works               | Verifier sub-agents perform code review before marking complete |
+| No codebase knowledge       | Production-tested rules loaded into every session               |
+| Generic suggestions         | Coding standards activated conditionally by file type           |
+| Changes mixed into branch   | Isolated worktrees — review and squash merge when verified      |
+| Manual tool setup           | MCP servers + language servers pre-configured and ready         |
+| Requires constant oversight | Start a task, grab a coffee, come back to verified results      |
 
 ---
 
@@ -304,11 +304,11 @@ All commands support `--json` for structured output. Multiple Pilot sessions can
 
 Create your own in your project's `.claude/` folder:
 
-| Type         | Loaded                                          | Best for                                 |
-| ------------ | ----------------------------------------------- | ---------------------------------------- |
-| **Rules**    | Every session, or conditionally by file type    | Guidelines Claude should always follow   |
-| **Commands** | On demand via `/command`                        | Specific workflows or multi-step tasks   |
-| **Skills**   | On demand, created via `/learn`                 | Reusable knowledge from past sessions    |
+| Type         | Loaded                                       | Best for                               |
+| ------------ | -------------------------------------------- | -------------------------------------- |
+| **Rules**    | Every session, or conditionally by file type | Guidelines Claude should always follow |
+| **Commands** | On demand via `/command`                     | Specific workflows or multi-step tasks |
+| **Skills**   | On demand, created via `/learn`              | Reusable knowledge from past sessions  |
 
 Claude Pilot automatically installs best-practice rules, commands, and coding standards. Standards rules use `paths` frontmatter to activate only when you're working with matching file types (e.g., Python standards load only when editing `.py` files). Custom skills are created by `/learn` when it detects non-obvious discoveries, workarounds, or reusable workflows — and can be shared across your team via `/vault`.
 
@@ -432,21 +432,21 @@ Production-tested best practices loaded into **every session**. These aren't sug
 
 Conditional rules activated by file type — loaded only when working with matching files:
 
-| Standard             | Activates On                    | Coverage                                                         |
-| -------------------- | ------------------------------- | ---------------------------------------------------------------- |
-| Python               | `*.py`                          | uv, pytest, ruff, basedpyright, type hints, docstrings           |
-| TypeScript           | `*.ts`, `*.tsx`, `*.js`, `*.jsx`| npm/pnpm, Jest, ESLint, Prettier, React patterns                 |
-| Go                   | `*.go`                          | Modules, testing, formatting, error handling                     |
-| Testing Strategies   | `*test*`, `*spec*`              | Unit vs integration vs E2E, mocking, coverage goals              |
-| API Design           | `*route*`, `*endpoint*`, `*api*`| RESTful patterns, response envelopes, error handling, versioning |
-| Data Models          | `*model*`, `*schema*`, `*entity*`| Database schemas, type safety, migrations, relationships        |
-| Components           | `*component*`, `*.tsx`, `*.vue` | Reusable patterns, props design, documentation, testing          |
-| CSS / Styling        | `*.css`, `*.scss`, `*.tailwind*`| Naming conventions, organization, responsive design, performance |
-| Responsive Design    | `*.css`, `*.scss`, `*.tsx`      | Mobile-first, breakpoints, Flexbox/Grid, touch interactions      |
-| Design System        | `*.css`, `*.tsx`, `*.vue`       | Color palette, typography, spacing, component consistency        |
-| Accessibility        | `*.tsx`, `*.jsx`, `*.vue`, `*.html`| WCAG compliance, ARIA attributes, keyboard nav, screen readers |
-| DB Migrations        | `*migration*`, `*alembic*`      | Schema changes, data transformation, rollback strategy           |
-| Query Optimization   | `*query*`, `*repository*`, `*dao*`| Indexing, N+1 problems, query patterns, performance            |
+| Standard           | Activates On                        | Coverage                                                         |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------------- |
+| Python             | `*.py`                              | uv, pytest, ruff, basedpyright, type hints, docstrings           |
+| TypeScript         | `*.ts`, `*.tsx`, `*.js`, `*.jsx`    | npm/pnpm, Jest, ESLint, Prettier, React patterns                 |
+| Go                 | `*.go`                              | Modules, testing, formatting, error handling                     |
+| Testing Strategies | `*test*`, `*spec*`                  | Unit vs integration vs E2E, mocking, coverage goals              |
+| API Design         | `*route*`, `*endpoint*`, `*api*`    | RESTful patterns, response envelopes, error handling, versioning |
+| Data Models        | `*model*`, `*schema*`, `*entity*`   | Database schemas, type safety, migrations, relationships         |
+| Components         | `*component*`, `*.tsx`, `*.vue`     | Reusable patterns, props design, documentation, testing          |
+| CSS / Styling      | `*.css`, `*.scss`, `*.tailwind*`    | Naming conventions, organization, responsive design, performance |
+| Responsive Design  | `*.css`, `*.scss`, `*.tsx`          | Mobile-first, breakpoints, Flexbox/Grid, touch interactions      |
+| Design System      | `*.css`, `*.tsx`, `*.vue`           | Color palette, typography, spacing, component consistency        |
+| Accessibility      | `*.tsx`, `*.jsx`, `*.vue`, `*.html` | WCAG compliance, ARIA attributes, keyboard nav, screen readers   |
+| DB Migrations      | `*migration*`, `*alembic*`          | Schema changes, data transformation, rollback strategy           |
+| Query Optimization | `*query*`, `*repository*`, `*dao*`  | Indexing, N+1 problems, query patterns, performance              |
 
 ### MCP Servers
 
@@ -476,7 +476,7 @@ All configured via `.lsp.json` with stdio transport.
 
 ## Claude Pilot Console
 
-Access the web-based Claude Pilot Console at **http://localhost:41777** to visualize your development workflow:
+Access the web-based Claude Pilot Console to visualize your development workflow:
 
 <img src="docs/img/console.png" alt="Claude Pilot Console" width="700">
 
@@ -516,13 +516,13 @@ Details and licensing at [claude-pilot.com](https://claude-pilot.com).
 
 Pilot makes external calls **only for licensing**. Here is the complete list:
 
-| When | Where | What is sent |
-|------|-------|--------------|
-| License validation (once per 24h) | `api.polar.sh` | License key, organization ID |
-| License activation (once) | `api.polar.sh` | License key, machine fingerprint, OS, architecture, Python version |
-| Activation analytics (once) | `claude-pilot.com` | Tier, Pilot version, OS, architecture, Python version, machine fingerprint |
-| Trial start (once) | `claude-pilot.com` | Hashed hardware fingerprint, OS, Pilot version, locale |
-| Trial heartbeat (each session during trial) | `claude-pilot.com` | Hashed hardware fingerprint, OS, Pilot version |
+| When                                        | Where              | What is sent                                                               |
+| ------------------------------------------- | ------------------ | -------------------------------------------------------------------------- |
+| License validation (once per 24h)           | `api.polar.sh`     | License key, organization ID                                               |
+| License activation (once)                   | `api.polar.sh`     | License key, machine fingerprint, OS, architecture, Python version         |
+| Activation analytics (once)                 | `claude-pilot.com` | Tier, Pilot version, OS, architecture, Python version, machine fingerprint |
+| Trial start (once)                          | `claude-pilot.com` | Hashed hardware fingerprint, OS, Pilot version, locale                     |
+| Trial heartbeat (each session during trial) | `claude-pilot.com` | Hashed hardware fingerprint, OS, Pilot version                             |
 
 That's it. No code, no filenames, no prompts, no project content, no personal data. The validation result is cached locally, and Pilot works fully offline for up to 7 days between checks. Beyond these licensing calls, the only external communication is between Claude Code and Anthropic's API — using your own subscription or API key.
 

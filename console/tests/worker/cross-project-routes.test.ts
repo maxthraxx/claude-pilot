@@ -1,10 +1,10 @@
 /**
- * Tests for cross-project root path resolution in PlanRoutes and VexorRoutes
+ * Tests for cross-project root path resolution in PlanRoutes
  *
  * Mock Justification: Code-inspection pattern (readFileSync + string assertions)
  * Tests that route handlers accept ?project= param and resolve project roots.
  *
- * Value: Validates cross-project filesystem support across plan, git, and vexor routes
+ * Value: Validates cross-project filesystem support across plan and git routes
  */
 import { describe, it, expect } from "bun:test";
 import { readFileSync, existsSync } from "fs";
@@ -14,17 +14,9 @@ const PLAN_ROUTES_PATH = path.resolve(
   import.meta.dir,
   "../../src/services/worker/http/routes/PlanRoutes.ts",
 );
-const VEXOR_ROUTES_PATH = path.resolve(
-  import.meta.dir,
-  "../../src/services/worker/http/routes/VexorRoutes.ts",
-);
 const RESOLVE_UTIL_PATH = path.resolve(
   import.meta.dir,
   "../../src/services/worker/http/routes/utils/resolveProjectRoot.ts",
-);
-const WORKER_SERVICE_PATH = path.resolve(
-  import.meta.dir,
-  "../../src/services/worker-service.ts",
 );
 
 describe("resolveProjectRoot utility", () => {
@@ -88,42 +80,3 @@ describe("PlanRoutes cross-project support", () => {
   });
 });
 
-describe("VexorRoutes cross-project support", () => {
-  const source = readFileSync(VEXOR_ROUTES_PATH, "utf-8");
-
-  it("should accept DatabaseManager in constructor", () => {
-    expect(source).toContain("DatabaseManager");
-    expect(source).toContain("dbManager");
-  });
-
-  it("should import resolveProjectRoot from shared utility", () => {
-    expect(source).toContain("resolveProjectRoot");
-    expect(source).toContain("utils/resolveProjectRoot");
-  });
-
-  it("handleStatus should use ?project= query param", () => {
-    const handler = source.slice(source.indexOf("handleStatus"));
-    expect(handler).toContain("req.query.project");
-    expect(handler).toContain("resolveProjectRoot");
-  });
-
-  it("handleSearch should use ?project= query param", () => {
-    const handler = source.slice(source.indexOf("handleSearch"));
-    expect(handler).toContain("req.query.project");
-    expect(handler).toContain("resolveProjectRoot");
-  });
-
-  it("handleReindex should use ?project= query param", () => {
-    const handler = source.slice(source.indexOf("handleReindex"));
-    expect(handler).toContain("req.query.project");
-    expect(handler).toContain("resolveProjectRoot");
-  });
-});
-
-describe("worker-service.ts wiring", () => {
-  const source = readFileSync(WORKER_SERVICE_PATH, "utf-8");
-
-  it("should pass dbManager to VexorRoutes constructor", () => {
-    expect(source).toContain("new VexorRoutes(this.dbManager)");
-  });
-});

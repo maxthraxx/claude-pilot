@@ -1,39 +1,144 @@
 /**
- * ModeManager - Singleton for loading and managing mode profiles
+ * ModeManager - Singleton for managing observation mode configuration
  *
- * Mode profiles define observation types, concepts, and prompts for different use cases.
- * Default mode is 'code' (software development). Other modes like 'email-investigation'
- * can be selected via CLAUDE_PILOT_MODE setting.
+ * Mode configuration defines observation types, concepts, and prompts.
+ * Previously loaded from JSON files with language-specific inheritance.
+ * Now hardcoded to 'code' mode only - language modes removed.
  */
 
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
-import { homedir } from "os";
 import type { ModeConfig, ObservationType, ObservationConcept } from "./types.js";
-import { logger } from "../../utils/logger.js";
-import { getPackageRoot } from "../../shared/paths.js";
+
+/**
+ * Hardcoded 'code' mode configuration
+ * Inlined from pilot/modes/code.json
+ */
+const DEFAULT_MODE: ModeConfig = {
+  name: "Code Development",
+  description: "Software development and engineering work",
+  version: "1.0.0",
+  observation_types: [
+    {
+      id: "bugfix",
+      label: "Bug Fix",
+      description: "Something was broken, now fixed",
+      emoji: "🔴",
+      work_emoji: "🛠️",
+    },
+    {
+      id: "feature",
+      label: "Feature",
+      description: "New capability or functionality added",
+      emoji: "🟣",
+      work_emoji: "🛠️",
+    },
+    {
+      id: "refactor",
+      label: "Refactor",
+      description: "Code restructured, behavior unchanged",
+      emoji: "🔄",
+      work_emoji: "🛠️",
+    },
+    {
+      id: "change",
+      label: "Change",
+      description: "Generic modification (docs, config, misc)",
+      emoji: "✅",
+      work_emoji: "🛠️",
+    },
+    {
+      id: "discovery",
+      label: "Discovery",
+      description: "Learning about existing system",
+      emoji: "🔵",
+      work_emoji: "🔍",
+    },
+    {
+      id: "decision",
+      label: "Decision",
+      description: "Architectural/design choice with rationale",
+      emoji: "⚖️",
+      work_emoji: "⚖️",
+    },
+  ],
+  observation_concepts: [
+    {
+      id: "how-it-works",
+      label: "How It Works",
+      description: "Understanding mechanisms",
+    },
+    {
+      id: "why-it-exists",
+      label: "Why It Exists",
+      description: "Purpose or rationale",
+    },
+    {
+      id: "what-changed",
+      label: "What Changed",
+      description: "Modifications made",
+    },
+    {
+      id: "problem-solution",
+      label: "Problem-Solution",
+      description: "Issues and their fixes",
+    },
+    {
+      id: "gotcha",
+      label: "Gotcha",
+      description: "Traps or edge cases",
+    },
+    {
+      id: "pattern",
+      label: "Pattern",
+      description: "Reusable approach",
+    },
+    {
+      id: "trade-off",
+      label: "Trade-Off",
+      description: "Pros/cons of a decision",
+    },
+  ],
+  prompts: {
+    system_identity: "[MEMORY] You are a specialized observer tool for creating searchable memory FOR FUTURE SESSIONS.\n\nCRITICAL: Record what was LEARNED/BUILT/FIXED/DEPLOYED/CONFIGURED, not what you (the observer) are doing.\n\nYou do not have access to tools. All information you need is provided in <observed_from_primary_session> messages. Create observations from what you observe - no investigation needed.",
+    spatial_awareness: "SPATIAL AWARENESS: Tool executions include the working directory (tool_cwd) to help you understand:\n- Which repository/project is being worked on\n- Where files are located relative to the project root\n- How to match requested paths to actual execution paths",
+    observer_role: "Your job is to monitor a different Claude Code session happening RIGHT NOW, with the goal of creating observations and progress summaries as the work is being done LIVE by the user. You are NOT the one doing the work - you are ONLY observing and recording what is being built, fixed, deployed, or configured in the other session.",
+    recording_focus: "WHAT TO RECORD\n--------------\nFocus on deliverables and capabilities:\n- What the system NOW DOES differently (new capabilities)\n- What shipped to users/production (features, fixes, configs, docs)\n- Changes in technical domains (auth, data, UI, infra, DevOps, docs)\n\nUse verbs like: implemented, fixed, deployed, configured, migrated, optimized, added, refactored\n\n✅ GOOD EXAMPLES (describes what was built):\n- \"Authentication now supports OAuth2 with PKCE flow\"\n- \"Deployment pipeline runs canary releases with auto-rollback\"\n- \"Database indexes optimized for common query patterns\"\n\n❌ BAD EXAMPLES (describes observation process - DO NOT DO THIS):\n- \"Analyzed authentication implementation and stored findings\"\n- \"Tracked deployment steps and logged outcomes\"\n- \"Monitored database performance and recorded metrics\"",
+    skip_guidance: "WHEN TO SKIP\n------------\nSkip routine operations:\n- Empty status checks\n- Package installations with no errors\n- Simple file listings\n- Repetitive operations you've already documented\n- If file related research comes back as empty or not found\n\nIMPORTANT: If you decide to skip, output NOTHING AT ALL. Do not say 'no output needed' or explain why you're skipping. Simply produce zero output - an empty response.",
+    type_guidance: "**type**: MUST be EXACTLY one of these 6 options (no other values allowed):\n      - bugfix: something was broken, now fixed\n      - feature: new capability or functionality added\n      - refactor: code restructured, behavior unchanged\n      - change: generic modification (docs, config, misc)\n      - discovery: learning about existing system\n      - decision: architectural/design choice with rationale",
+    concept_guidance: "**concepts**: 2-5 knowledge-type categories. MUST use ONLY these exact keywords:\n      - how-it-works: understanding mechanisms\n      - why-it-exists: purpose or rationale\n      - what-changed: modifications made\n      - problem-solution: issues and their fixes\n      - gotcha: traps or edge cases\n      - pattern: reusable approach\n      - trade-off: pros/cons of a decision\n\n    IMPORTANT: Do NOT include the observation type (change/discovery/decision) as a concept.\n    Types and concepts are separate dimensions.",
+    field_guidance: "**facts**: Concise, self-contained statements\nEach fact is ONE piece of information\n      No pronouns - each fact must stand alone\n      Include specific details: filenames, functions, values\n\n**files**: All files touched (full paths from project root)",
+    output_format_header: "OUTPUT FORMAT\n-------------\nOutput observations using this XML structure:",
+    format_examples: "",
+    footer: "IMPORTANT! DO NOT do any work right now other than generating this OBSERVATIONS from tool use messages - and remember that you are a memory agent designed to summarize a DIFFERENT claude code session, not this one.\n\nNever reference yourself or your own actions. Do not output anything other than the observation content formatted in the XML structure above. All other output is ignored by the system, and the system has been designed to be smart about token usage. Please spend your tokens wisely on useful observations.\n\nRemember that we record these observations as a way of helping us stay on track with our progress, and to help us keep important decisions and changes at the forefront of our minds! :) Thank you so much for your help!",
+    xml_title_placeholder: "[**title**: Short title capturing the core action or topic]",
+    xml_subtitle_placeholder: "[**subtitle**: One sentence explanation (max 24 words)]",
+    xml_fact_placeholder: "[Concise, self-contained statement]",
+    xml_narrative_placeholder: "[**narrative**: Full context: What was done, how it works, why it matters]",
+    xml_concept_placeholder: "[knowledge-type-category]",
+    xml_file_placeholder: "[path/to/file]",
+    xml_summary_request_placeholder: "[Short title capturing the user's request AND the substance of what was discussed/done]",
+    xml_summary_investigated_placeholder: "[What has been explored so far? What was examined?]",
+    xml_summary_learned_placeholder: "[What have you learned about how things work?]",
+    xml_summary_completed_placeholder: "[What work has been completed so far? What has shipped or changed?]",
+    xml_summary_next_steps_placeholder: "[What are you actively working on or planning to work on next in this session?]",
+    xml_summary_notes_placeholder: "[Additional insights or observations about the current progress]",
+    header_memory_start: "MEMORY PROCESSING START\n=======================",
+    header_memory_continued: "MEMORY PROCESSING CONTINUED\n===========================",
+    header_summary_checkpoint: "PROGRESS SUMMARY CHECKPOINT\n===========================",
+    continuation_greeting: "[MEMORY] Hello memory agent, you are continuing to observe the primary Claude session.",
+    continuation_instruction: "IMPORTANT: Continue generating observations from tool use messages using the XML structure below.",
+    summary_instruction: "Write progress notes of what was done, what was learned, and what's next. This is a checkpoint to capture progress so far. The session is ongoing - you may receive more requests and tool executions after this summary. Write \"next_steps\" as the current trajectory of work (what's actively being worked on or coming up next), not as post-session future work. Always write at least a minimal summary explaining current progress, even if work is still in early stages, so that users see a summary output tied to each request.",
+    summary_context_label: "Claude's Full Response to User:",
+    summary_format_instruction: "Respond in this XML format (ALL fields are REQUIRED - never leave any field empty):",
+    summary_footer: "EXAMPLE of a complete, well-formed summary:\n```xml\n<summary>\n  <request>Implement user authentication with OAuth2 support</request>\n  <investigated>Examined existing auth middleware, reviewed OAuth2 libraries (passport, grant), analyzed token storage options in Redis vs PostgreSQL</investigated>\n  <learned>The app uses session-based auth with express-session. OAuth2 requires stateless JWT tokens. Passport.js supports both strategies simultaneously via passport-jwt and passport-oauth2 packages.</learned>\n  <completed>Installed passport and passport-google-oauth20. Created OAuth2Strategy configuration in src/auth/strategies/google.ts. Added /auth/google and /auth/google/callback routes. Users can now sign in with Google.</completed>\n  <next_steps>Adding GitHub OAuth provider next, then implementing token refresh logic</next_steps>\n  <notes>Consider adding rate limiting to OAuth endpoints to prevent abuse</notes>\n</summary>\n```\n\nIMPORTANT! You MUST fill in ALL six fields (request, investigated, learned, completed, next_steps, notes) with actual content - never leave any field empty or use placeholder text. If a field doesn't apply, write a brief explanation why (e.g., \"No investigation needed - straightforward implementation\").\n\nDo not output anything other than the summary content formatted in the XML structure above.",
+  },
+};
 
 export class ModeManager {
   private static instance: ModeManager | null = null;
   private activeMode: ModeConfig | null = null;
-  private modesDir: string;
 
   private constructor() {
-    const packageRoot = getPackageRoot();
-
-    const possiblePaths = [
-      join(packageRoot, "modes"),
-      join(packageRoot, "..", "pilot", "modes"),
-      join(packageRoot, "..", "..", "pilot", "modes"),
-      join(homedir(), ".claude", "pilot", "modes"),
-    ];
-
-    const foundPath = possiblePaths.find((p) => existsSync(p));
-    this.modesDir = foundPath || possiblePaths[0];
-
-    if (!foundPath) {
-      logger.warn("SYSTEM", "No modes directory found", { searched: possiblePaths });
-    }
+    // No initialization needed - using hardcoded config
   }
 
   /**
@@ -47,148 +152,12 @@ export class ModeManager {
   }
 
   /**
-   * Parse mode ID for inheritance pattern (parent--override)
+   * Load mode configuration
+   * Now just sets activeMode to the hardcoded DEFAULT_MODE
    */
-  private parseInheritance(modeId: string): {
-    hasParent: boolean;
-    parentId: string;
-    overrideId: string;
-  } {
-    const parts = modeId.split("--");
-
-    if (parts.length === 1) {
-      return { hasParent: false, parentId: "", overrideId: "" };
-    }
-
-    if (parts.length > 2) {
-      throw new Error(
-        `Invalid mode inheritance: ${modeId}. Only one level of inheritance supported (parent--override)`,
-      );
-    }
-
-    return {
-      hasParent: true,
-      parentId: parts[0],
-      overrideId: modeId,
-    };
-  }
-
-  /**
-   * Check if value is a plain object (not array, not null)
-   */
-  private isPlainObject(value: unknown): boolean {
-    return value !== null && typeof value === "object" && !Array.isArray(value);
-  }
-
-  /**
-   * Deep merge two objects
-   * - Recursively merge nested objects
-   * - Replace arrays completely (no merging)
-   * - Override primitives
-   */
-  private deepMerge<T>(base: T, override: Partial<T>): T {
-    const result = { ...base } as T;
-
-    for (const key in override) {
-      const overrideValue = override[key];
-      const baseValue = base[key];
-
-      if (this.isPlainObject(overrideValue) && this.isPlainObject(baseValue)) {
-        result[key] = this.deepMerge(baseValue, overrideValue as any);
-      } else {
-        result[key] = overrideValue as T[Extract<keyof T, string>];
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Load a mode file from disk without inheritance processing
-   */
-  private loadModeFile(modeId: string): ModeConfig {
-    const modePath = join(this.modesDir, `${modeId}.json`);
-
-    if (!existsSync(modePath)) {
-      throw new Error(`Mode file not found: ${modePath}`);
-    }
-
-    const jsonContent = readFileSync(modePath, "utf-8");
-    return JSON.parse(jsonContent) as ModeConfig;
-  }
-
-  /**
-   * Load a mode profile by ID with inheritance support
-   * Caches the result for subsequent calls
-   *
-   * Supports inheritance via parent--override pattern (e.g., code--ko)
-   * - Loads parent mode recursively
-   * - Loads override file from modes directory
-   * - Deep merges override onto parent
-   */
-  loadMode(modeId: string): ModeConfig {
-    const inheritance = this.parseInheritance(modeId);
-
-    if (!inheritance.hasParent) {
-      try {
-        const mode = this.loadModeFile(modeId);
-        this.activeMode = mode;
-        logger.debug("SYSTEM", `Loaded mode: ${mode.name} (${modeId})`, undefined, {
-          types: mode.observation_types.map((t) => t.id),
-          concepts: mode.observation_concepts.map((c) => c.id),
-        });
-        return mode;
-      } catch (error) {
-        logger.warn("SYSTEM", `Mode file not found: ${modeId}, falling back to 'code'`);
-        if (modeId === "code") {
-          throw new Error("Critical: code.json mode file missing");
-        }
-        return this.loadMode("code");
-      }
-    }
-
-    const { parentId, overrideId } = inheritance;
-
-    let parentMode: ModeConfig;
-    try {
-      parentMode = this.loadMode(parentId);
-    } catch (error) {
-      logger.warn("SYSTEM", `Parent mode '${parentId}' not found for ${modeId}, falling back to 'code'`);
-      parentMode = this.loadMode("code");
-    }
-
-    let overrideConfig: Partial<ModeConfig>;
-    try {
-      overrideConfig = this.loadModeFile(overrideId);
-      logger.debug("SYSTEM", `Loaded override file: ${overrideId} for parent ${parentId}`);
-    } catch (error) {
-      logger.warn("SYSTEM", `Override file '${overrideId}' not found, using parent mode '${parentId}' only`);
-      this.activeMode = parentMode;
-      return parentMode;
-    }
-
-    if (!overrideConfig) {
-      logger.warn("SYSTEM", `Invalid override file: ${overrideId}, using parent mode '${parentId}' only`);
-      this.activeMode = parentMode;
-      return parentMode;
-    }
-
-    const mergedMode = this.deepMerge(parentMode, overrideConfig);
-    this.activeMode = mergedMode;
-
-    logger.debug(
-      "SYSTEM",
-      `Loaded mode with inheritance: ${mergedMode.name} (${modeId} = ${parentId} + ${overrideId})`,
-      undefined,
-      {
-        parent: parentId,
-        override: overrideId,
-        types: mergedMode.observation_types.map((t) => t.id),
-        concepts: mergedMode.observation_concepts.map((c) => c.id),
-      },
-    );
-
-    return mergedMode;
+  loadMode(): ModeConfig {
+    this.activeMode = DEFAULT_MODE;
+    return DEFAULT_MODE;
   }
 
   /**

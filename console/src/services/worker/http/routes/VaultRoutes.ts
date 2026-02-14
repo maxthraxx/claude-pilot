@@ -1,7 +1,7 @@
 /**
  * VaultRoutes
  *
- * API endpoints for sx Team Vault status and management.
+ * API endpoints for sx Vault status and management.
  * Invokes the sx CLI via Bun.spawn with timeout and caching.
  */
 
@@ -37,17 +37,35 @@ export interface VaultStatus {
   isInstalling: boolean;
 }
 
+interface VaultDetailResponse {
+  name: string;
+  type: string;
+  metadata: {
+    description: string | null;
+    authors: string[];
+    keywords: string[];
+  };
+  versions: Array<{
+    version: string;
+    createdAt: string | null;
+    filesCount: number;
+  }>;
+}
+
 const STATUS_TIMEOUT_MS = 15_000;
 const INSTALL_TIMEOUT_MS = 60_000;
 const STATUS_CACHE_TTL_MS = 30_000;
+const DETAIL_CACHE_TTL_MS = 60_000;
 
 export class VaultRoutes extends BaseRouteHandler {
   private statusCache: { data: VaultStatus; timestamp: number } | null = null;
+  private detailCache: Map<string, { data: VaultDetailResponse; timestamp: number }> = new Map();
   private _isInstalling = false;
 
   setupRoutes(app: express.Application): void {
     app.get("/api/vault/status", this.handleStatus.bind(this));
     app.post("/api/vault/install", this.handleInstall.bind(this));
+    app.get("/api/vault/detail/:name", this.handleDetail.bind(this));
   }
 
   private handleStatus = this.wrapHandler(async (_req: Request, res: Response): Promise<void> => {
@@ -137,6 +155,65 @@ export class VaultRoutes extends BaseRouteHandler {
     } finally {
       this._isInstalling = false;
       this.statusCache = null;
+      this.detailCache.clear();
+    }
+  });
+
+  private handleDetail = this.wrapHandler(async (req: Request, res: Response): Promise<void> => {
+    const name = req.params.name;
+
+    if (!name || !/^[a-zA-Z0-9-]+$/.test(name)) {
+      res.status(400).json({ error: "Invalid asset name: only alphanumeric characters and hyphens allowed" });
+      return;
+    }
+
+    const cached = this.detailCache.get(name);
+    if (cached && Date.now() - cached.timestamp < DETAIL_CACHE_TTL_MS) {
+      res.json(cached.data);
+      return;
+    }
+
+    const sxPath = this.resolveSxBinary();
+    if (!sxPath) {
+      res.status(500).json({ error: "sx CLI not found" });
+      return;
+    }
+
+    try {
+      const output = await this.runSxCommand([sxPath, "vault", "show", name, "--json"], STATUS_TIMEOUT_MS);
+      const data = JSON.parse(output);
+
+      if (!data.name || !data.type) {
+        logger.error("HTTP", "Unexpected sx vault show output", { name, raw: output.slice(0, 500) });
+        res.status(502).json({ error: "Unexpected sx response format" });
+        return;
+      }
+
+      const detail = {
+        name: data.name,
+        type: data.type,
+        metadata: {
+          description: data.metadata?.description ?? null,
+          authors: data.metadata?.authors ?? [],
+          keywords: data.metadata?.keywords ?? [],
+        },
+        versions: (data.versions ?? []).map((v: any) => ({
+          version: v.version,
+          createdAt: v.createdAt ?? null,
+          filesCount: v.filesCount ?? 0,
+        })),
+      };
+
+      this.detailCache.set(name, { data: detail, timestamp: Date.now() });
+      res.json(detail);
+    } catch (error) {
+      const message = (error as Error).message || "";
+      if (message.includes("exited with code")) {
+        res.status(404).json({ error: `Asset '${name}' not found` });
+      } else {
+        logger.error("HTTP", "Vault detail failed", { name }, error as Error);
+        res.status(502).json({ error: "Unexpected sx response format" });
+      }
     }
   });
 

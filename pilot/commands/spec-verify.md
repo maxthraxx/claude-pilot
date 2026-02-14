@@ -256,19 +256,21 @@ This is a serious issue - the implementation is incomplete.
 
 **None of these are valid reasons to skip. ALWAYS COLLECT AND PROCESS RESULTS.**
 
-#### 3.5a: Retrieve Findings from Persistent Files
+#### 3.5a: Retrieve and Fix Findings Progressively
 
 The two review agents (launched in Step 3.0) should be done or nearly done by now. Their findings are persisted to files in the session directory.
 
 **⛔ NEVER use `TaskOutput` to retrieve agent results.** TaskOutput dumps the full verbose agent transcript (all JSON messages, hook progress, tool calls) into context, wasting thousands of tokens. Instead, poll the output files with the Read tool.
 
-**Polling approach:**
+**Progressive polling — fix findings as each agent completes:**
 
-1. **Read findings from files** — Use the Read tool on the paths defined in Step 3.0c:
+1. **Attempt to read BOTH findings files** using the Read tool on the paths defined in Step 3.0c:
    - `~/.pilot/sessions/<session-id>/findings-compliance.json`
    - `~/.pilot/sessions/<session-id>/findings-quality.json`
-2. **If a file doesn't exist yet**, wait a few seconds and retry (agents may still be running)
-3. **Parse the JSON** from each file to get the structured findings
+2. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
+3. After fixing the first batch, **poll for the second file** (retry if not yet ready)
+4. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
+5. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
 
 **If a findings file is still missing after 2-3 retries** (agent failed to write):
 1. Re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
@@ -280,41 +282,9 @@ The two review agents (launched in Step 3.0) should be done or nearly done by no
 - Agents typically complete in 3-7 minutes
 - Net result: Agents finish around the same time as Step 3.4, minimal or zero wait time
 
-#### 3.5b: Merge and Deduplicate Findings
+#### 3.5b: Report Findings
 
-After BOTH agents complete:
-
-1. **Collect findings** from both agents
-2. **Deduplicate**: If both agents found the same issue (same file and line), keep the one with higher severity
-3. **Combine** into a single findings list
-
-The merged list contains:
-- All spec compliance, risk mitigation, and DoD issues (from spec-reviewer-compliance)
-- All code quality, security, testing, performance, and error handling issues (from spec-reviewer-quality)
-
-#### 3.5c: Review Agent Results
-
-The reviewers have examined the code from two perspectives:
-
-**spec-reviewer-compliance** verified:
-- Implementation matches plan specification
-- All risk mitigations from plan are implemented
-- Each task's Definition of Done criteria are met
-- No out-of-scope features added
-
-**spec-reviewer-quality** verified:
-- All rule files (global + project) are followed
-- Code quality standards met
-- Security vulnerabilities absent
-- Tests exist for new code
-- Error handling is present
-- Performance issues absent
-
-Both ran with fresh context (no anchoring bias) and returned structured JSON findings.
-
-#### 3.5d: Report Findings
-
-Present findings briefly:
+As you collect and fix findings, present them briefly:
 
 ```
 ## Code Verification Complete
@@ -326,7 +296,7 @@ Present findings briefly:
 Implementing fixes automatically...
 ```
 
-#### 3.5e: Automatically Implement ALL Findings
+#### 3.5c: Fix Severity Order
 
 **⛔ DO NOT ask user for permission. Fix everything automatically.**
 
@@ -348,16 +318,15 @@ This is part of the automated /spec workflow. The user approved the plan - verif
 
 **⛔ This step is NON-NEGOTIABLE. Fixes can introduce new bugs.**
 
-After implementing ALL code review findings from Step 3.5e:
+After implementing ALL code review findings from Step 3.5c:
 
 1. **Re-run BOTH review agents** in parallel (same parameters as Step 3.0d, with `run_in_background=true` and output paths):
    - `spec-reviewer-compliance` → writes to `findings-compliance.json`
    - `spec-reviewer-quality` → writes to `findings-quality.json`
-2. **Wait for completion**, then **read findings from files** (same as Step 3.5a)
-3. **Merge and deduplicate findings** (same process as Step 3.5b)
-4. If new must_fix or should_fix issues found → fix them and re-run both agents again
-5. Maximum 3 iterations of the fix → re-verify cycle
-6. **Only proceed to Phase B when BOTH reviewers return zero must_fix and zero should_fix**
+2. **Use the same progressive polling approach as Step 3.5a** — fix findings from whichever agent finishes first, then handle the second when ready
+3. If new must_fix or should_fix issues found → fix them and re-run both agents again
+4. Maximum 3 iterations of the fix → re-verify cycle
+5. **Only proceed to Phase B when BOTH reviewers return zero must_fix and zero should_fix**
 
 If iterations exhausted with remaining issues, add them to plan. **⛔ Phase Transition Context Guard** (spec.md Section 0.3) before invoking `Skill(skill='spec-implement', args='<plan-path>')`
 

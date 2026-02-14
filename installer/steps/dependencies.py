@@ -139,7 +139,7 @@ def _configure_claude_defaults() -> bool:
     config_ok = _patch_claude_config(
         {
             "installMethod": "npm",
-            "theme": "dark-ansi",
+            "theme": "dark",
             "verbose": True,
             "autoCompactEnabled": False,
             "autoConnectIde": True,
@@ -783,9 +783,8 @@ class DependenciesStep(BaseStep):
         if _install_with_spinner(ui, "uv", install_uv):
             installed.append("uv")
 
-        if ctx.enable_python:
-            if _install_with_spinner(ui, "Python tools", install_python_tools):
-                installed.append("python_tools")
+        if _install_with_spinner(ui, "Python tools", install_python_tools):
+            installed.append("python_tools")
 
         if _install_claude_code_with_ui(ui, ctx.project_dir):
             installed.append("claude_code")

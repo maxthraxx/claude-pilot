@@ -14,9 +14,6 @@ class InstallContext:
     """Context object that flows through all installation steps."""
 
     project_dir: Path
-    enable_python: bool = True
-    enable_typescript: bool = True
-    enable_golang: bool = True
     non_interactive: bool = False
     skip_env: bool = False
     local_mode: bool = False

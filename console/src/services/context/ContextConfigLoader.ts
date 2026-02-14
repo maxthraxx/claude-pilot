@@ -7,7 +7,6 @@
 import path from "path";
 import { homedir } from "os";
 import { SettingsDefaultsManager } from "../../shared/SettingsDefaultsManager.js";
-import { ModeManager } from "../domain/ModeManager.js";
 import type { ContextConfig } from "./types.js";
 
 /**
@@ -18,28 +17,17 @@ export function loadContextConfig(): ContextConfig {
   const settingsPath = path.join(homedir(), ".pilot/memory", "settings.json");
   const settings = SettingsDefaultsManager.loadFromFile(settingsPath);
 
-  const modeId = settings.CLAUDE_PILOT_MODE;
-  const isCodeMode = modeId === "code" || modeId.startsWith("code--");
-
-  let observationTypes: Set<string>;
-  let observationConcepts: Set<string>;
-
-  if (isCodeMode) {
-    observationTypes = new Set(
-      settings.CLAUDE_PILOT_CONTEXT_OBSERVATION_TYPES.split(",")
-        .map((t: string) => t.trim())
-        .filter(Boolean),
-    );
-    observationConcepts = new Set(
-      settings.CLAUDE_PILOT_CONTEXT_OBSERVATION_CONCEPTS.split(",")
-        .map((c: string) => c.trim())
-        .filter(Boolean),
-    );
-  } else {
-    const mode = ModeManager.getInstance().getActiveMode();
-    observationTypes = new Set(mode.observation_types.map((t) => t.id));
-    observationConcepts = new Set(mode.observation_concepts.map((c) => c.id));
-  }
+  // Load observation types and concepts from settings
+  const observationTypes = new Set(
+    settings.CLAUDE_PILOT_CONTEXT_OBSERVATION_TYPES.split(",")
+      .map((t: string) => t.trim())
+      .filter(Boolean),
+  );
+  const observationConcepts = new Set(
+    settings.CLAUDE_PILOT_CONTEXT_OBSERVATION_CONCEPTS.split(",")
+      .map((c: string) => c.trim())
+      .filter(Boolean),
+  );
 
   return {
     totalObservationCount: parseInt(settings.CLAUDE_PILOT_CONTEXT_OBSERVATIONS, 10),

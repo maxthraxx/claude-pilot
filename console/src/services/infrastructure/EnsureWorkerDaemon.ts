@@ -6,6 +6,7 @@
 import {
   writePidFile,
   removePidFile,
+  cleanStalePidFile,
   getPlatformTimeout,
   spawnDaemon,
 } from "./ProcessManager.js";
@@ -17,6 +18,7 @@ import {
   checkVersionMatch,
 } from "./HealthMonitor.js";
 import { logger } from "../../utils/logger.js";
+import { HOOK_TIMEOUTS } from "../../shared/hook-constants.js";
 
 export interface EnsureWorkerDeps {
   waitForHealth: (port: number, timeout: number) => Promise<boolean>;
@@ -27,6 +29,7 @@ export interface EnsureWorkerDeps {
   spawnDaemon: (scriptPath: string, port: number) => number | undefined;
   writePidFile: (info: { pid: number; port: number; startedAt: string }) => void;
   removePidFile: () => void;
+  cleanStalePidFile: () => void;
   getPlatformTimeout: (baseMs: number) => number;
 }
 
@@ -39,6 +42,7 @@ const defaultDeps: EnsureWorkerDeps = {
   spawnDaemon,
   writePidFile,
   removePidFile,
+  cleanStalePidFile,
   getPlatformTimeout,
 };
 
@@ -51,6 +55,9 @@ export async function ensureWorkerDaemon(
   scriptPath: string,
   deps: EnsureWorkerDeps = defaultDeps,
 ): Promise<{ ready: boolean; error?: string }> {
+  // Clean up stale PID file from crashed daemon before health checks
+  deps.cleanStalePidFile();
+
   if (await deps.waitForHealth(port, 1000)) {
     const versionCheck = await deps.checkVersionMatch(port);
     if (!versionCheck.matches) {
@@ -60,7 +67,7 @@ export async function ensureWorkerDaemon(
       });
 
       await deps.httpShutdown(port);
-      const freed = await deps.waitForPortFree(port, deps.getPlatformTimeout(15000));
+      const freed = await deps.waitForPortFree(port, deps.getPlatformTimeout(HOOK_TIMEOUTS.PORT_IN_USE_WAIT));
       if (!freed) {
         return { ready: false, error: "Port did not free after version mismatch restart" };
       }
@@ -72,7 +79,7 @@ export async function ensureWorkerDaemon(
 
   if (await deps.isPortInUse(port)) {
     logger.info("SYSTEM", "Port in use, waiting for worker to become healthy");
-    const healthy = await deps.waitForHealth(port, deps.getPlatformTimeout(15000));
+    const healthy = await deps.waitForHealth(port, deps.getPlatformTimeout(HOOK_TIMEOUTS.PORT_IN_USE_WAIT));
     if (healthy) return { ready: true };
     return { ready: false, error: "Port in use but worker not responding" };
   }
@@ -85,7 +92,7 @@ export async function ensureWorkerDaemon(
 
   deps.writePidFile({ pid, port, startedAt: new Date().toISOString() });
 
-  const healthy = await deps.waitForHealth(port, deps.getPlatformTimeout(30000));
+  const healthy = await deps.waitForHealth(port, deps.getPlatformTimeout(HOOK_TIMEOUTS.POST_SPAWN_WAIT));
   if (!healthy) {
     deps.removePidFile();
     return { ready: false, error: "Worker failed to start (health check timeout)" };

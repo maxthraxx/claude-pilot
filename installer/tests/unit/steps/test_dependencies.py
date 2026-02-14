@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+
 class TestDependenciesStep:
     """Test DependenciesStep class."""
 
@@ -35,50 +36,10 @@ class TestDependenciesStep:
     @patch("installer.steps.dependencies._install_plugin_dependencies")
     @patch("installer.steps.dependencies._setup_pilot_memory")
     @patch("installer.steps.dependencies.install_claude_code")
-    @patch("installer.steps.dependencies.install_nodejs")
-    def test_dependencies_run_installs_core(
-        self,
-        mock_nodejs,
-        mock_claude,
-        mock_setup_pilot_memory,
-        mock_plugin_deps,
-        mock_vexor,
-        _mock_precache,
-    ):
-        """DependenciesStep installs core dependencies."""
-        from installer.context import InstallContext
-        from installer.steps.dependencies import DependenciesStep
-        from installer.ui import Console
-
-        mock_nodejs.return_value = True
-        mock_claude.return_value = (True, "latest")
-        mock_setup_pilot_memory.return_value = True
-        mock_plugin_deps.return_value = True
-        mock_vexor.return_value = True
-
-        step = DependenciesStep()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            ctx = InstallContext(
-                project_dir=Path(tmpdir),
-                enable_python=False,
-                ui=Console(non_interactive=True),
-            )
-
-            step.run(ctx)
-
-            mock_nodejs.assert_called_once()
-            mock_claude.assert_called_once()
-            mock_plugin_deps.assert_called_once()
-
-    @patch("installer.steps.dependencies._precache_npx_mcp_servers", return_value=True)
-    @patch("installer.steps.dependencies.install_vexor")
-    @patch("installer.steps.dependencies._install_plugin_dependencies")
-    @patch("installer.steps.dependencies._setup_pilot_memory")
-    @patch("installer.steps.dependencies.install_claude_code")
     @patch("installer.steps.dependencies.install_python_tools")
     @patch("installer.steps.dependencies.install_uv")
     @patch("installer.steps.dependencies.install_nodejs")
-    def test_dependencies_installs_python_when_enabled(
+    def test_dependencies_run_installs_core(
         self,
         mock_nodejs,
         mock_uv,
@@ -89,7 +50,7 @@ class TestDependenciesStep:
         mock_vexor,
         _mock_precache,
     ):
-        """DependenciesStep installs Python tools when enabled."""
+        """DependenciesStep installs all dependencies including Python tools."""
         from installer.context import InstallContext
         from installer.steps.dependencies import DependenciesStep
         from installer.ui import Console
@@ -106,14 +67,16 @@ class TestDependenciesStep:
         with tempfile.TemporaryDirectory() as tmpdir:
             ctx = InstallContext(
                 project_dir=Path(tmpdir),
-                enable_python=True,
                 ui=Console(non_interactive=True),
             )
 
             step.run(ctx)
 
+            mock_nodejs.assert_called_once()
             mock_uv.assert_called_once()
             mock_python_tools.assert_called_once()
+            mock_claude.assert_called_once()
+            mock_plugin_deps.assert_called_once()
 
 
 class TestDependencyInstallFunctions:
@@ -295,7 +258,7 @@ class TestClaudeCodeInstall:
                 assert settings["attribution"] == {"commit": "", "pr": ""}
                 config_path = Path(tmpdir) / ".claude.json"
                 config = json.loads(config_path.read_text())
-                assert config["theme"] == "dark-ansi"
+                assert config["theme"] == "dark"
 
 
 class TestCleanNpmStaleDirs:

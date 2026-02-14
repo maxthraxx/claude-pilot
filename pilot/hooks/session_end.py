@@ -10,14 +10,14 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _util import _sessions_base
+from notify import send_notification
+
 PILOT_BIN = Path.home() / ".pilot" / "bin" / "pilot"
-
-
-def _sessions_base() -> Path:
-    """Get base sessions directory."""
-    return Path.home() / ".pilot" / "sessions"
 
 
 def _get_active_session_count() -> int:
@@ -63,6 +63,23 @@ def _is_session_handing_off() -> bool:
     return False
 
 
+def _is_plan_verified() -> bool:
+    """Check if active plan has VERIFIED status."""
+    session_id = os.environ.get("PILOT_SESSION_ID", "").strip() or "default"
+    session_dir = _sessions_base() / session_id
+    plan_file = session_dir / "active_plan.json"
+
+    if not plan_file.exists():
+        return False
+
+    try:
+        data = json.loads(plan_file.read_text())
+        status = data.get("status", "").upper()
+        return status == "VERIFIED"
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
 def main() -> int:
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
     if not plugin_root:
@@ -82,6 +99,12 @@ def main() -> int:
         text=True,
         check=False,
     )
+
+    if _is_plan_verified():
+        send_notification("Pilot", "Spec complete — all checks passed")
+    else:
+        send_notification("Pilot", "Claude session ended")
+
     return result.returncode
 
 

@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { MemoriesToolbar } from './MemoriesToolbar';
 import { MemoryCard } from './MemoryCard';
 import { MemoryDetailModal } from './MemoryDetailModal';
-import { EmptyState, Spinner, Button, Icon, ScopeBadge } from '../../components/ui';
+import { SearchInput } from '../../components/SearchInput';
+import { SearchResultCard } from '../../components/SearchResultCard';
+import { EmptyState, Spinner, Button, Icon, ScopeBadge, Badge } from '../../components/ui';
 import { useToast, useProject } from '../../context';
+import { useMemorySearch } from '../../hooks/useMemorySearch';
 
 type ViewMode = 'grid' | 'list';
 type FilterType = 'all' | 'observation' | 'summary' | 'prompt';
@@ -31,6 +34,19 @@ export function MemoriesView() {
   const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
   const { selectedProject } = useProject();
+
+  const {
+    isSearchMode, searchResults, isSearching, searchError,
+    searchMeta, handleSearch: doSearch, handleClearSearch,
+  } = useMemorySearch();
+
+  const handleSearch = useCallback(async (query: string) => {
+    if (selectionMode) {
+      setSelectionMode(false);
+      setSelectedIds(new Set());
+    }
+    await doSearch(query);
+  }, [selectionMode, doSearch]);
 
   const fetchMemories = useCallback(async () => {
     setIsLoading(true);
@@ -193,51 +209,142 @@ export function MemoriesView() {
           <h1 className="text-2xl font-bold">Memories</h1>
           <ScopeBadge project={selectedProject} />
         </div>
-        <p className="text-base-content/60">Browse and manage your stored memories</p>
+        <p className="text-base-content/60">
+          {isSearchMode ? 'Search results' : 'Browse and manage your stored memories'}
+        </p>
       </div>
 
-      <MemoriesToolbar
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        filterType={filterType}
-        onFilterTypeChange={setFilterType}
-        totalCount={memories.length}
-        selectionMode={selectionMode}
-        onToggleSelectionMode={() => selectionMode ? handleExitSelectionMode() : setSelectionMode(true)}
-        selectedCount={selectedIds.size}
-        onSelectAll={handleSelectAll}
-        onExport={handleBulkExport}
-        onDelete={handleBulkDelete}
-        isExporting={isExporting}
-        isDeleting={isDeleting}
-        allSelected={memories.length > 0 && selectedIds.size === memories.length}
+      {/* Search bar */}
+      <SearchInput
+        onSearch={handleSearch}
+        isSearching={isSearching}
+        placeholder="Search memories semantically..."
       />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Spinner size="lg" />
+      {/* Clear search button */}
+      {isSearchMode && (
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleClearSearch}>
+            <Icon icon="lucide:x" size={16} className="mr-1" />
+            Clear search
+          </Button>
         </div>
-      ) : memories.length === 0 ? (
-        <EmptyState
-          icon="lucide:brain"
-          title="No memories found"
-          description="Memories will appear here as you use Claude Code"
+      )}
+
+      {/* Semantic search status badges (only show in search mode) */}
+      {isSearchMode && searchMeta && (
+        <div className="flex items-center gap-2 text-sm">
+          {searchMeta.vectorDbAvailable ? (
+            searchMeta.usedSemantic ? (
+              <Badge variant="success" outline size="sm">
+                <Icon icon="lucide:brain" size={14} className="mr-1" />
+                Semantic Search Active
+              </Badge>
+            ) : (
+              <Badge variant="warning" outline size="sm">
+                <Icon icon="lucide:filter" size={14} className="mr-1" />
+                Filter-only Mode
+              </Badge>
+            )
+          ) : (
+            <Badge variant="error" outline size="sm">
+              <Icon icon="lucide:alert-triangle" size={14} className="mr-1" />
+              Vector DB Unavailable
+            </Badge>
+          )}
+          <span className="text-base-content/50">
+            {searchMeta.usedSemantic
+              ? 'Results ranked by semantic similarity'
+              : searchMeta.vectorDbAvailable
+                ? 'Enter a query for semantic ranking'
+                : 'Install Chroma for semantic search'}
+          </span>
+        </div>
+      )}
+
+      {/* Toolbar (only show in browse mode) */}
+      {!isSearchMode && (
+        <MemoriesToolbar
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          filterType={filterType}
+          onFilterTypeChange={setFilterType}
+          totalCount={memories.length}
+          selectionMode={selectionMode}
+          onToggleSelectionMode={() => selectionMode ? handleExitSelectionMode() : setSelectionMode(true)}
+          selectedCount={selectedIds.size}
+          onSelectAll={handleSelectAll}
+          onExport={handleBulkExport}
+          onDelete={handleBulkDelete}
+          isExporting={isExporting}
+          isDeleting={isDeleting}
+          allSelected={memories.length > 0 && selectedIds.size === memories.length}
         />
-      ) : (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-          {memories.map((memory) => (
-            <MemoryCard
-              key={memory.id}
-              memory={memory}
-              viewMode={viewMode}
-              onDelete={handleDelete}
-              onView={handleView}
-              selectionMode={selectionMode}
-              isSelected={selectedIds.has(memory.id)}
-              onToggleSelection={handleToggleSelection}
-            />
-          ))}
+      )}
+
+      {/* Error display */}
+      {searchError && !isSearching && (
+        <div className="alert alert-error">
+          <Icon icon="lucide:alert-circle" size={16} />
+          <span>{searchError}</span>
         </div>
+      )}
+
+      {/* Results */}
+      {isSearchMode ? (
+        isSearching ? (
+          <div className="flex flex-col items-center justify-center h-64 gap-3">
+            <Spinner size="lg" />
+            <span className="text-sm text-base-content/50">Searching memories...</span>
+          </div>
+        ) : searchError ? null : searchResults.length === 0 ? (
+          <EmptyState
+            icon="lucide:search-x"
+            title="No results found"
+            description="Try a different query"
+          />
+        ) : (
+          <div className="space-y-3">
+            <div className="text-sm text-base-content/60">
+              {searchResults.length} results
+              {searchMeta?.usedSemantic && searchResults[0]?.score > 0 && (
+                <span className="ml-2">
+                  (best match: {Math.round(searchResults[0].score * 100)}% similarity)
+                </span>
+              )}
+            </div>
+            {searchResults.map((result) => (
+              <SearchResultCard key={`${result.type}-${result.id}`} result={result} />
+            ))}
+          </div>
+        )
+      ) : (
+        isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <Spinner size="lg" />
+          </div>
+        ) : memories.length === 0 ? (
+          <EmptyState
+            icon="lucide:brain"
+            title="No memories found"
+            description="Memories will appear here as you use Claude Code"
+          />
+        ) : (
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+            {memories.map((memory) => (
+              <MemoryCard
+                key={memory.id}
+                memory={memory}
+                viewMode={viewMode}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectionMode={selectionMode}
+                isSelected={selectedIds.has(memory.id)}
+                onToggleSelection={handleToggleSelection}
+              />
+            ))}
+          </div>
+        )
       )}
 
       <MemoryDetailModal
