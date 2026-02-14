@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.5.6] - 2026-02-14
+
+### Bug Fixes
+
+- Clarify existing project support, streamline installer UX
+
 ## [6.5.5] - 2026-02-14
 
 ### Bug Fixes
