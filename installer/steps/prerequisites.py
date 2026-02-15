@@ -160,13 +160,9 @@ class PrerequisitesStep(BaseStep):
 
         Returns True (skip) if:
         - Running in a dev container
-        - Not a local installation
         - Homebrew is available AND all packages are already installed
         """
         if is_in_devcontainer():
-            return True
-
-        if not ctx.is_local_install:
             return True
 
         if not is_homebrew_available():

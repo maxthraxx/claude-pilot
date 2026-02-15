@@ -264,15 +264,18 @@ The two review agents (launched in Step 3.0) should be done or nearly done by no
 
 **Progressive polling — fix findings as each agent completes:**
 
-1. **Attempt to read BOTH findings files** using the Read tool on the paths defined in Step 3.0c:
+**⚠️ IMPORTANT: Wait between polling attempts.** Run `sleep 10` via Bash before each Read attempt. Agents typically take 3-7 minutes. Rapid-fire Read calls waste context and produce dozens of "file not found" errors.
+
+1. **Wait 10 seconds, then attempt to read BOTH findings files** using the Read tool on the paths defined in Step 3.0c:
    - `~/.pilot/sessions/<session-id>/findings-compliance.json`
    - `~/.pilot/sessions/<session-id>/findings-quality.json`
-2. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
-3. After fixing the first batch, **poll for the second file** (retry if not yet ready)
-4. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
-5. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
+2. **If neither file exists yet** → run `sleep 10` and retry. Repeat up to 30 times (5 minutes total) before considering the agents failed.
+3. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
+4. After fixing the first batch, **wait 10 seconds and poll for the second file** (retry with `sleep 10` between attempts)
+5. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
+6. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
 
-**If a findings file is still missing after 2-3 retries** (agent failed to write):
+**If a findings file is still missing after 30 retries** (agent failed to write):
 1. Re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
 2. If the synchronous re-launch also fails, log the failure and continue with findings from the other agent only
 

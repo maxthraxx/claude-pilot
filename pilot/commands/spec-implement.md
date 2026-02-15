@@ -85,10 +85,10 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
 
 0. **Read the `Worktree:` header from the plan file:**
    - Parse `Worktree: Yes` or `Worktree: No` from the plan content (regex: `/^Worktree:\s*(\w+)/m`)
-   - If the field is missing, default to `Yes` (backward compatibility with older plans)
-   - **If `Worktree: No`:** Skip the rest of Step 2.1b entirely. Implementation happens directly on the current branch. Proceed to Step 2.2.
+   - If the field is missing, default to `No`
+   - **If `Worktree: No` (or missing/default):** Skip the rest of Step 2.1b entirely. Implementation happens directly on the current branch. Proceed to Step 2.2.
 
-**If `Worktree: Yes` (or missing/default):** All implementation happens in an isolated git worktree. This keeps the main branch clean until verification passes and the user approves sync.
+**If `Worktree: Yes`:** All implementation happens in an isolated git worktree. This keeps the main branch clean until verification passes and the user approves sync.
 
 1. **Extract plan slug** from the plan file path:
    - `docs/plans/2026-02-09-add-auth.md` → plan_slug = `add-auth` (strip date prefix and `.md`)
@@ -111,27 +111,9 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
 
    Then `cd` to the `path` from the JSON output for all subsequent commands.
 
-5. **If creation fails due to dirty working tree** (JSON contains `"error": "dirty"`):
+   **Note:** If the working tree has uncommitted changes, `worktree create` auto-stashes them before creation and restores them after. No user intervention needed.
 
-   The worktree cannot be created with uncommitted changes. Show the user the changed files from the error detail, then ask:
-
-   ```
-   AskUserQuestion:
-     question: "Worktree creation requires a clean working tree. How should we handle your uncommitted changes?"
-     header: "Dirty tree"
-     options:
-       - "Commit changes" (Recommended) — Commit current changes before creating the worktree
-       - "Stash changes" — Stash changes (restore later with `git stash pop`)
-       - "Skip worktree" — Work directly on the current branch instead (no isolation)
-   ```
-
-   **If "Commit changes":** Run `git add` for the changed files, commit with an appropriate message, then retry `pilot worktree create`.
-   **If "Stash changes":** Run `git stash push -m "auto-stash before spec worktree"`, then retry `pilot worktree create`.
-   **If "Skip worktree":** Continue without worktree isolation — implementation happens on the current branch. Log a note to the user.
-
-   Do NOT proceed with worktree creation until the working tree is clean or the user chooses to skip.
-
-6. **If creation fails due to old git version** (error contains "git >= 2.15 required"): Log a warning and continue without worktree isolation. Implementation will happen directly on the current branch. This is a graceful fallback for systems with older git versions.
+5. **If creation fails due to old git version** (error contains "git >= 2.15 required"): Log a warning and continue without worktree isolation. Implementation will happen directly on the current branch. This is a graceful fallback for systems with older git versions.
 
 7. **Verify worktree is active:** Run `git branch --show-current` in the worktree to confirm you're on the `spec/<plan_slug>` branch.
 

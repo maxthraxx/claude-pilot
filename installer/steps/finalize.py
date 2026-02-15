@@ -8,6 +8,7 @@ from pathlib import Path
 
 from installer import __version__
 from installer.context import InstallContext
+from installer.platform_utils import is_in_devcontainer
 from installer.steps.base import BaseStep
 
 
@@ -57,7 +58,9 @@ class FinalizeStep(BaseStep):
 
         steps: list[tuple[str, str]] = []
 
-        if ctx.is_local_install and ctx.config.get("shell_needs_reload"):
+        in_container = is_in_devcontainer()
+
+        if not in_container and ctx.config.get("shell_needs_reload"):
             modified = ctx.config.get("modified_shell_configs", [])
             reload_cmds = []
             for f in modified:
@@ -70,21 +73,22 @@ class FinalizeStep(BaseStep):
 
             if reload_cmds:
                 cmd_str = " or ".join(reload_cmds)
-                steps.append(("Reload shell", f"{cmd_str} (or restart terminal)"))
-        elif not ctx.is_local_install:
+                steps.append(("🔄 Reload shell", f"{cmd_str} (or restart terminal)"))
+        elif in_container:
             project_slug = ctx.project_dir.name.lower().replace(" ", "-").replace("_", "-")
             steps.append(
                 (
-                    "Connect to dev container",
+                    "🐳 Connect to dev container",
                     f'docker exec -it $(docker ps --filter "name={project_slug}" -q) zsh',
                 )
             )
 
-        steps.append(("Start Pilot", "Run: pilot (in your project folder)"))
-        steps.append(("Team Vault", "/vault → Pull shared rules and skills from your team"))
-        steps.append(("Sync codebase", "/sync → Learns your conventions and generates project rules"))
-        steps.append(("Start building", '/spec "task" for planned features, or just chat for quick fixes'))
-        steps.append(("Claude Pilot Console", "http://localhost:41777"))
+        steps.append(("🚀 Start Pilot", "Run: pilot (in your project folder)"))
+        steps.append(("🔄 /sync", "Learn your codebase conventions and generate project rules"))
+        steps.append(("📋 /spec", "Plan, implement & verify features with TDD and code review"))
+        steps.append(("🧠 /learn", "Extract reusable knowledge into skills from sessions"))
+        steps.append(("🏦 /vault", "Optional: Pull shared rules and skills from your team"))
+        steps.append(("🔵 Pilot Console", "Open in your browser at: http://localhost:41777"))
 
         ui.next_steps(steps)
 

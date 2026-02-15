@@ -6,8 +6,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 class TestPrerequisitesStep:
     """Test PrerequisitesStep class."""
@@ -74,8 +72,8 @@ class TestPrerequisitesStep:
                         with patch("installer.steps.prerequisites._is_nvm_installed", return_value=True):
                             assert step.check(ctx) is True
 
-    def test_prerequisites_step_skips_when_not_local_install(self):
-        """PrerequisitesStep.check returns True when not a local install."""
+    def test_prerequisites_step_runs_outside_devcontainer(self):
+        """PrerequisitesStep.check returns False (run) when not in dev container and packages missing."""
         from installer.context import InstallContext
         from installer.steps.prerequisites import PrerequisitesStep
         from installer.ui import Console
@@ -84,43 +82,13 @@ class TestPrerequisitesStep:
         with tempfile.TemporaryDirectory() as tmpdir:
             ctx = InstallContext(
                 project_dir=Path(tmpdir),
-                is_local_install=False,
                 ui=Console(non_interactive=True),
             )
 
             with patch("installer.steps.prerequisites.is_in_devcontainer", return_value=False):
-                assert step.check(ctx) is True
-
-    def test_prerequisites_step_only_runs_in_local_mode_outside_devcontainer(self):
-        """PrerequisitesStep only runs when is_local_install=True AND not in dev container."""
-        from installer.context import InstallContext
-        from installer.steps.prerequisites import PrerequisitesStep
-        from installer.ui import Console
-
-        step = PrerequisitesStep()
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            test_cases = [
-                (False, False, True),
-                (False, True, True),
-                (True, True, True),
-                (True, False, False),
-            ]
-
-            for is_local, in_dc, should_skip in test_cases:
-                ctx = InstallContext(
-                    project_dir=Path(tmpdir),
-                    is_local_install=is_local,
-                    ui=Console(non_interactive=True),
-                )
-
-                with patch("installer.steps.prerequisites.is_in_devcontainer", return_value=in_dc):
-                    with patch("installer.steps.prerequisites.is_homebrew_available", return_value=True):
-                        with patch("installer.steps.prerequisites.command_exists", return_value=False):
-                            result = step.check(ctx)
-                            assert result == should_skip, (
-                                f"is_local={is_local}, in_dc={in_dc}: expected skip={should_skip}, got skip={result}"
-                            )
+                with patch("installer.steps.prerequisites.is_homebrew_available", return_value=True):
+                    with patch("installer.steps.prerequisites.command_exists", return_value=False):
+                        assert step.check(ctx) is False
 
 
 class TestPrerequisitesStepRun:

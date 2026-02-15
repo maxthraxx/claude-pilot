@@ -86,7 +86,7 @@
     "pr": ""
   },
   "companyAnnouncements": [
-    "🔵 Open the Claude Pilot Console at: http://localhost:41777"
+    "🔵 Console: http://localhost:41777 | 📋 /spec — plan, build & verify | 🔄 /sync — sync rules | 🧠 /learn — extract skills | 🏦 /vault — share with team"
   ],
   "respectGitignore": false,
   "cleanupPeriodDays": 31

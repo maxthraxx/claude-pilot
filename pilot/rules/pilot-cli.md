@@ -25,7 +25,7 @@ The `pilot` binary is at `~/.pilot/bin/pilot`. These are **all** available comma
 
 **Slug** = plan filename without date prefix and `.md` (e.g., `2026-02-11-add-auth.md` → `add-auth`).
 
-**Error handling:** `create` returns `{"success": false, "error": "dirty", "detail": "..."}` when the working tree has uncommitted changes. Use `AskUserQuestion` to let the user choose: commit, stash, or skip worktree (see spec-implement Step 2.1b).
+**Auto-stash:** `create` automatically stashes uncommitted changes before worktree creation and restores them after. No user intervention needed for dirty working trees.
 
 ### License & Auth
 

@@ -216,7 +216,7 @@ Note: Task management tools (TaskCreate, TaskList, etc.) are ALWAYS allowed.
 
 **Task tool** may also use `run_in_background=true` for parallel review agents in /spec verification steps (Steps 1.7 and 3.0).
 
-**⛔ NEVER use `TaskOutput` to retrieve verification agent results.** TaskOutput dumps the full verbose agent transcript (all JSON messages, hook progress, tool calls) into context, wasting thousands of tokens. Instead, agents write their findings to JSON files in the session directory — use the Read tool to poll those files.
+**⛔ NEVER use `TaskOutput` to retrieve verification agent results.** TaskOutput dumps the full verbose agent transcript (all JSON messages, hook progress, tool calls) into context, wasting thousands of tokens. Instead, agents write their findings to JSON files in the session directory — use the Read tool to poll those files. **Always run `sleep 10` via Bash between polling attempts** to avoid rapid-fire Read calls that waste context.
 
 ### No Built-in Plan Mode
 
@@ -329,9 +329,9 @@ The user approved the plan. Verification fixes are part of that approval.
 
 ### Worktree Isolation (Optional)
 
-Worktree isolation is controlled by the `Worktree:` field in the plan header (default: `Yes`). The user chooses at the START of the `/spec` flow (before planning begins) whether to use isolation. The dispatcher asks the worktree question and passes the choice to `spec-plan`, which writes it into the plan header at creation time.
+Worktree isolation is controlled by the `Worktree:` field in the plan header (default: `No`). The user chooses at the START of the `/spec` flow (before planning begins) whether to use isolation. The dispatcher asks the worktree question and passes the choice to `spec-plan`, which writes it into the plan header at creation time.
 
-**When `Worktree: Yes` (default):**
+**When `Worktree: Yes`:**
 
 1. After plan approval, a worktree is created at `.worktrees/spec-<slug>-<hash>/`
 2. All implementation happens in the worktree — the main branch is untouched
@@ -350,7 +350,7 @@ Worktree isolation is controlled by the `Worktree:` field in the plan header (de
 - Worktree state is tracked per-session and survives Endless Mode restarts
 - `pilot worktree status` shows current worktree state
 - If the user discards changes, the worktree is removed without merging
-- Plans missing the `Worktree:` field default to `Yes` for backward compatibility
+- Plans missing the `Worktree:` field default to `No`
 
 **Worktree CLI commands** (see `pilot-cli.md` for full reference with JSON output formats):
 
@@ -363,7 +363,7 @@ pilot worktree cleanup --json <slug>  # Remove worktree and branch
 pilot worktree status --json          # Show active worktree info
 ```
 
-**Dirty working tree:** If `create` fails with `"error": "dirty"`, ask the user via `AskUserQuestion` whether to commit changes, stash them, or skip worktree isolation. See spec-implement Step 2.1b for the full handling flow.
+**Auto-stash:** `create` automatically stashes uncommitted changes before worktree creation and restores them after. No user intervention needed for dirty working trees.
 
 ## Task Completion Tracking
 

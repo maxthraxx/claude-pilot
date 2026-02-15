@@ -372,7 +372,7 @@ Created: [Date]
 Status: PENDING
 Approved: No
 Iterations: 0
-Worktree: Yes
+Worktree: No
 
 > **Status Lifecycle:** PENDING → COMPLETE → VERIFIED
 > **Iterations:** Tracks implement→verify cycles (incremented by verify phase)
@@ -382,7 +382,7 @@ Worktree: Yes
 > - VERIFIED: All checks passed
 >
 > **Approval Gate:** Implementation CANNOT proceed until `Approved: Yes`
-> **Worktree:** Set at plan creation (from dispatcher). `Yes` uses git worktree isolation; `No` works directly on current branch
+> **Worktree:** Set at plan creation (from dispatcher). `Yes` uses git worktree isolation; `No` works directly on current branch (default)
 
 ## Summary
 
@@ -581,12 +581,15 @@ Both agents persist their findings JSON to the session directory for reliable re
 
 **Progressive polling — fix findings as each agent completes:**
 
-1. **Attempt to read BOTH findings files** using the Read tool on the paths defined above
-2. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
-3. After fixing the first batch, **poll for the second file** (retry if not yet ready)
-4. **If a file is still missing after 2-3 retries**, re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
-5. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
-6. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
+**⚠️ IMPORTANT: Wait between polling attempts.** Run `sleep 10` via Bash before each Read attempt. Agents typically take 3-7 minutes. Rapid-fire Read calls waste context and produce dozens of "file not found" errors.
+
+1. **Wait 10 seconds, then attempt to read BOTH findings files** using the Read tool on the paths defined above
+2. **If neither file exists yet** → run `sleep 10` and retry. Repeat up to 30 times (5 minutes total) before considering the agents failed.
+3. **If one file exists but the other doesn't** → start fixing findings from the ready agent immediately (by severity: must_fix → should_fix → suggestion). Track which findings you fixed.
+4. After fixing the first batch, **wait 10 seconds and poll for the second file** (retry with `sleep 10` between attempts)
+5. **If a file is still missing after 30 retries**, re-launch that specific agent synchronously (without `run_in_background`) with the same prompt
+6. When the second file is ready, **skip findings that overlap** with already-fixed items from the first batch (same file + same issue), then fix the remaining findings
+7. **If both files are ready simultaneously**, deduplicate first (keep higher severity for duplicates on same file + line), then fix all
 
 **Severity actions:**
 

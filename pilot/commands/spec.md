@@ -97,8 +97,8 @@ AskUserQuestion:
   question: "Use git worktree isolation for this spec?"
   header: "Worktree"
   options:
-    - "Yes" - Isolate work on a dedicated branch; safe to experiment, easy to discard or squash merge
-    - "No" - Work directly on the current branch without worktree isolation
+    - "No" - Work directly on the current branch, simple and straightforward
+    - "Yes" - Isolate work on a dedicated branch; auto-stashes uncommitted changes, safe to experiment, easy to discard or squash merge
 ```
 
 **Append the choice to the spec-plan args:** `Skill(skill='spec-plan', args='<task_description> --worktree=yes')` or `--worktree=no`.
