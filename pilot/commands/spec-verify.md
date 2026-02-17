@@ -513,8 +513,10 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
 
    ```bash
    ~/.pilot/bin/pilot worktree sync --json <plan_slug>
-   # Returns: {"success": true, "files_changed": N, "commit_hash": "..."} or {"success": false, "error": "..."}
+   # Returns: {"success": true, "files_changed": N, "commit_hash": "...", "stash_warning": null|"..."} or {"success": false, "error": "..."}
    ```
+
+   **Check `stash_warning` in the response.** If non-null, the user had uncommitted changes that couldn't be cleanly restored after the merge. Report the warning so the user can run `git stash pop` manually.
 
    If sync succeeds, clean up the worktree:
 
@@ -522,7 +524,8 @@ This is the THIRD user interaction point in the `/spec` workflow (first is workt
    ~/.pilot/bin/pilot worktree cleanup --json <plan_slug>
    ```
 
-   Report: "✅ Changes synced to `<base_branch>` — N files changed, commit `<hash>`"
+   Report: "Changes synced to `<base_branch>` — N files changed, commit `<hash>`"
+   If `stash_warning` was set: also report "⚠ Your previously uncommitted changes need manual restore: `git stash pop`"
 
    **If "No, keep worktree":**
    Report: "Worktree preserved at `<worktree_path>`. You can sync later via `pilot worktree sync <plan-slug>` or discard via `pilot worktree cleanup <plan-slug>`."
