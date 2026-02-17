@@ -164,14 +164,32 @@ hooks:
    - Strip the `--worktree=...` flag from the task description
    - Default to `Yes` if no flag is present (backward compatibility)
 
-2. **Generate filename:** `docs/plans/YYYY-MM-DD-<feature-slug>.md`
+2. **Create worktree early (if `--worktree=yes`):**
+
+   Creating the worktree NOW (before writing the plan file) ensures the plan file lives inside the worktree from the start. This avoids the plan file being stranded on the main branch.
+
+   - Generate the plan slug from the task description (same logic as filename: first 3-4 words, lowercase, hyphens)
+   - Check for existing worktree first:
+     ```bash
+     ~/.pilot/bin/pilot worktree detect --json <plan_slug>
+     ```
+   - If not found, create one:
+     ```bash
+     ~/.pilot/bin/pilot worktree create --json <plan_slug>
+     # Returns: {"path": "...", "branch": "spec/<slug>", "base_branch": "main"}
+     ```
+   - Note the worktree `path` from the JSON output — all file writes (including the plan file) should use paths relative to this worktree directory
+   - If creation fails due to old git version (error contains "git >= 2.15 required"): Log a warning and continue without worktree isolation. Set worktree choice to `No`.
+
+3. **Generate filename:** `docs/plans/YYYY-MM-DD-<feature-slug>.md`
    - Use current date
    - Create slug from first 3-4 words of task description (lowercase, hyphens)
    - Example: "add user authentication" → `2026-01-24-add-user-authentication.md`
+   - **If worktree is active:** Use the worktree path as the base directory (e.g., `<worktree_path>/docs/plans/...`)
 
-3. **Create directory if needed:** `mkdir -p docs/plans`
+4. **Create directory if needed:** `mkdir -p docs/plans`
 
-4. **Write initial header immediately (with worktree choice from dispatcher):**
+5. **Write initial header immediately (with worktree choice from dispatcher):**
 
    ```markdown
    # [Feature Name] Implementation Plan
@@ -193,7 +211,7 @@ hooks:
    _Exploring codebase and gathering requirements..._
    ```
 
-5. **Register plan association (MANDATORY):**
+6. **Register plan association (MANDATORY):**
 
    ```bash
    ~/.pilot/bin/pilot register-plan "<plan_path>" "PENDING" 2>/dev/null || true
@@ -201,7 +219,7 @@ hooks:
 
    This tells the statusline which plan belongs to THIS session. Without it, parallel sessions show the wrong plan.
 
-6. **Why this matters:**
+7. **Why this matters:**
    - Status bar shows "Spec: <name> [/plan]" immediately
    - User sees progress even during exploration phase
    - Plan file exists for continuation across auto-compaction cycles

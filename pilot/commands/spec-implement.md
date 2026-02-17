@@ -79,7 +79,7 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
 
 ---
 
-### Step 2.1b: Create or Resume Worktree (Conditional)
+### Step 2.1b: Detect or Resume Worktree (Conditional)
 
 **Check the plan's `Worktree:` header field to determine isolation mode.**
 
@@ -88,12 +88,12 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
    - If the field is missing, default to `No`
    - **If `Worktree: No` (or missing/default):** Skip the rest of Step 2.1b entirely. Implementation happens directly on the current branch. Proceed to Step 2.2.
 
-**If `Worktree: Yes`:** All implementation happens in an isolated git worktree. This keeps the main branch clean until verification passes and the user approves sync.
+**If `Worktree: Yes`:** All implementation happens in an isolated git worktree. The worktree is normally created during the planning phase (`spec-plan`), so it should already exist with the plan file inside it.
 
 1. **Extract plan slug** from the plan file path:
    - `docs/plans/2026-02-09-add-auth.md` → plan_slug = `add-auth` (strip date prefix and `.md`)
 
-2. **Check for existing worktree** (continuation session or verify→implement feedback loop):
+2. **Detect existing worktree:**
 
    ```bash
    ~/.pilot/bin/pilot worktree detect --json <plan_slug>
@@ -102,7 +102,7 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
 
 3. **If worktree exists** (`"found": true`): Resume it — `cd` to the `path` from the JSON output for all subsequent commands.
 
-4. **If no worktree exists** (`"found": false`): Create one:
+4. **If no worktree exists** (`"found": false`): Create one as fallback (handles plans created before early worktree creation was added, or edge cases):
 
    ```bash
    ~/.pilot/bin/pilot worktree create --json <plan_slug>
@@ -111,11 +111,16 @@ spec-implement → spec-verify → issues found → spec-implement → spec-veri
 
    Then `cd` to the `path` from the JSON output for all subsequent commands.
 
+   **Copy the plan file into the worktree** if it doesn't exist there:
+   ```bash
+   cp <plan_path_on_main> <worktree_path>/<relative_plan_path>
+   ```
+
    **Note:** If the working tree has uncommitted changes, `worktree create` auto-stashes them before creation and restores them after. No user intervention needed.
 
 5. **If creation fails due to old git version** (error contains "git >= 2.15 required"): Log a warning and continue without worktree isolation. Implementation will happen directly on the current branch. This is a graceful fallback for systems with older git versions.
 
-7. **Verify worktree is active:** Run `git branch --show-current` in the worktree to confirm you're on the `spec/<plan_slug>` branch.
+6. **Verify worktree is active:** Run `git branch --show-current` in the worktree to confirm you're on the `spec/<plan_slug>` branch.
 
 **⚠️ All subsequent implementation steps happen inside the worktree directory (when worktree is active).** The plan file exists at the same relative path in the worktree (e.g., `docs/plans/...`). Commits within the worktree are expected and allowed.
 

@@ -163,7 +163,7 @@ confirm_local_install() {
 	echo "  Local installation will:"
 	echo "    • Install Homebrew packages: python, node, nvm, pnpm, bun, uv, go, gopls, ripgrep, git, gh"
 	echo "    • Add 'pilot' and 'ccp' command to your favorite shell config (~/.bashrc, ~/.zshrc, fish)"
-	echo "    • Configure Claude Code to Pilot best-practices (~/.claude.json & ~/.claude/settings.json)"
+	echo "    • Configure Claude Code to Pilot best-practices (~/.claude.json, ~/.claude/settings.json)"
 	echo ""
 	confirm=""
 	if [ -t 0 ]; then

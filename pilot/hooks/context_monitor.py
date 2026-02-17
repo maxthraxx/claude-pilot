@@ -28,19 +28,9 @@ def _to_effective(raw_pct: float) -> float:
     return min(raw_pct / COMPACTION_THRESHOLD_PCT * 100, 100)
 
 
-def get_current_session_id() -> str:
-    """Get current session ID from history."""
-    history = Path.home() / ".claude" / "history.jsonl"
-    if not history.exists():
-        return ""
-    try:
-        with history.open() as f:
-            lines = f.readlines()
-            if lines:
-                return json.loads(lines[-1]).get("sessionId", "")
-    except (json.JSONDecodeError, OSError):
-        pass
-    return ""
+def _get_pilot_session_id() -> str:
+    """Get Pilot session ID from environment."""
+    return os.environ.get("PILOT_SESSION_ID", "").strip() or "unknown"
 
 
 def get_session_flags(session_id: str) -> tuple[list[int], bool]:
@@ -96,8 +86,8 @@ def save_cache(
 def _read_statusline_context_pct() -> float | None:
     """Read authoritative context percentage from statusline cache.
 
-    Returns None if cache is missing, corrupt, stale (>60s), or from a
-    different Claude Code session (e.g. after compaction).
+    Returns None if cache is missing, corrupt, or stale (>60s).
+    Cache is already scoped per Pilot session via PILOT_SESSION_ID.
     """
     pilot_session_id = os.environ.get("PILOT_SESSION_ID", "").strip()
     if not pilot_session_id:
@@ -110,11 +100,6 @@ def _read_statusline_context_pct() -> float | None:
         ts = data.get("ts")
         if ts is None or time.time() - ts > 60:
             return None
-        cached_session_id = data.get("session_id")
-        if cached_session_id:
-            current_cc_session = get_current_session_id()
-            if current_cc_session and current_cc_session != cached_session_id:
-                return None
         pct = data.get("pct")
         return float(pct) if pct is not None else None
     except (json.JSONDecodeError, OSError, ValueError, TypeError):
@@ -170,7 +155,7 @@ def _resolve_context(session_id: str) -> tuple[float, int, list[int], bool] | No
 
 def run_context_monitor() -> int:
     """Run context monitoring and return exit code."""
-    session_id = get_current_session_id() or "unknown"
+    session_id = _get_pilot_session_id()
 
     if _is_throttled(session_id):
         return 0

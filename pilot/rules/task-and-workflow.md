@@ -142,7 +142,7 @@ Everything else is automatic. **NEVER ask "Should I fix these findings?"** — v
 
 Controlled by `Worktree:` field in plan header (default: `No`). User chooses at START of `/spec`.
 
-**When `Worktree: Yes`:** Worktree created at `.worktrees/spec-<slug>-<hash>/`, all implementation there, squash merged after verification.
+**When `Worktree: Yes`:** Worktree created during planning phase (spec-plan) at `.worktrees/spec-<slug>-<hash>/`, so the plan file lives inside the worktree from the start. All implementation happens there, squash merged after verification.
 
 **When `Worktree: No`:** Direct implementation on current branch.
 
