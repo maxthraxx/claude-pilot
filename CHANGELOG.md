@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.7.7] - 2026-02-17
+
+### Bug Fixes
+
+- Improve network connectivity for corporate proxy and firewall environments
+
 ## [6.7.6] - 2026-02-17
 
 ### Bug Fixes
