@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.8.1] - 2026-02-18
+
+### Bug Fixes
+
+- Go/gopls auto-install, npx zod peer dep fix, and update prompt TTY handling
+
 ## [6.8.0] - 2026-02-18
 
 ### Features
