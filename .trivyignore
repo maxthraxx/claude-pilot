@@ -10,3 +10,7 @@
 # would produce false-positive secret detections.
 #
 # See: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+
+# minimatch ReDoS — transitive dev dependency of @typescript-eslint/typescript-estree.
+# Fix (10.2.1) requires major version bump that @typescript-eslint hasn't adopted yet.
+CVE-2026-26996

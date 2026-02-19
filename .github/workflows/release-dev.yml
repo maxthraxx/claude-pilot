@@ -31,6 +31,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           skip-dirs: ".venv,node_modules,console/node_modules,launcher,docs/site/api"
+          trivyignores: ".trivyignore"
           format: "table"
           output: trivy-results.txt
 

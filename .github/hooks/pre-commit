@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Pre-commit hook: Run Trivy security scan before committing.
+# Install: ln -sf ../../.github/hooks/pre-commit .git/hooks/pre-commit
+#
+# Requires: trivy (brew install trivy / apt-get install trivy)
+# Skip: SKIP_TRIVY=1 git commit ...
+
+set -euo pipefail
+
+if [ "${SKIP_TRIVY:-0}" = "1" ]; then
+  exit 0
+fi
+
+if ! command -v trivy &>/dev/null; then
+  echo "⚠ trivy not installed — skipping security scan (brew install trivy)"
+  exit 0
+fi
+
+echo "Running Trivy security scan..."
+trivy fs . \
+  --scanners vuln,secret \
+  --severity CRITICAL,HIGH \
+  --exit-code 1 \
+  --ignore-unfixed \
+  --skip-dirs .venv,node_modules,console/node_modules,launcher,docs/site/api \
+  --ignorefile .trivyignore \
+  --quiet
+
+echo "Security scan passed."
