@@ -1,0 +1,12 @@
+# Trivy ignore file
+# Add CVE IDs or secret rule IDs here to suppress specific findings.
+#
+# Format:
+#   CVE-2024-12345                     # Suppress a specific CVE
+#   generic-api-key:path/to/file.txt   # Suppress a secret finding in a specific file
+#
+# Note: launcher/ and docs/site/api/ are excluded from scanning via skip-dirs
+# in the workflow because they are git-crypt encrypted — their binary content
+# would produce false-positive secret detections.
+#
+# See: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
