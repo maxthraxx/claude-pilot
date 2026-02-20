@@ -603,20 +603,6 @@ See the full changelog at [pilot.openchangelog.com](https://pilot.openchangelog.
 
 ---
 
-## Workshops & Enterprise Adoption
-
-Claude Pilot is built by [Max Ritter](https://www.maxritter.net/), a senior IT freelancer and consultant from Germany. Max helps companies and enterprises adopt Claude Code and Claude Pilot for production-grade AI-assisted development.
-
-**What's on offer:**
-
-- **Agentic Engineering Workshops** — Hands-on training for development teams on Claude Code, Claude Pilot, and spec-driven AI development
-- **Enterprise Rollout** — Introduce Claude Pilot to your team and standardize AI-assisted development across the organization
-- **Consulting** — Architecture reviews, workflow optimization, and best practices for AI-assisted development at scale
-
-**Get in touch:** [mail@maxritter.net](mailto:mail@maxritter.net)
-
----
-
 <div align="center">
 
 **Claude Code is powerful. Pilot makes it reliable.**
