@@ -2,6 +2,14 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.9.1] - 2026-02-20
+
+### Bug Fixes
+
+- Make vexor model pre-download best-effort during installation
+- Use sys.executable instead of uv in spec_validators tests
+- Consolidate test infrastructure, harden parallel spec workflows 
+
 ## [6.9.0] - 2026-02-19
 
 ### Bug Fixes
