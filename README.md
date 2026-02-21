@@ -46,11 +46,11 @@ A full-stack project — created from scratch with a single prompt, then extende
 
 <div align="center">
 
-<a href="https://youtu.be/NHw8BloZB_M">
-  <img src="https://img.youtube.com/vi/NHw8BloZB_M/maxresdefault.jpg" alt="Watch the Claude Pilot Demo" width="700">
+<a href="https://youtu.be/S7faAK931NU">
+  <img src="https://img.youtube.com/vi/S7faAK931NU/maxresdefault.jpg" alt="Watch the Claude Pilot Demo" width="700">
 </a>
 
-**[Watch the full demo on YouTube](https://youtu.be/NHw8BloZB_M)** · **[Browse the demo repository](https://github.com/maxritter/claude-pilot-demo)**
+**[Watch the full demo on YouTube](https://youtu.be/S7faAK931NU)** · **[Browse the demo repository](https://github.com/maxritter/claude-pilot-demo)**
 
 </div>
 

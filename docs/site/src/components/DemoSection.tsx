@@ -60,7 +60,7 @@ const DemoSection = () => {
             >
               <iframe
                 className="absolute inset-0 w-full h-full"
-                src="https://www.youtube-nocookie.com/embed/NHw8BloZB_M?rel=0"
+                src="https://www.youtube-nocookie.com/embed/S7faAK931NU?rel=0"
                 title="Claude Pilot Demo — Full-Stack Project Built by AI"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
