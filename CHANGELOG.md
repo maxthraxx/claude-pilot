@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.10.3] - 2026-02-23
+
+### Bug Fixes
+
+- Enhance rules, agents, and workflow prompts for better review handling and debugging
+
 ## [6.10.1] - 2026-02-22
 
 ### Bug Fixes
