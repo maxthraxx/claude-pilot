@@ -53,4 +53,11 @@ describe("/api/plans/stats endpoint", () => {
   it("should support ?project= query parameter", () => {
     expect(routesSource).toContain("req.query.project");
   });
+
+  it("should parse specType from plan files", () => {
+    expect(readerSource).toContain("specType");
+    expect(readerSource).toContain('"Bugfix"');
+    expect(readerSource).toContain('"Feature"');
+    expect(readerSource).toContain(/^Type:\s*(\w+)/m.source);
+  });
 });

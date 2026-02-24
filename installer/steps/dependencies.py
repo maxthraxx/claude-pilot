@@ -543,6 +543,52 @@ def install_ccusage() -> bool:
     return _run_bash_with_retry(npm_global_cmd("npm install -g ccusage@latest"))
 
 
+def _is_hypothesis_installed() -> bool:
+    """Check if hypothesis is installed via uv tool."""
+    try:
+        result = subprocess.run(
+            ["uv", "tool", "list"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.returncode == 0 and "hypothesis" in result.stdout
+    except Exception:
+        return False
+
+
+def _is_fast_check_installed() -> bool:
+    """Check if fast-check is installed globally via npm."""
+    try:
+        result = subprocess.run(
+            ["npm", "list", "-g", "fast-check", "--depth=0"],
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0 and "fast-check" in result.stdout
+    except Exception:
+        return False
+
+
+def install_pbt_tools() -> bool:
+    """Install property-based testing packages: hypothesis (Python) and fast-check (TypeScript).
+
+    Go PBT is handled by the built-in 'go test -fuzz' (Go 1.18+) — no install needed.
+    Both packages are best-effort: failure does not block installation.
+    """
+    ok = True
+
+    if not _is_hypothesis_installed():
+        if not _run_bash_with_retry("uv tool install hypothesis"):
+            ok = False
+
+    if not _is_fast_check_installed():
+        if not _run_bash_with_retry(npm_global_cmd("npm install -g fast-check")):
+            ok = False
+
+    return ok
+
+
 def _get_playwright_cache_dirs() -> list[Path]:
     """Get possible Playwright cache directories for the current platform."""
     import platform
@@ -902,6 +948,9 @@ class DependenciesStep(BaseStep):
 
         if _install_with_spinner(ui, "golangci-lint (Go linter)", install_golangci_lint):
             installed.append("golangci_lint")
+
+        if _install_with_spinner(ui, "PBT tools (hypothesis, fast-check)", install_pbt_tools):
+            installed.append("pbt_tools")
 
         if _install_with_spinner(ui, "ccusage (usage tracking)", install_ccusage):
             installed.append("ccusage")
