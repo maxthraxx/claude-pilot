@@ -2,6 +2,12 @@
 
 All notable changes to Claude Pilot will be documented in this file.
 
+## [6.11.0] - 2026-02-24
+
+### Features
+
+- Add bugfix spec workflow and viewer enhancements 
+
 ## [6.10.3] - 2026-02-23
 
 ### Bug Fixes
