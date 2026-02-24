@@ -28,11 +28,13 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.
 
 ## Why I Built This
 
-I'm a senior IT freelancer from Germany. My clients hire me to ship production-quality code — tested, typed, formatted, and reviewed. When something goes into production under my name, quality isn't optional.
+I'm Max, a senior IT freelancer from Germany. My clients hire me to ship production-quality code — tested, typed, formatted, and reviewed. When something goes into production under my name, quality isn't optional.
 
-Claude Code writes code fast. But without structure, it skips tests, loses context, and produces inconsistent results — especially on complex, established codebases where there are real conventions to follow and real regressions to catch. I tried other frameworks — they burned tokens on bloated prompts without adding real value. Some added process without enforcement. Others were prompt templates that Claude ignored when context got tight. None made Claude reliably produce production-grade code.
+Claude Code writes code fast. But without structure, it skips tests, loses context, and produces inconsistent results — especially on complex, established codebases where there are real conventions to follow and real regressions to catch. I tried other frameworks. Most of them add complexity — dozens of agents, elaborate scaffolding, thousands of lines of instruction files — but the output doesn't get better. You just burn more tokens, wait longer, and deal with more things breaking.
 
-So I built Pilot Shell. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is monitored and preserved across sessions. Every piece of work goes through verification before it's marked done.
+So I built Pilot Shell. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is preserved across sessions. Every rule exists because I hit a real problem: a bug that slipped through, a regression that shouldn't have happened, a session where Claude cut corners and nobody caught it.
+
+This isn't a vibe coding tool, it's true agentic engineering, made simple. You install it in any existing project, run `pilot`, then `/sync` to learn your codebase. The guardrails are just there. The end result is that you can walk away — start a `/spec` task, approve the plan, go grab a coffee. When you come back, the work is tested, verified, formatted, and ready to ship.
 
 ---
 
@@ -61,27 +63,13 @@ Each `/spec` prompt one-shotted a complete feature — plan, TDD implementation,
 | Writes code, skips tests    | TDD enforced — RED, GREEN, REFACTOR on every feature            |
 | No quality checks           | Hooks auto-lint, format, type-check on every file edit          |
 | Context degrades mid-task   | Hooks preserve and restore state across compaction cycles       |
-| Every session starts fresh  | Persistent memory across sessions via Pilot Shell Console             |
+| Every session starts fresh  | Persistent memory across sessions via Pilot Shell Console       |
 | Hope it works               | Verifier sub-agents perform code review before marking complete |
 | No codebase knowledge       | Production-tested rules loaded into every session               |
 | Generic suggestions         | Coding standards activated conditionally by file type           |
 | Changes mixed into branch   | Isolated worktrees — review and squash merge when verified      |
 | Manual tool setup           | MCP servers + language servers pre-configured and ready         |
 | Requires constant oversight | Start a task, grab a coffee, come back to verified results      |
-
----
-
-## Why This Approach Works
-
-There are other AI coding frameworks out there. I tried them. They add complexity — dozens of agents, elaborate scaffolding, thousands of lines of instruction files — but the output doesn't improve proportionally. More machinery burns more tokens, increases latency, and creates more failure modes. Complexity is not a feature.
-
-**Pilot Shell optimizes for output quality, not system complexity.** The rules are minimal and focused. There's no big learning curve, no project scaffolding to set up, no state files to manage. You install it in any existing project — no matter how complex — run `pilot`, then `/sync` to learn your codebase, and the quality guardrails are just there — hooks, TDD, type checking, formatting — enforced automatically on every edit, in every session.
-
-This isn't a vibe coding tool. It's built for developers who ship to production and need code that actually works. Every rule in the system comes from daily professional use: real bugs caught, real regressions prevented, real sessions where the AI cut corners and the hooks stopped it. The rules are continuously refined based on what measurably improves output.
-
-**The result: you can actually walk away.** Start a `/spec` task, approve the plan, then go grab a coffee. When you come back, the work is done — tested, verified, formatted, and ready to ship. Hooks preserve state across compaction cycles, persistent memory carries context between sessions, quality hooks catch every mistake along the way, and verifier agents review the code before marking it complete. No babysitting required.
-
-The system stays fast because it stays simple. Quick mode is direct execution with zero overhead — no sub-agents, no plan files, no directory scaffolding. You describe the task and it gets done. `/spec` adds structure only when you need it: plan verification, TDD enforcement, independent code review, automated quality checks. Both modes share the same quality hooks. Both modes benefit from persistent memory and hooks that preserve state across compaction.
 
 ---
 
@@ -231,21 +219,6 @@ Discuss  →  Plan  →  Approve  →  Implement  →  Verify  →  Done
 
 </details>
 
-### Smart Model Routing
-
-Pilot Shell uses the right model for each phase — Opus where reasoning quality matters most, Sonnet where speed and cost matter:
-
-| Phase                 | Default | Why                                                                                                                                               |
-| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Planning**          | Opus    | Exploring your codebase, designing architecture, and writing the spec requires deep reasoning. A good plan is the foundation of everything.       |
-| **Plan Verification** | Opus    | Catching gaps, missing edge cases, and requirement mismatches before implementation saves expensive rework.                                       |
-| **Implementation**    | Sonnet  | With a solid plan, writing code is straightforward. Sonnet is fast, cost-effective, and produces high-quality code when guided by a clear spec.   |
-| **Code Verification** | Opus    | Independent code review against the plan requires the same reasoning depth as planning — catching subtle bugs, logic errors, and spec deviations. |
-
-**The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot Shell invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
-
-**Configurable:** All model assignments are configurable per-component via the Pilot Shell Console settings. Choose between Sonnet 4.6 and Opus 4.6 for the main session, each command, and sub-agents. A global "Extended Context (1M)" toggle enables the 1M token context window across all models simultaneously. **Note:** 1M context models require a Max (20x) or Enterprise subscription — not available to all users.
-
 ### Quick Mode
 
 Just chat. No plan file, no approval gate. All quality hooks and TDD enforcement still apply. Best for small tasks, exploration, and quick questions.
@@ -285,12 +258,12 @@ The `pilot` binary (`~/.pilot/bin/pilot`) manages sessions, worktrees, licensing
 <details>
 <summary><b>Session & Context</b></summary>
 
-| Command                               | Purpose                                                              |
-| ------------------------------------- | -------------------------------------------------------------------- |
+| Command                               | Purpose                                                                    |
+| ------------------------------------- | -------------------------------------------------------------------------- |
 | `pilot`                               | Start Claude with Pilot Shell enhancements, auto-update, and license check |
-| `pilot run [args...]`                 | Same as above, with optional flags (e.g., `--skip-update-check`)     |
-| `pilot check-context --json`          | Get current context usage percentage                                 |
-| `pilot register-plan <path> <status>` | Associate a plan file with the current session                       |
+| `pilot run [args...]`                 | Same as above, with optional flags (e.g., `--skip-update-check`)           |
+| `pilot check-context --json`          | Get current context usage percentage                                       |
+| `pilot register-plan <path> <status>` | Associate a plan file with the current session                             |
 | `pilot sessions [--json]`             | Show count of active Pilot Shell sessions                                  |
 
 </details>
@@ -353,7 +326,7 @@ Add your own MCP servers in `.mcp.json`. Run `/sync` after adding servers to gen
 
 | Hook                      | Type     | What it does                                                           |
 | ------------------------- | -------- | ---------------------------------------------------------------------- |
-| Memory loader             | Blocking | Loads persistent context from Pilot Shell Console memory                     |
+| Memory loader             | Blocking | Loads persistent context from Pilot Shell Console memory               |
 | `post_compact_restore.py` | Blocking | After auto-compaction: re-injects active plan, task state, and context |
 | Session tracker           | Async    | Initializes user message tracking for the session                      |
 
@@ -376,8 +349,8 @@ After **every single file edit**, these hooks fire:
 
 #### PreCompact (before auto-compaction)
 
-| Hook             | Type     | What it does                                                                                             |
-| ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| Hook             | Type     | What it does                                                                                                   |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
 | `pre_compact.py` | Blocking | Captures Pilot Shell state (active plan, task list, key context) to persistent memory before compaction fires. |
 
 #### Stop (when Claude tries to finish)
@@ -389,8 +362,8 @@ After **every single file edit**, these hooks fire:
 
 #### SessionEnd (when the session closes)
 
-| Hook             | Type     | What it does                                                                                             |
-| ---------------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| Hook             | Type     | What it does                                                                                                   |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
 | `session_end.py` | Blocking | Stops the worker daemon when no other Pilot Shell sessions are active. Sends real-time dashboard notification. |
 
 ### Context Preservation
@@ -403,6 +376,21 @@ Pilot Shell preserves context automatically across compaction boundaries:
 - Status line shows live context usage, memory status, active plan, and license info
 
 **Effective context display:** Claude Code reserves ~16.5% of the context window as a compaction buffer, triggering auto-compaction at ~83.5% raw usage. Pilot Shell rescales this to an **effective 0–100% range** so the status bar fills naturally to 100% right before compaction fires. A `▓` buffer indicator at the end of the bar shows the reserved zone. The context monitor warns at ~80% effective (informational) and ~90%+ effective (caution) — no confusing raw percentages.
+
+### Smart Model Routing
+
+Pilot Shell uses the right model for each phase — Opus where reasoning quality matters most, Sonnet where speed and cost matter:
+
+| Phase                 | Default | Why                                                                                                                                               |
+| --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Planning**          | Opus    | Exploring your codebase, designing architecture, and writing the spec requires deep reasoning. A good plan is the foundation of everything.       |
+| **Plan Verification** | Opus    | Catching gaps, missing edge cases, and requirement mismatches before implementation saves expensive rework.                                       |
+| **Implementation**    | Sonnet  | With a solid plan, writing code is straightforward. Sonnet is fast, cost-effective, and produces high-quality code when guided by a clear spec.   |
+| **Code Verification** | Opus    | Independent code review against the plan requires the same reasoning depth as planning — catching subtle bugs, logic errors, and spec deviations. |
+
+**The insight:** Implementation is the easy part when the plan is good and verification is thorough. Pilot Shell invests reasoning power where it has the highest impact — planning and verification — and uses fast execution where a clear spec makes quality predictable.
+
+**Configurable:** All model assignments are configurable per-component via the Pilot Shell Console settings. Choose between Sonnet 4.6 and Opus 4.6 for the main session, each command, and sub-agents. A global "Extended Context (1M)" toggle enables the 1M token context window across all models simultaneously. **Note:** 1M context models require a Max (20x) or Enterprise subscription — not available to all users.
 
 ### Built-in Rules & Standards
 
@@ -533,11 +521,11 @@ Details and licensing at [pilot-shell.com](https://pilot-shell.com).
 
 Pilot Shell makes external calls **only for licensing**. Here is the complete list:
 
-| When                              | Where              | What is sent                       |
-| --------------------------------- | ------------------ | ---------------------------------- |
-| License validation (once per 24h) | `api.polar.sh`     | License key, organization ID       |
-| License activation (once)         | `api.polar.sh`     | License key, machine fingerprint   |
-| Trial start (once)                | `pilot-shell.com` | Hashed hardware fingerprint        |
+| When                              | Where             | What is sent                     |
+| --------------------------------- | ----------------- | -------------------------------- |
+| License validation (once per 24h) | `api.polar.sh`    | License key, organization ID     |
+| License activation (once)         | `api.polar.sh`    | License key, machine fingerprint |
+| Trial start (once)                | `pilot-shell.com` | Hashed hardware fingerprint      |
 
 That's it — three calls total, each sent at most once (validation re-checks daily). No OS, no architecture, no Python version, no locale, no analytics, no heartbeats. The validation result is cached locally, and Pilot Shell works fully offline for up to 7 days between checks. Beyond these licensing calls, the only external communication is between Claude Code and Anthropic's API — using your own subscription or API key.
 

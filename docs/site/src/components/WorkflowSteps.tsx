@@ -196,27 +196,6 @@ const WorkflowSteps = () => {
           </div>
         </div>
 
-        {/* Model Routing */}
-        <div
-          className={`rounded-2xl p-5 border border-border/50 bg-card/30 backdrop-blur-sm mb-8 ${diagramInView ? "animate-fade-in-up animation-delay-300" : "opacity-0"}`}
-        >
-          <h3 className="text-base font-semibold text-foreground mb-3 text-center">
-            Smart Model Routing
-          </h3>
-          <p className="text-sm text-muted-foreground text-center max-w-2xl mx-auto mb-4">
-            Pilot uses <span className="text-violet-400 font-medium">Opus</span>{" "}
-            for planning and verification — where reasoning quality matters most
-            — and <span className="text-primary font-medium">Sonnet</span> for
-            implementation, where a clear spec makes fast execution predictable
-            and cost-effective.
-          </p>
-          <p className="text-xs text-muted-foreground/70 text-center max-w-xl mx-auto">
-            Implementation is the easy part when the plan is good and
-            verification is thorough. Pilot invests reasoning power where it has
-            the highest impact.
-          </p>
-        </div>
-
         {/* Detailed Phase Breakdowns */}
         <div
           ref={detailsRef}

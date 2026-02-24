@@ -813,10 +813,11 @@ class TestVexorMlxInstall:
         mock_setup.assert_called_once()
 
     @patch("installer.steps.dependencies._configure_vexor_local", return_value=True)
+    @patch("installer.steps.dependencies._is_vexor_local_functional", return_value=True)
     @patch("installer.steps.dependencies._is_vexor_local_model_installed", return_value=True)
     @patch("installer.steps.dependencies._is_vexor_mlx_installed", return_value=True)
     def test_install_vexor_mlx_skips_if_already_installed(
-        self, _mock_mlx_check, _mock_model_check, mock_config
+        self, _mock_mlx_check, _mock_model_check, _mock_functional, mock_config
     ):
         """_install_vexor_mlx skips clone when MLX vexor already installed."""
         from installer.steps.dependencies import _install_vexor_mlx
@@ -825,6 +826,25 @@ class TestVexorMlxInstall:
 
         assert result is True
         mock_config.assert_called_once()
+
+    @patch("installer.steps.dependencies._setup_vexor_local_model", return_value=True)
+    @patch("installer.steps.dependencies._configure_vexor_local", return_value=True)
+    @patch("installer.steps.dependencies._install_vexor_from_local", return_value=True)
+    @patch("installer.steps.dependencies._clone_vexor_fork")
+    @patch("installer.steps.dependencies._is_vexor_local_functional", return_value=False)
+    @patch("installer.steps.dependencies._is_vexor_local_model_installed", return_value=True)
+    @patch("installer.steps.dependencies._is_vexor_mlx_installed", return_value=True)
+    def test_install_vexor_mlx_reinstalls_when_not_functional(
+        self, _mock_mlx, _mock_model, _mock_functional, mock_clone, mock_install, mock_config, mock_setup
+    ):
+        """_install_vexor_mlx reinstalls when MLX is present but not functional."""
+        from installer.steps.dependencies import _install_vexor_mlx
+
+        mock_clone.return_value = Path("/tmp/fake-vexor")
+        result = _install_vexor_mlx()
+
+        assert result is True
+        mock_clone.assert_called_once()
 
     @patch("installer.steps.dependencies._setup_vexor_local_model", return_value=True)
     @patch("installer.steps.dependencies._configure_vexor_local", return_value=True)
@@ -854,6 +874,86 @@ class TestVexorMlxInstall:
 
         assert result is True
         mock_mlx.assert_called_once()
+
+
+class TestVexorLocalFunctional:
+    """Test vexor local functionality runtime check."""
+
+    @patch("installer.steps.dependencies.subprocess.run")
+    def test_get_uv_tool_vexor_bin_returns_path(self, mock_run):
+        """Returns vexor binary path when it exists in uv tool dir."""
+        from installer.steps.dependencies import _get_uv_tool_vexor_bin
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vexor_bin = Path(tmpdir) / "vexor" / "bin" / "vexor"
+            vexor_bin.parent.mkdir(parents=True)
+            vexor_bin.touch()
+
+            mock_run.return_value = MagicMock(returncode=0, stdout=tmpdir + "\n")
+            result = _get_uv_tool_vexor_bin()
+
+            assert result == vexor_bin
+
+    @patch("installer.steps.dependencies.subprocess.run")
+    def test_get_uv_tool_vexor_bin_returns_none_when_missing(self, mock_run):
+        """Returns None when vexor binary doesn't exist in uv tool dir."""
+        from installer.steps.dependencies import _get_uv_tool_vexor_bin
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mock_run.return_value = MagicMock(returncode=0, stdout=tmpdir + "\n")
+            result = _get_uv_tool_vexor_bin()
+
+            assert result is None
+
+    @patch("installer.steps.dependencies.subprocess.run")
+    def test_get_uv_tool_vexor_bin_returns_none_on_uv_failure(self, mock_run):
+        """Returns None when uv tool dir command fails."""
+        from installer.steps.dependencies import _get_uv_tool_vexor_bin
+
+        mock_run.return_value = MagicMock(returncode=1)
+        result = _get_uv_tool_vexor_bin()
+
+        assert result is None
+
+    @patch("installer.steps.dependencies._get_uv_tool_vexor_bin")
+    def test_is_vexor_local_functional_returns_false_when_no_binary(self, mock_bin):
+        """Returns False when uv tool vexor binary not found."""
+        from installer.steps.dependencies import _is_vexor_local_functional
+
+        mock_bin.return_value = None
+        assert _is_vexor_local_functional() is False
+
+    @patch("installer.steps.dependencies.subprocess.run")
+    @patch("installer.steps.dependencies._get_uv_tool_vexor_bin")
+    def test_is_vexor_local_functional_returns_true_when_working(self, mock_bin, mock_run):
+        """Returns True when vexor index --help runs without error message."""
+        from installer.steps.dependencies import _is_vexor_local_functional
+
+        mock_bin.return_value = Path("/fake/vexor")
+        mock_run.return_value = MagicMock(returncode=0, stdout="Usage: vexor index", stderr="")
+        assert _is_vexor_local_functional() is True
+
+    @patch("installer.steps.dependencies.subprocess.run")
+    @patch("installer.steps.dependencies._get_uv_tool_vexor_bin")
+    def test_is_vexor_local_functional_returns_false_when_broken(self, mock_bin, mock_run):
+        """Returns False when vexor reports local model support missing."""
+        from installer.steps.dependencies import _is_vexor_local_functional
+
+        mock_bin.return_value = Path("/fake/vexor")
+        mock_run.return_value = MagicMock(
+            returncode=1, stdout="", stderr="Local model support is not installed"
+        )
+        assert _is_vexor_local_functional() is False
+
+    @patch("installer.steps.dependencies.subprocess.run")
+    @patch("installer.steps.dependencies._get_uv_tool_vexor_bin")
+    def test_is_vexor_local_functional_handles_subprocess_exception(self, mock_bin, mock_run):
+        """Returns False when subprocess raises an exception."""
+        from installer.steps.dependencies import _is_vexor_local_functional
+
+        mock_bin.return_value = Path("/fake/vexor")
+        mock_run.side_effect = OSError("permission denied")
+        assert _is_vexor_local_functional() is False
 
 
 class TestInstallPrettier:

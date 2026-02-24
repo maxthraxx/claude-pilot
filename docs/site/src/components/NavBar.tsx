@@ -38,7 +38,7 @@ const NavBar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <ul className="hidden md:flex gap-6 lg:gap-8">
+        <ul className="hidden lg:flex gap-6 xl:gap-8">
           {navLinks.map((link) => (
             <li key={link.href}>
               <button
@@ -96,7 +96,7 @@ const NavBar = () => {
           </Button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-foreground p-2"
+            className="lg:hidden text-foreground p-2"
           >
             {mobileMenuOpen ? (
               <X className="h-5 w-5" />
@@ -109,7 +109,7 @@ const NavBar = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-card/95 backdrop-blur-xl border-t border-border px-4 sm:px-6 py-4 animate-fade-in">
+        <div className="lg:hidden bg-card/95 backdrop-blur-xl border-t border-border px-4 sm:px-6 py-4 animate-fade-in">
           {navLinks.map((link) => (
             <button
               key={link.href}

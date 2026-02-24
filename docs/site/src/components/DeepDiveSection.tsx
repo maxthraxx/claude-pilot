@@ -13,6 +13,7 @@ import {
   Layers,
   Cpu,
   RefreshCw,
+  Route,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 
@@ -174,6 +175,7 @@ const mcpServers = [
 const DeepDiveSection = () => {
   const [headerRef, headerInView] = useInView<HTMLDivElement>();
   const [hooksRef, hooksInView] = useInView<HTMLDivElement>();
+  const [routingRef, routingInView] = useInView<HTMLDivElement>();
   const [rulesRef, rulesInView] = useInView<HTMLDivElement>();
   const [mcpRef, mcpInView] = useInView<HTMLDivElement>();
 
@@ -273,6 +275,68 @@ const DeepDiveSection = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Smart Model Routing */}
+        <div
+          ref={routingRef}
+          className={`mb-16 ${routingInView ? "animate-fade-in-up" : "opacity-0"}`}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-violet-400/10 rounded-xl flex items-center justify-center">
+              <Route className="h-5 w-5 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-foreground">
+                Smart Model Routing
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                The right model for each phase — reasoning power where it
+                matters most
+              </p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div className="rounded-2xl p-5 border border-violet-400/30 bg-violet-400/5 backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-mono font-semibold text-violet-400 bg-violet-400/10 px-3 py-1 rounded-lg">
+                  OPUS
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Planning & Verification
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Exploring your codebase, designing architecture, catching gaps,
+                and reviewing code against the plan. Deep reasoning prevents
+                expensive rework.
+              </p>
+            </div>
+            <div className="rounded-2xl p-5 border border-primary/30 bg-primary/5 backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-mono font-semibold text-primary bg-primary/10 px-3 py-1 rounded-lg">
+                  SONNET
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Implementation
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                With a solid plan, writing code is straightforward. Fast,
+                cost-effective, and produces high-quality code when guided by a
+                clear spec.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl p-4 border border-border/30 bg-card/20 backdrop-blur-sm">
+            <p className="text-xs text-muted-foreground text-center">
+              Implementation is the easy part when the plan is good and
+              verification is thorough. All model assignments are configurable
+              per-component via the Pilot Shell Console settings.
+            </p>
           </div>
         </div>
 
