@@ -31,9 +31,15 @@ class TestDependenciesStep:
             )
             assert step.check(ctx) is False
 
+    @patch("installer.steps.dependencies.install_sx", return_value=True)
+    @patch("installer.steps.dependencies.update_sx", return_value=True)
+    @patch("installer.steps.dependencies._install_vexor_with_ui", return_value=True)
+    @patch("installer.steps.dependencies._install_playwright_cli_with_ui", return_value=True)
+    @patch("installer.steps.dependencies.install_ccusage", return_value=True)
     @patch("installer.steps.dependencies.install_pbt_tools", return_value=True)
     @patch("installer.steps.dependencies.install_golangci_lint", return_value=True)
     @patch("installer.steps.dependencies.install_prettier", return_value=True)
+    @patch("installer.steps.dependencies.install_typescript_lsp", return_value=True)
     @patch("installer.steps.dependencies._precache_npx_mcp_servers", return_value=True)
     @patch("installer.steps.dependencies.install_vexor")
     @patch("installer.steps.dependencies._install_plugin_dependencies")
@@ -52,9 +58,15 @@ class TestDependenciesStep:
         mock_plugin_deps,
         mock_vexor,
         _mock_precache,
+        _mock_ts_lsp,
         _mock_prettier,
         _mock_golangci_lint,
         _mock_pbt_tools,
+        _mock_ccusage,
+        _mock_playwright,
+        _mock_vexor_ui,
+        _mock_sx,
+        _mock_update_sx,
     ):
         """DependenciesStep installs all dependencies including Python tools."""
         from installer.context import InstallContext

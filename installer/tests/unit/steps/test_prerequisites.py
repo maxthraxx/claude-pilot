@@ -391,6 +391,8 @@ class TestEnsureGitInstalled:
 class TestPrerequisitesStepRunLinuxFallback:
     """Test that PrerequisitesStep.run continues on Linux when Homebrew fails."""
 
+    @patch("installer.steps.prerequisites._install_bun_standalone", return_value=True)
+    @patch("installer.steps.prerequisites._install_nodejs_via_pkg", return_value=True)
     @patch("installer.steps.prerequisites._install_ripgrep_via_apt")
     @patch("installer.steps.prerequisites.is_apt_available")
     @patch("installer.steps.prerequisites._install_homebrew_package")
@@ -411,6 +413,8 @@ class TestPrerequisitesStepRunLinuxFallback:
         _mock_pkg_install,
         mock_apt,
         mock_ripgrep,
+        _mock_nodejs_pkg,
+        _mock_bun_standalone,
     ):
         """On Linux, PrerequisitesStep.run does not return early when Homebrew fails."""
         from installer.context import InstallContext
@@ -473,6 +477,8 @@ class TestPrerequisitesStepRunLinuxFallback:
 
         mock_ripgrep.assert_not_called()
 
+    @patch("installer.steps.prerequisites._install_bun_standalone", return_value=True)
+    @patch("installer.steps.prerequisites._install_nodejs_via_pkg", return_value=True)
     @patch("installer.steps.prerequisites._install_ripgrep_via_apt")
     @patch("installer.steps.prerequisites.is_apt_available")
     @patch("installer.steps.prerequisites._install_homebrew")
@@ -489,6 +495,8 @@ class TestPrerequisitesStepRunLinuxFallback:
         mock_install_brew,
         mock_apt,
         mock_ripgrep,
+        _mock_nodejs_pkg,
+        _mock_bun_standalone,
     ):
         """On Linux without UI, PrerequisitesStep.run does not return early when Homebrew fails."""
         from installer.context import InstallContext
