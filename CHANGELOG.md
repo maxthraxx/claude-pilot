@@ -2,6 +2,16 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.0.4] - 2026-02-25
+
+### Bug Fixes
+
+- Right-size bugfix spec workflow and improve site/installer/console
+
+### Miscellaneous
+
+- Add positioning statement to hero section
+
 ## [7.0.3] - 2026-02-25
 
 ### Bug Fixes
