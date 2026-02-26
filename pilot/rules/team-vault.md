@@ -1,6 +1,6 @@
 ## Team Vault (sx)
 
-Share AI assets (rules, skills, commands, agents, hooks) across your team using `sx` and a private Git repository.
+Share AI assets (rules, skills, commands, agents, hooks, MCP configs) across your team using `sx` and a private Git repository.
 
 ### When to Use
 
@@ -47,6 +47,7 @@ sx remove <asset-name> --yes           # Remove from lock file (stays in vault)
 | `agent` | `--type agent` | `.claude/agents/<name>.md` |
 | `hook` | `--type hook` | Hook scripts |
 | `mcp` | `--type mcp` | MCP server configs |
+| `claude-code-plugin` | `--type claude-code-plugin` | Plugin bundles |
 
 ### Scoping
 
@@ -91,6 +92,21 @@ sx init --type sleuth
 sx vault list
 ```
 
+### Roles (Skills.new Only)
+
+```bash
+sx role list                # List available roles
+sx role set <role-slug>     # Set active role (controls which skills are available)
+sx role current             # Show current role
+sx role clear               # Clear active role
+```
+
+Only works with `sleuth` vault type (skills.new).
+
+### Supported Clients
+
+sx installs to all detected clients: `claude-code`, `cursor`, `github-copilot`, `gemini`. Disable non-Claude clients: `sx clients disable <client-id>`.
+
 ### Tips
 
 - Do NOT use `--no-install` when pushing — it skips the vault lockfile update, making assets invisible to teammates
@@ -98,4 +114,4 @@ sx vault list
 - Always use `sx install --repair --target .` to install assets to the current project
 - Use `--target /path` to install for a project from outside it (CI pipelines, Docker)
 - Multiple profiles supported via `--profile` flag or `SX_PROFILE` env var
-- **Add `.cursor/` to `.gitignore`** — sx installs to all detected clients (including Cursor), which creates `.cursor/` in the project directory. Gitignore it to avoid polluting version control.
+- **Add `.cursor/` and `.gemini/` to `.gitignore`** — sx installs to all detected clients, which creates client directories in the project. Gitignore them to avoid polluting version control.

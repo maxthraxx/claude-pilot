@@ -453,6 +453,7 @@ if is_native_windows && ! is_in_container; then
 	echo ""
 	echo "    2) Use the Dev Container (works without WSL2)"
 	echo "       Requires Docker Desktop for Windows."
+	echo "       Must be run from inside your project directory."
 	echo ""
 	echo "  Choose: "
 
@@ -470,6 +471,10 @@ if is_native_windows && ! is_in_container; then
 
 	case $choice in
 	2)
+		echo ""
+		echo "  Dev Container mode creates .devcontainer/ in the current directory."
+		echo "  Current directory: $(pwd)"
+		echo ""
 		setup_devcontainer
 		;;
 	*)
@@ -503,8 +508,9 @@ if ! is_in_container; then
 	else
 		echo "  Choose installation method:"
 		echo ""
-		echo "    1) Local - Install directly on your system"
+		echo "    1) Local - Install directly on your system (run from any directory)"
 		echo "    2) Dev Container - Isolated, pre-configured environment"
+		echo "       (must be run from inside your project directory)"
 		echo ""
 
 		choice=""
@@ -521,6 +527,32 @@ if ! is_in_container; then
 
 		case $choice in
 		2)
+			echo ""
+			echo "  Dev Container mode creates .devcontainer/ in the current directory."
+			echo "  Current directory: $(pwd)"
+			echo ""
+			if [ ! -d ".git" ]; then
+				echo "  [!!] Warning: This doesn't look like a project root (no .git/ found)."
+				echo "  [!!] cd into your project directory first, then re-run the installer."
+				echo ""
+				confirm=""
+				if [ -t 0 ]; then
+					printf "  Continue anyway? [y/N]: "
+					read -r confirm
+				elif [ -e /dev/tty ]; then
+					printf "  Continue anyway? [y/N]: "
+					read -r confirm </dev/tty
+				else
+					confirm="n"
+				fi
+				case "$confirm" in
+				[Yy] | [Yy][Ee][Ss]) ;;
+				*)
+					echo "  Cancelled. cd into your project directory and re-run."
+					exit 0
+					;;
+				esac
+			fi
 			setup_devcontainer
 			;;
 		*)

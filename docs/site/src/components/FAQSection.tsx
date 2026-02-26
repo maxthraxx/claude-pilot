@@ -52,7 +52,12 @@ const faqItems = [
   {
     question: "Can I use Pilot Shell on multiple projects?",
     answer:
-      "Yes. Pilot Shell installs once and works across all your projects. Each project can have its own rules, standards, and MCP servers in the .claude/ folder. Run /sync in each project to generate project-specific documentation and standards.",
+      "Yes. Pilot Shell installs once globally and works across all your projects \u2014 you don\u2019t need to reinstall per project. All tools, rules, commands, and hooks live in ~/.pilot/ and ~/.claude/, available everywhere. Just cd into any project and run pilot. Each project can optionally have its own .claude/ rules, custom skills, and MCP servers for project-specific behavior. Run /sync in each project to generate project-specific documentation and standards.",
+  },
+  {
+    question: "Do I need to run the installer from inside a project directory?",
+    answer:
+      "For local mode: no. You can run the installer from any directory \u2014 your home folder, a parent folder containing multiple repos, anywhere. Everything installs globally to ~/.pilot/ and ~/.claude/. For Dev Container mode: yes. The installer creates a .devcontainer/ folder in the current directory, so run it from inside the project you want to containerize.",
   },
   {
     question: "Can I add my own rules, commands, and skills?",

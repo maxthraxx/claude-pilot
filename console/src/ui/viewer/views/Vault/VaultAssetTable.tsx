@@ -1,17 +1,26 @@
-import { Icon, Badge, Tabs } from '../../components/ui';
-import type { MergedAsset, AssetDetail } from '../../hooks/useVault';
-import { VaultAssetDetail } from './VaultAssetDetail';
+import { Icon, Badge, Tabs } from "../../components/ui";
+import type { MergedAsset, AssetDetail } from "../../hooks/useVault";
+import { VaultAssetDetail } from "./VaultAssetDetail";
 
 const TYPE_ICONS: Record<string, string> = {
   skill: "lucide:wand-2",
   rule: "lucide:scale",
   command: "lucide:terminal",
+  agent: "lucide:bot",
+  hook: "lucide:webhook",
+  mcp: "lucide:plug",
 };
 
-const TYPE_BADGE_VARIANT: Record<string, "primary" | "info" | "accent" | "ghost"> = {
+const TYPE_BADGE_VARIANT: Record<
+  string,
+  "primary" | "info" | "accent" | "ghost"
+> = {
   skill: "primary",
   rule: "info",
   command: "accent",
+  agent: "ghost",
+  hook: "ghost",
+  mcp: "ghost",
 };
 
 const TABS = [
@@ -19,6 +28,9 @@ const TABS = [
   { id: "skill", label: "Skills" },
   { id: "rule", label: "Rules" },
   { id: "command", label: "Commands" },
+  { id: "agent", label: "Agents" },
+  { id: "hook", label: "Hooks" },
+  { id: "mcp", label: "MCP" },
 ];
 
 interface VaultAssetTableProps {
@@ -68,7 +80,9 @@ export function VaultAssetTable({
 
       {filtered.length === 0 ? (
         <div className="text-center py-8 text-base-content/50">
-          {searchQuery ? `No assets matching "${searchQuery}"` : "No assets in this category"}
+          {searchQuery
+            ? `No assets matching "${searchQuery}"`
+            : "No assets in this category"}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -138,19 +152,21 @@ function AssetRow({
             <Icon icon={iconName} size={16} className="text-base-content/50" />
             <span className="font-medium">{asset.name}</span>
             {asset.hasUpdate && (
-              <Badge variant="warning" size="sm">update</Badge>
+              <Badge variant="warning" size="sm">
+                update
+              </Badge>
             )}
           </div>
         </td>
         <td>
-          <Badge variant={badgeVariant} size="sm">{asset.type}</Badge>
+          <Badge variant={badgeVariant} size="sm">
+            {asset.type}
+          </Badge>
         </td>
         <td className="font-mono text-sm">
           {asset.installedVersion ?? "\u2014"}
         </td>
-        <td className="font-mono text-sm">
-          v{asset.latestVersion}
-        </td>
+        <td className="font-mono text-sm">v{asset.latestVersion}</td>
         <td className="text-sm text-base-content/60">
           {asset.scope ?? "\u2014"}
         </td>

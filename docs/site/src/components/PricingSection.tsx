@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Check, Building2, Clock, Sparkles, Shield, Zap } from "lucide-react";
+import { Check, Building2, Clock, Sparkles } from "lucide-react";
 import { PolarEmbedCheckout } from "@polar-sh/checkout/embed";
 import { Button } from "@/components/ui/button";
 import { useInView } from "@/hooks/use-in-view";
@@ -19,7 +19,6 @@ const IS_PRODUCTION =
 const PricingSection = () => {
   const [headerRef, headerInView] = useInView<HTMLDivElement>();
   const [cardsRef, cardsInView] = useInView<HTMLDivElement>();
-  const [valueRef, valueInView] = useInView<HTMLDivElement>();
 
   const soloUrl = SOLO_CHECKOUT_URL;
   const teamUrl = TEAM_CHECKOUT_URL;
@@ -235,47 +234,6 @@ const PricingSection = () => {
             Manage your subscription
           </a>
         </p>
-
-        {/* Value proposition */}
-        <div
-          ref={valueRef}
-          className={`mt-12 rounded-2xl p-6 border border-border/50 bg-card/30 backdrop-blur-sm ${valueInView ? "animate-fade-in-up" : "opacity-0"}`}
-        >
-          <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
-            What You Get
-          </h3>
-          <div className="grid sm:grid-cols-3 gap-4 text-center">
-            <div className="flex flex-col items-center gap-2">
-              <Shield className="h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">
-                  Production-tested rules
-                </span>{" "}
-                and best practices loaded into every session
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Zap className="h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">
-                  Automated hooks
-                </span>{" "}
-                enforcing quality on every file edit — formatting, linting, type
-                checking, TDD
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">
-                <span className="text-foreground font-medium">
-                  Continuous updates
-                </span>{" "}
-                from daily production usage — new rules, standards, and
-                optimizations shipped regularly
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

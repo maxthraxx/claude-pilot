@@ -38,7 +38,7 @@ Claude Code writes code fast. But without structure, it skips tests, loses conte
 
 **So I built Pilot Shell**. Instead of adding process on top, it bakes quality into every interaction. Linting, formatting, and type checking run as enforced hooks on every edit. TDD is mandatory, not suggested. Context is preserved across sessions. Every rule exists because I hit a real problem: a bug that slipped through, a regression that shouldn't have happened, a session where Claude cut corners and nobody caught it.
 
-This isn't a vibe coding tool, it's true agentic engineering, but without the added complexity. You install it in any existing project, run `pilot`, then `/sync` to learn your codebase. The guardrails are just there. The end result is that you can walk away — start a `/spec` task, approve the plan, go grab a coffee. When you come back, the work is tested, verified, formatted, and ready to ship.
+This isn't a vibe coding tool, it's true agentic engineering, but without the added complexity. You install it once, run `pilot` in any project, then `/sync` to learn your codebase. The guardrails are just there. The end result is that you can walk away — start a `/spec` task, approve the plan, go grab a coffee. When you come back, the work is tested, verified, formatted, and ready to ship.
 
 ---
 
@@ -50,7 +50,7 @@ This isn't a vibe coding tool, it's true agentic engineering, but without the ad
 
 ### Installation
 
-**Works with any existing project.** Pilot Shell doesn't scaffold or restructure your code — it installs alongside your project and adapts to your conventions. `cd` into your project folder, then run:
+**Works with any existing project.** Pilot Shell doesn't scaffold or restructure your code — it installs globally and adapts to your conventions.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.sh | bash
@@ -58,10 +58,10 @@ curl -fsSL https://raw.githubusercontent.com/maxritter/pilot-shell/main/install.
 
 **Choose your environment:**
 
-- **Local Installation** — Install directly on your system using Homebrew. Works on macOS, Linux, and Windows (WSL2).
-- **Dev Container** — Pre-configured, isolated environment with all tools ready. No system conflicts and works on any OS.
+- **Local Installation** — Install directly on your system using Homebrew. Works on macOS, Linux, and Windows (WSL2). Run from any directory — all tools and rules install globally to `~/.pilot/` and `~/.claude/`.
+- **Dev Container** — Pre-configured, isolated environment with all tools ready. Run from inside the project directory. No system conflicts and works on any OS.
 
-After installation, run `pilot` or `ccp` in your project folder to start Pilot Shell.
+After installation, `cd` into any project and run `pilot` or `ccp` to start Pilot Shell.
 
 <details>
 <summary><b>What the installer does</b></summary>
@@ -490,7 +490,16 @@ Pilot Shell's quality hooks (auto-formatting, linting, type checking) currently 
 <details>
 <summary><b>Can I use Pilot Shell on multiple projects?</b></summary>
 
-Yes. Pilot Shell installs once and works across all your projects. Each project can have its own `.claude/` rules, custom skills, and MCP servers. Run `/sync` in each project to generate project-specific documentation and standards.
+Yes. Pilot Shell installs once globally and works across all your projects — you don't need to reinstall per project. All tools, rules, commands, and hooks live in `~/.pilot/` and `~/.claude/`, available everywhere. Just `cd` into any project and run `pilot`. Each project can optionally have its own `.claude/` rules, custom skills, and MCP servers for project-specific behavior. Run `/sync` in each project to generate project-specific documentation and standards.
+
+</details>
+
+<details>
+<summary><b>Do I need to run the installer from inside a project directory?</b></summary>
+
+**For local mode: no.** You can run the installer from any directory — your home folder, a parent folder containing multiple repos, anywhere. Everything installs globally to `~/.pilot/` and `~/.claude/`. The only file written to the current directory is `.nvmrc` (a Node.js version hint).
+
+**For Dev Container mode: yes.** The installer creates a `.devcontainer/` folder in the current directory, so run it from inside the project you want to containerize.
 
 </details>
 

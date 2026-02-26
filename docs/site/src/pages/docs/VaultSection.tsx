@@ -36,7 +36,17 @@ const assetTypes = [
     path: ".claude/commands/<name>.md",
     desc: "Slash commands (/mycommand)",
   },
+  {
+    type: "agent",
+    path: ".claude/agents/<name>.md",
+    desc: "Sub-agent definitions",
+  },
   { type: "hook", path: "Hook scripts", desc: "Quality enforcement hooks" },
+  {
+    type: "mcp",
+    path: "MCP server configs",
+    desc: "External tool integrations",
+  },
 ];
 
 const VaultSection = () => {

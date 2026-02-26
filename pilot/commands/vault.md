@@ -24,10 +24,10 @@ sx is a team asset manager that uses a private Git repository as a shared vault.
 
 2. **Ensure only Claude Code receives assets:**
 
-   sx installs to all detected clients by default. Disable non-Claude clients to avoid polluting `.cursor/` and `.github/` directories:
+   sx installs to all detected clients by default. Disable non-Claude clients to avoid polluting `.cursor/`, `.github/`, and Gemini directories:
 
    ```bash
-   sx clients disable cursor 2>/dev/null; sx clients disable github-copilot 2>/dev/null
+   sx clients disable cursor 2>/dev/null; sx clients disable github-copilot 2>/dev/null; sx clients disable gemini 2>/dev/null
    ```
 
    This is idempotent — safe to run every time. Only Claude Code should receive vault assets.
@@ -241,11 +241,11 @@ sx add .claude/skills/<name> --yes --type skill --name "<name>" --scope-global
 
 **Warning:** Do NOT use `--no-install` — it skips updating the vault lockfile, making assets invisible to `sx install` for teammates.
 
-**Note:** sx installs to all detected clients by default (Claude Code, Cursor, GitHub Copilot). Copilot uses `.github/skills/` and `.github/instructions/` which conflicts with tracked `.github/` files. If `.cursor/` or Copilot asset directories are not in `.gitignore`, add them:
+**Note:** sx installs to all detected clients by default (Claude Code, Cursor, GitHub Copilot, Gemini). Copilot uses `.github/skills/` and `.github/instructions/` which conflicts with tracked `.github/` files. If non-Claude client asset directories are not in `.gitignore`, add them:
 
 ```bash
 # Add gitignore entries for non-Claude client directories
-echo -e '.cursor/\n.github/skills/\n.github/instructions/' >> .gitignore 2>/dev/null
+echo -e '.cursor/\n.github/skills/\n.github/instructions/\n.gemini/' >> .gitignore 2>/dev/null
 ```
 
 ### Step P.6: Verify Push
@@ -310,6 +310,7 @@ Header: "Manage"
 Options:
 - "Remove an asset" - Unlink an asset from your lock file
 - "Manage clients" - Enable/disable AI clients that receive assets
+- "Manage roles" - Set active role (skills.new only)
 - "Switch profile" - Change vault configuration profile
 - "Update sx" - Check for and install sx updates
 ```
@@ -347,19 +348,19 @@ sx clients enable <client-id>
 sx clients reset
 ```
 
-Client IDs: `claude-code`, `cursor`, `github-copilot`
+Client IDs: `claude-code`, `cursor`, `github-copilot`, `gemini`
 
 **Client compatibility — not all asset types work with all clients:**
 
-| Asset Type | Claude Code | Cursor | Copilot |
-|-----------|-------------|--------|---------|
-| `skill` | Yes | Yes | Yes |
-| `rule` | Yes | Yes | Yes |
-| `command` | Yes | Yes | Yes |
-| `agent` | Yes | — | Yes |
-| `hook` | Yes | Yes | — |
-| `mcp` | Yes | Yes | Yes |
-| `claude-code-plugin` | Yes | — | — |
+| Asset Type | Claude Code | Cursor | Copilot | Gemini (CLI/VS Code) | Gemini (JetBrains) |
+|-----------|-------------|--------|---------|----------------------|--------------------|
+| `skill` | Yes | Yes | Yes | Yes | — |
+| `rule` | Yes | Yes | Yes | Yes | Yes |
+| `command` | Yes | Yes | Yes | Yes | — |
+| `agent` | Yes | — | Yes | — | — |
+| `hook` | Yes | Yes | — | Yes | — |
+| `mcp` | Yes | Yes | Yes | Yes | Yes |
+| `claude-code-plugin` | Yes | — | — | — | — |
 
 ### Profile Management
 
@@ -380,6 +381,26 @@ sx profile remove <profile-name>
 ```
 
 Ask user what profile operation they need.
+
+### Roles (Skills.new Only)
+
+Roles control which skills are available. Only supported for remote (skills.new) vault profiles.
+
+```bash
+# List available roles
+sx role list
+
+# Set the active role
+sx role set <role-slug>
+
+# Show current role
+sx role current
+
+# Clear the active role
+sx role clear
+```
+
+If the vault type is not `sleuth`, inform the user that roles are only available with skills.new.
 
 ### Update sx
 

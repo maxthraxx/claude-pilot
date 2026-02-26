@@ -28,9 +28,8 @@ const InstallSection = () => {
             Getting Started
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-3xl mx-auto">
-            Works with any existing project — no matter how complex.{" "}
-            <code className="text-primary">cd</code> into your project folder,
-            then run:
+            Install once, use everywhere — works with any existing project, no
+            matter how complex:
           </p>
         </div>
 

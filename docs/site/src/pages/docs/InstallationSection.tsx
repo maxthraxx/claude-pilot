@@ -127,8 +127,11 @@ const InstallationSection = () => {
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
-            <code className="text-primary">cd</code> into your project folder
-            first, then run this. After installation, run{" "}
+            Run from any directory — local mode installs globally to{" "}
+            <code className="text-primary">~/.pilot/</code> and{" "}
+            <code className="text-primary">~/.claude/</code>. After
+            installation, <code className="text-primary">cd</code> into any
+            project and run{" "}
             <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">
               pilot
             </code>{" "}
@@ -136,8 +139,8 @@ const InstallationSection = () => {
             <code className="text-primary bg-primary/10 px-1 py-0.5 rounded">
               ccp
             </code>{" "}
-            to start. Pilot doesn't scaffold or restructure your code — it
-            installs alongside your project and adapts to your conventions.
+            to start. Dev Container mode should be run from inside the project
+            directory.
           </p>
         </div>
 
