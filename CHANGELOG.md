@@ -2,6 +2,12 @@
 
 All notable changes to Pilot Shell will be documented in this file.
 
+## [7.0.6] - 2026-02-26
+
+### Bug Fixes
+
+- Update vault workflow for sx 0.11.1+ and improve site/installer/console
+
 ## [7.0.5] - 2026-02-26
 
 ### Bug Fixes
